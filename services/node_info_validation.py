@@ -360,19 +360,6 @@ def validate_node_information(node_info, location_info=None):
             "LocationInfo comment must not exceed 36 characters."
         )
 
-    advertised_ctcss = str(
-        location_info.get("advertised_ctcss") or ""
-    ).strip()
-
-    if advertised_ctcss:
-        ctcss = _number(advertised_ctcss)
-
-        if ctcss is None or ctcss <= 0:
-            errors.append(
-                "Advertised CTCSS must be a positive frequency "
-                "or left empty."
-            )
-
     if (
         location_info.get("publish_echolink_status")
         and not str(

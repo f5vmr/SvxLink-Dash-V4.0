@@ -81,7 +81,6 @@
         "tx_offset_khz": 0,
         "antenna_gain": "",
         "antenna_height_unit": "m",
-        "advertised_ctcss": "",
         "beacon_interval": 10,
         "comment": ""
         },

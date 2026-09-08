@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Primary SvxLink configuration renderer for SvxLink-Dash-V3.1.
+Primary SvxLink configuration renderer for SvxLink-Dash-V4.0.
 """
 from models.node_model import (
     get_installation_tones,
@@ -1604,11 +1604,6 @@ def render_location_info(model):
 
     antenna_height_value = f"{antenna_height}{antenna_height_unit}"
 
-    advertised_ctcss = str(
-        location_info.get("advertised_ctcss") or ""
-    ).strip()
-    tone = advertised_ctcss or "0"
-
     symbol = "/r" if primary_role == "repeater" else "/n"
 
     echolink_enabled = bool(model.get("echolink", {}).get("enabled"))
@@ -1658,7 +1653,7 @@ def render_location_info(model):
             "ANTENNA_DIR": antenna_direction,
             "BEACON_INTERVAL": location_info.get("beacon_interval", 10),
             "SYMBOL": symbol,
-            "TONE": tone,
+            "TONE": "0",
             "PRIMARY_LOGIC": get_primary_logic_name(model),
             "COMMENT_LINE": comment_line,
         },

@@ -1,0 +1,39 @@
+<div class="form-section">
+    <div class="label">Public node and location information</div>
+
+    <div class="note">
+        These details are optional. When enabled, the dashboard generates
+        node_info.json and enables the SvxLink LocationInfo section for the
+        primary radio port.
+    </div>
+
+    <label>
+        <input
+            type="radio"
+            id="location_information_yes"
+            name="location_info_enabled"
+            value="yes"
+            {% if location_info.get("enabled", false) %}checked{% endif %}
+        >
+        Configure and publish node location information
+    </label>
+
+    <br>
+
+    <label>
+        <input
+            type="radio"
+            id="location_information_no"
+            name="location_info_enabled"
+            value="no"
+            {% if not location_info.get("enabled", false) %}checked{% endif %}
+        >
+        Do not configure location information at this time
+    </label>
+
+    <div class="note">
+        If this option is declined, node_info.json will contain no node
+        information and LOCATION_INFO will remain commented. You can return
+        here later through Rebuild.
+    </div>
+</div>

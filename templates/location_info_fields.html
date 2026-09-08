@@ -18,41 +18,6 @@
 
 <div class="form-section">
     <div class="label">SvxLink LocationInfo and APRS</div>
-
-    <div class="note">
-        LocationInfo is optional. When enabled, SvxLink publishes the
-        primary installation identity and RF information to the configured
-        APRS service. Multi-port installations use the selected primary
-        port. The public node information entered above is still used to
-        generate node_info.json.
-    </div>
-
-    <div class="field-group">
-        <div class="label">Enable LocationInfo</div>
-
-        <label>
-            <input
-                type="radio"
-                name="location_info_enabled"
-                value="yes"
-                {% if location_info.get("enabled", false) %}checked{% endif %}
-            >
-            Enable LocationInfo and APRS publication
-        </label>
-
-        <br>
-
-        <label>
-            <input
-                type="radio"
-                name="location_info_enabled"
-                value="no"
-                {% if not location_info.get("enabled", false) %}checked{% endif %}
-            >
-            Do not enable LocationInfo
-        </label>
-    </div>
-
     <div class="field-group">
         <label class="label" for="aprs_server_list">
             APRS server
@@ -63,24 +28,32 @@
             id="aprs_server_list"
             name="aprs_server_list"
             type="text"
-            value="{{ location_info.get('aprs_server_list', '') }}"
-            placeholder="rotate.aprs2.net:14580"
+            value="{{ location_info.get('aprs_server_list') or aprs_server_suggestion }}"
+            placeholder="APRS server and port"
         >
 
-        <div class="note">
-            Enter the APRS-IS server and port supplied or recommended
-            for your region. This is required only when LocationInfo is
-            enabled.
-        </div>
+        {% if aprs_server_suggestion %}
+            <div class="note">
+                The selected environment initially suggests the server
+                shown above from the SvxLink example. You may edit it if
+                another APRS-IS server is required.
+            </div>
+        {% else %}
+            <div class="note">
+                Enter the APRS-IS server and port appropriate for this
+                installation.
+            </div>
+        {% endif %}
     </div>
 
-    <div class="field-group">
-        <div class="label">EchoLink status publication</div>
+    {% if echolink_enabled %}
+        <div class="field-group">
+            <div class="label">EchoLink status publication</div>
 
-        {% if echolink_enabled %}
             <label>
                 <input
                     type="checkbox"
+                    id="publish_echolink_status"
                     name="publish_echolink_status"
                     value="yes"
                     {% if location_info.get("publish_echolink_status", false) %}checked{% endif %}
@@ -93,34 +66,53 @@
                 appropriate EL- or ER- prefix from the configured EchoLink
                 callsign.
             </div>
-        {% else %}
-            <div class="note">
-                EchoLink is not enabled. EchoLink object and status
-                publication is therefore unavailable.
-            </div>
-        {% endif %}
-    </div>
+        </div>
 
-    <div class="field-group">
-        <label class="label" for="status_server_list">
-            EchoLink status server
-        </label>
+        <div class="field-group">
+            <label class="label" for="status_server_list">
+                EchoLink status server
+            </label>
 
-        <input
-            class="input-field"
-            id="status_server_list"
-            name="status_server_list"
-            type="text"
-            value="{{ location_info.get(
-                'status_server_list',
-                'aprs.echolink.org:5199'
-            ) }}"
-            placeholder="aprs.echolink.org:5199"
-        >
-    </div>
+            <input
+                class="input-field"
+                id="echolink_status_server_list"
+                name="status_server_list"
+                type="text"
+                value="{{ location_info.get(
+                    'status_server_list',
+                    'aprs.echolink.org:5199'
+                ) }}"
+                placeholder="aprs.echolink.org:5199"
+            >
+        </div>
+        <script>
+            (() => {
+                const publish = document.getElementById(
+                    "publish_echolink_status"
+                );
+                const serverFields = document.getElementById(
+                    "echolink_status_server_fields"
+                );
 
-    <div class="field-group">
-        <label class="label" for="tx_offset_khz">
+                function updateEchoLinkStatusFields() {
+                    serverFields.hidden = !publish.checked;
+                }
+
+                publish.addEventListener(
+                    "change",
+                    updateEchoLinkStatusFields
+                );
+
+                updateEchoLinkStatusFields();
+            })();
+        </script>
+    {% endif %}
+
+    <div
+        class="field-group"
+        id="custom_tx_offset_fields"
+    >
+        <label class="label" for="custom_tx_offset_khz">
             Transmitter offset
         </label>
 
@@ -206,7 +198,27 @@
             from the entered frequencies.
         </div>
     </div>
+    <script>
+        (() => {
+            const selection = document.getElementById(
+                "tx_offset_khz"
+            );
+            const customFields = document.getElementById(
+                "custom_tx_offset_fields"
+            );
 
+            function updateCustomOffsetFields() {
+                customFields.hidden = selection.value !== "custom";
+            }
+
+            selection.addEventListener(
+                "change",
+                updateCustomOffsetFields
+            );
+
+            updateCustomOffsetFields();
+        })();
+    </script>
     <div class="field-group">
         <label class="label" for="custom_tx_offset_khz">
             Custom transmitter offset, kHz
@@ -266,27 +278,6 @@
 
         <div class="note">
             Antenna height means height above the surrounding terrain.
-        </div>
-    </div>
-
-    <div class="field-group">
-        <label class="label" for="advertised_ctcss">
-            Advertised CTCSS
-        </label>
-
-        <input
-            class="input-field"
-            id="advertised_ctcss"
-            name="advertised_ctcss"
-            type="text"
-            value="{{ location_info.get('advertised_ctcss', '') }}"
-            placeholder="Leave empty for none"
-        >
-
-        <div class="note">
-            Enter one CTCSS access frequency to advertise, or leave this
-            empty to render TONE=0. Do not enter the legacy 1750 Hz access
-            tone here.
         </div>
     </div>
 

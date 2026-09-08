@@ -28,8 +28,15 @@
         Settings saved and SvxLink restarted successfully.
     </p>
     {% endif %}
-    {% if error %}
-        <p class="error">{{ error }}</p>
+    {% if errors %}
+        <div class="error" role="alert">
+            <strong>Please correct the following:</strong>
+            <ul>
+                {% for message in errors %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
 
 
@@ -64,9 +71,24 @@
     </div>
 
     <form method="post">
+    {% include "location_information_choice.html" %}
 
+    <div id="location_information_fields">
+        <div class="note">
+            {% if primary_port_id %}
+                The RF details below describe primary Port
+                {{ primary_port_id }}. Both node_info.json and LocationInfo
+                will represent this port.
+            {% else %}
+                The RF details below describe this system’s only radio port.
+                They are used by both node_info.json and LocationInfo.
+            {% endif %}
+        </div>
         <div class="field-group">
             <label class="label">Node Location / County</label>
+            <div class="note">
+                The broader administrative area, for example Northumberland.
+            </div>
             <input class="input-field"
                    type="text"
                    name="node_location"
@@ -75,6 +97,9 @@
 
         <div class="field-group">
             <label class="label">QTH Name</label>
+            <div class="note">
+                The town, radio site or installation name, for example Alnwick.
+            </div>
             <input class="input-field"
                    type="text"
                    name="qth_name"
@@ -179,26 +204,58 @@
                    value="{{ node_info.antenna_direction }}">
         </div>
 
-        {% include "location_info_fields.html" %}
-
-        <div class="button-row">
-            <a class="button-secondary"
-                href="{{ url_for('status_page') }}">
-                    Cancel
-            </a>
-
-            <button class="button-primary"
-                    type="submit">
-                Continue
-            </button>
-        </div>
+    {% include "location_info_fields.html" %}
+    </div>
+    <div class="button-row">
+        <a class="button-secondary"
+            href="{{ url_for('status_page') }}">
+                Cancel
+        </a>
+        <button class="button-primary"
+                type="submit">
+            Continue
+        </button>
+    </div>
 
     </form>
+    <script>
+        (() => {
+            const fields = document.getElementById(
+                "location_information_fields"
+            );
+            const choices = document.querySelectorAll(
+                'input[name="location_info_enabled"]'
+            );
 
+            function updateLocationFields() {
+                const selected = document.querySelector(
+                    'input[name="location_info_enabled"]:checked'
+                );
+                const enabled = selected && selected.value === "yes";
+
+                fields.hidden = !enabled;
+
+                fields.querySelectorAll(
+                    "input, select, textarea"
+                ).forEach((control) => {
+                    control.disabled = !enabled;
+                });
+            }
+
+            choices.forEach((choice) => {
+                choice.addEventListener(
+                    "change",
+                    updateLocationFields
+                );
+            });
+
+            updateLocationFields();
+        })();
+    </script>
 <footer class="site-footer">
     SvxLink Software &copy; Tobias Blömberg SM0SVX<br>
     SvxLink Configurator and Dashboard &copy; Chris Jackson G4NAB<br>
-    Dashboard SvxLink-Dash-V3.1|
+    Dashboard SvxLink-Dash-V4.0|
     SvxLink Package {{ version_info.package }} |
     SvxLink {{ version_info.engine }}
 </footer>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-SvxLink-Dash-V3.1 node model.
+SvxLink-Dash-V4.0 node model.
 
 This file defines the authoritative configuration model used by:
 - Flask setup pages
@@ -192,7 +192,6 @@ DEFAULT_MODEL = {
             "tx_offset_khz": 0,
             "antenna_gain": "",
             "antenna_height_unit": "m",
-            "advertised_ctcss": "",
             "beacon_interval": 10,
             "comment": "",
         },

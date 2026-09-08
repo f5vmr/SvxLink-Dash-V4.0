@@ -91,7 +91,9 @@ from services.gpio_service import (
     prepare_gpio_lines,
     update_model_gpiod_discovery,
 )
-from services.node_info_service import write_node_info_json
+from services.node_info_service import (
+    get_primary_port_id,
+)
 from services.node_info_validation import (
     validate_node_information,
 )
@@ -4528,6 +4530,20 @@ def wifi_page():
         password=password,
     )
 ## End Wifi
+def get_aprs_server_suggestion(model):
+    """
+    Return the documented initial APRS server suggestion where applicable.
+    """
+    environment = (
+        model.get("environment", {}).get("region")
+        or "british_isles"
+    )
+
+    if environment == "british_isles":
+        return "euro.aprs2.net:14580"
+
+    return ""
+
 @app.route("/node-info", methods=["GET", "POST"])
 def node_info_page():
 
@@ -4547,7 +4563,12 @@ def node_info_page():
         model.get("echolink", {}).get("enabled")
     )
 
-    error = None
+    aprs_server_suggestion = get_aprs_server_suggestion(
+        model
+    )
+    primary_port_id = get_primary_port_id(model)
+
+    errors = []
 
     if request.method == "POST":
 
@@ -4555,7 +4576,6 @@ def node_info_page():
             model,
             request.form,
         )
-
         location_info = (
             update_location_information_from_form(
                 model,
@@ -4569,7 +4589,7 @@ def node_info_page():
         )
 
         if validation_errors:
-            error = " ".join(validation_errors)
+            errors = validation_errors
         else:
             save_node_model(model)
             return redirect(url_for("setup_auth_page"))
@@ -4579,7 +4599,9 @@ def node_info_page():
         node_info=node_info,
         location_info=location_info,
         echolink_enabled=echolink_enabled,
-        error=error,
+        aprs_server_suggestion=aprs_server_suggestion,
+        primary_port_id=primary_port_id,
+        errors=errors,
     )
 
 def update_node_information_from_form(model, form):
@@ -4674,8 +4696,13 @@ def update_location_information_from_form(model, form):
         form.get("aprs_server_list") or ""
     ).strip()
 
+    echolink_enabled = bool(
+        model.get("echolink", {}).get("enabled")
+    )
+
     location_info["publish_echolink_status"] = (
-        form.get("publish_echolink_status") == "yes"
+        echolink_enabled
+        and form.get("publish_echolink_status") == "yes"
     )
 
     location_info["status_server_list"] = str(
@@ -4723,10 +4750,6 @@ def update_location_information_from_form(model, form):
     location_info["antenna_height_unit"] = (
         antenna_height_unit
     )
-
-    location_info["advertised_ctcss"] = str(
-        form.get("advertised_ctcss") or ""
-    ).strip()
 
     beacon_interval = str(
         form.get("beacon_interval") or "10"
@@ -4781,7 +4804,13 @@ def node_info_edit_page():
         model.get("echolink", {}).get("enabled")
     )
 
-    error = None
+    aprs_server_suggestion = get_aprs_server_suggestion(
+        model
+    )
+
+    primary_port_id = get_primary_port_id(model)
+
+    errors = []
 
     if request.method == "POST":
 
@@ -4803,26 +4832,37 @@ def node_info_edit_page():
         )
 
         if validation_errors:
-            error = " ".join(validation_errors)
+            errors = validation_errors
         else:
             save_node_model(model)
-            write_node_info_json(model)
-            restart_svxlink()
 
-            return redirect(
-                url_for(
-                    "node_info_edit_page",
-                    saved="1",
-                )
+            result = build_svxlink_configuration(
+                model,
+                restart=True,
             )
+
+            if not result.get("success"):
+                errors = [
+                    "Node information was saved, but the SvxLink "
+                    "configuration rebuild or restart failed."
+                ]
+            else:
+                return redirect(
+                    url_for(
+                        "node_info_edit_page",
+                        saved="1",
+                    )
+                )
 
     return render_template(
         "node_info_edit.html",
         node_info=node_info,
         location_info=location_info,
         echolink_enabled=echolink_enabled,
-        error=error,
+        aprs_server_suggestion=aprs_server_suggestion,
+        errors=errors,
         saved=saved,
+        primary_port_id=primary_port_id,
     )
 
 @app.route("/review", methods=["GET", "POST"])
@@ -4939,8 +4979,6 @@ def done():
 @app.route("/launch", methods=["POST"])
 def launch():
     model = load_node_model()
-
-    write_node_info_json(model)
 
     result = build_svxlink_configuration(
         model,

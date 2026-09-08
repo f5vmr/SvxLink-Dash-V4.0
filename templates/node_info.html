@@ -23,8 +23,15 @@
         </div>
     </div>
 
-    {% if error %}
-        <p class="error">{{ error }}</p>
+    {% if errors %}
+        <div class="error" role="alert">
+            <strong>Please correct the following:</strong>
+            <ul>
+                {% for message in errors %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
 
     <div class="form-section">
@@ -58,7 +65,19 @@
     </div>
 
     <form method="post">
+        {% include "location_information_choice.html" %}
 
+    <div id="location_information_fields">
+                <div class="note">
+            {% if primary_port_id %}
+                The RF details below describe primary Port
+                {{ primary_port_id }}. Both node_info.json and LocationInfo
+                will represent this port.
+            {% else %}
+                The RF details below describe this system’s only radio port.
+                They are used by both node_info.json and LocationInfo.
+            {% endif %}
+        </div>
         <div class="field-group">
             <label class="label">Node Location / County</label>
             <input class="input-field"
@@ -87,6 +106,8 @@
             <label class="label">Latitude Decimal</label>
             <input class="input-field"
                    type="text"
+                   inputmode="decimal"
+                   placeholder="Signed decimal, for example 55.1809"
                    name="lat"
                    value="{{ node_info.lat }}">
         </div>
@@ -95,6 +116,8 @@
             <label class="label">Longitude Decimal</label>
             <input class="input-field"
                    type="text"
+                   inputmode="decimal"
+                   placeholder="Signed decimal, for example -1.54604"
                    name="long"
                    value="{{ node_info.long }}">
         </div>
@@ -103,6 +126,8 @@
             <label class="label">Maidenhead Locator</label>
             <input class="input-field"
                    type="text"
+                   maxlength="8"
+                   placeholder="4, 6 or 8 characters, for example IO84AB"
                    name="locator"
                    value="{{ node_info.locator }}">
         </div>
@@ -126,7 +151,7 @@
         </div>
 
         <div class="field-group">
-            <label class="label">RX Frequency</label>
+            <label class="label">RX Frequency, MHz</label>
             <input class="input-field"
                    type="text"
                    name="rx_freq"
@@ -134,7 +159,7 @@
         </div>
 
         <div class="field-group">
-            <label class="label">TX Frequency</label>
+            <label class="label">TX Frequency, MHz</label>
             <input class="input-field"
                    type="text"
                    name="tx_freq"
@@ -142,7 +167,7 @@
         </div>
 
         <div class="field-group">
-            <label class="label">TX Power</label>
+            <label class="label">TX Power, watts</label>
             <input class="input-field"
                    type="text"
                    name="tx_power"
@@ -153,6 +178,7 @@
             <label class="label">Antenna Description</label>
             <input class="input-field"
                    type="text"
+                   placeholder="Make or Type, for example Diamond X-50A"
                    name="antenna"
                    value="{{ node_info.antenna }}">
         </div>
@@ -161,6 +187,7 @@
             <label class="label">Antenna Height</label>
             <input class="input-field"
                    type="text"
+                   placeholder="Numeric height; select the unit below"
                    name="antenna_height"
                    value="{{ node_info.antenna_height }}">
         </div>
@@ -169,30 +196,64 @@
             <label class="label">Antenna Direction</label>
             <input class="input-field"
                    type="text"
+                   placeholder="Omni or a bearing from 0 to 359 degrees."
                    name="antenna_direction"
                    value="{{ node_info.antenna_direction }}">
         </div>
 
         {% include "location_info_fields.html" %}
-
-        <div class="button-row">
-            <a class="button-secondary"
-               href="{{ url_for('setup_auth_page') }}">
-                Back
-            </a>
-
-            <button class="button-primary"
-                    type="submit">
-                Continue
-            </button>
-        </div>
+    </div>
+    <div class="button-row">
+        <a class="button-secondary"
+           href="{{ url_for('setup_auth_page') }}">
+            Back
+        </a>
+        <button class="button-primary"
+                type="submit">
+            Continue
+        </button>
+    </div>
 
     </form>
+    <script>
+        (() => {
+            const fields = document.getElementById(
+                "location_information_fields"
+            );
+            const choices = document.querySelectorAll(
+                'input[name="location_info_enabled"]'
+            );
+
+            function updateLocationFields() {
+                const selected = document.querySelector(
+                    'input[name="location_info_enabled"]:checked'
+                );
+                const enabled = selected && selected.value === "yes";
+
+                fields.hidden = !enabled;
+
+                fields.querySelectorAll(
+                    "input, select, textarea"
+                ).forEach((control) => {
+                    control.disabled = !enabled;
+                });
+            }
+
+            choices.forEach((choice) => {
+                choice.addEventListener(
+                    "change",
+                    updateLocationFields
+                );
+            });
+
+            updateLocationFields();
+        })();
+    </script>
 
 <footer class="site-footer">
     SvxLink Software &copy; Tobias Blömberg SM0SVX<br>
     SvxLink Configurator and Dashboard &copy; Chris Jackson G4NAB<br>
-    Dashboard SvxLink-Dash-V3.1|
+    Dashboard SvxLink-Dash-V4.0|
     SvxLink Package {{ version_info.package }} |
     SvxLink {{ version_info.engine }}
 </footer>
