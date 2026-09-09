@@ -3197,11 +3197,6 @@ def port_final_review_page():
         save_node_model(model)
         if reconfigure:
             return redirect(url_for("build_page"))
-        if not model.get(
-            "dashboard_auth",
-            {},
-        ).get("password_hash"):
-            return redirect(url_for("setup_auth_page"))
 
         return redirect(url_for("review_page"))
 
@@ -4735,7 +4730,7 @@ def node_info_page():
             if is_multiport_build(model):
                 return redirect(url_for("topology_page"))
 
-            return redirect(url_for("setup_auth_page"))
+            return redirect(url_for("review_page"))
 
     return render_template(
         "node_info.html",
