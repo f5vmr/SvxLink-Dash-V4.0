@@ -39,7 +39,11 @@
         {% endif %}
 
         <form action="/echolink" method="post">
-
+            {% if return_to %}
+                <input type="hidden"
+                       name="return_to"
+                       value="{{ return_to }}">
+            {% endif %}
             <div class="field-group">
 
                 <label class="label"
@@ -51,7 +55,7 @@
                        type="text"
                        id="echolink_callsign"
                        name="echolink_callsign"
-                       maxlength="10"
+                       maxlength="12"
                        autocomplete="off"
                        value="{{ model.echolink.callsign or '' }}"
                        placeholder="Example: G1ABC-L"
@@ -109,14 +113,15 @@
                        type="text"
                        id="echolink_location"
                        name="echolink_location"
-                       maxlength="10"
+                       maxlength="12"
                        autocomplete="off"
-                       value="{{ model.echolink.location or '' }}"
+                       value="{{ location_text }}"
                        placeholder="London">
 
                 <div class="note">
-                    Final location format:
-                    [Svx] Location (if editing - remove [SVX] from the beginning of the field, as it is added automatically).
+                    Enter only the location name, using no more than
+                    12 characters. The dashboard adds the [Svx] prefix
+                    automatically.
                 </div>
 
                 <div class="note">
@@ -128,7 +133,7 @@
             <div class="button-row">
 
                 <a class="button-secondary"
-                   href="/modules">
+                   href="{% if return_to == 'build' %}{{ url_for('modules_page', reconfigure='1') }}{% else %}{{ url_for('modules_page') }}{% endif %}">
                     Back
                 </a>
 

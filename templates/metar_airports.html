@@ -29,7 +29,11 @@
         {% endif %}
 
         <form action="{{ url_for('metar_airports_page') }}" method="post">
-
+            {% if return_to %}
+                <input type="hidden"
+                       name="return_to"
+                       value="{{ return_to }}">
+            {% endif %}
             <div class="field-group">
                 <label class="label">
                     Default airport
@@ -87,7 +91,7 @@
 
             <div class="button-row">
                 <a class="button-secondary"
-                   href="{{ url_for('metar_default_page') }}">
+                   href="{{ url_for('metar_default_page', return_to=return_to) if return_to else url_for('metar_default_page') }}">
                     Back
                 </a>
 

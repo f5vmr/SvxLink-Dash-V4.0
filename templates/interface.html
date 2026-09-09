@@ -258,7 +258,7 @@
 
             <div class="button-row">
                 <a class="button-secondary"
-                   href="/node">
+                   href="{% if request.values.get('reconfigure') == '1' %}{{ url_for('reconfigure_page') }}{% else %}{{ url_for('node_page') }}{% endif %}">
                     Back
                 </a>
 

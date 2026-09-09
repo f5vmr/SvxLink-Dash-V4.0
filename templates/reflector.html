@@ -24,78 +24,103 @@
             <p class="error">{{ error }}</p>
         {% endif %}
 
-        <form action="/reflector" method="post">
-            <div class="option-group">
-                <div class="radio-row">
-                    <input type="radio" id="connect_yes" name="connect" value="yes"
-                           {% if model.reflector.enabled %}checked{% endif %}>
-                    <label for="connect_yes">Connect to a reflector</label>
-                </div>
-
-                <div class="radio-row">
-                    <input type="radio" id="connect_no" name="connect" value="no"
-                           {% if not model.reflector.enabled %}checked{% endif %}>
-                    <label for="connect_no">Do not connect to a reflector</label>
-                </div>
-            </div>
+        <form action="{{ url_for('reflector_page') }}"
+              method="post">
+            {% if request.values.get("reconfigure") == "1" %}
+                <input type="hidden"
+                       name="reconfigure"
+                       value="1">
+            {% endif %}
 
             <div class="field-group">
-                <label class="label" for="reflector">Reflector</label>
-                <select class="input-field" id="reflector" name="reflector">
-                    {% for key, ref in reflectors.items() %}
-                    <option value="{{ key }}" {% if model.reflector.host == ref.host %}selected{% endif %}>
-                        {{ ref.name }}
+                <label class="label"
+                       for="reflector_route">
+                    Reflector access
+                </label>
+
+                <select class="input-field"
+                        id="reflector_route"
+                        name="reflector_route"
+                        required>
+                    <option value="none"
+                            {% if selected_route == "none" %}selected{% endif %}>
+                        No reflector connection
                     </option>
-                    {% endfor %}
+
+                    <option value="federation"
+                            {% if selected_route == "federation" %}selected{% endif %}>
+                        Federation Family reflector
+                    </option>
+
+                    <option value="v2"
+                            {% if selected_route == "v2" %}selected{% endif %}>
+                        SvxReflector Protocol 2
+                    </option>
+
+                    <option value="v3"
+                            {% if selected_route == "v3" %}selected{% endif %}>
+                        SvxReflector Protocol 3
+                    </option>
                 </select>
             </div>
 
             <div class="note">
-                Register at the relevant reflector website before entering the password.<br>By registering, a password will be sent to you by email.<br>
-                This password is used to authenticate your node to the reflector and must be entered in the field below. It is not the same as your SvxLink Dashboard password.
+                Reflector access normally requires prior registration
+                or approval by the relevant reflector administrator.
+                Any password or certificate requirements are entered
+                on the page for the selected access method.
             </div>
+
+            <div class="note">
+                A reflector subscription password is used to
+                authenticate the radio node. It is not the same as
+                the SvxLink Dashboard password.
+            </div>
+
             <div class="info-box">
                 <h3>Reflector access</h3>
 
                 <p>
-                    Reflector access normally requires prior registration with the chosen
-                    SvxReflector.
+                    Select the connection method required by the
+                    reflector administrator. The following page will
+                    request only the settings needed by that method.
                 </p>
-            
-                <p>
-                    The callsign used for this connection will be the primary callsign from
-                    this build. For multi-port systems, this is normally the callsign of the
-                    first configured port. The reflector password must be obtained from the
-                    reflector keeper or administrator before this connection will work.
-                </p>
-            
-                <p>
-                    If you do not yet have reflector access, select local operation for now.
-                    The node or repeater can still operate locally, and reflector connection
-                    can be configured later if you wish.
-                </p>
-            </div>
 
-            <div class="note">
-                {% for key, ref in reflectors.items() %}
-                    <a href="{{ ref.url }}" target="_blank">{{ ref.name }}</a><br>
-                {% endfor %}
-            </div>
+                <p>
+                    The callsign used for this connection will be the
+                    primary callsign from this build:
+                    <strong>{{ primary_callsign }}</strong>.
+                    {% if is_multiport and primary_port_id %}
+                        This is supplied by the selected primary Port
+                        {{ primary_port_id }}.
+                    {% endif %}
+                </p>
 
-            <div class="field-group">
-                <label class="label" for="password">Subscription password</label>
-                <input class="input-field" type="text" id="password" name="password"
-                       maxlength="16" autocomplete="off"
-                       value="{{ model.reflector.auth_key or '' }}"
-                       placeholder="16-character password">
+                <p>
+                    If reflector access is not yet available, select
+                    No reflector connection. The node or repeater can
+                    continue to operate locally, and reflector access
+                    can be configured later.
+                </p>
+
+                <p>
+                    Talkgroup operation requires a connection to an
+                    SvxReflector. The available talkgroups and their
+                    permitted use are determined by the selected
+                    reflector.
+                </p>
             </div>
 
             <div class="button-row">
                 <a class="button-secondary"
-                   href="{% if model.get('ports', {}).get('enabled', [])|length > 1 %}{{ url_for('timezone_page') }}{% else %}{{ url_for('modules_page') }}{% endif %}">
+                   href="{% if request.values.get('reconfigure') == '1' %}{{ url_for('reconfigure_page') }}{% elif is_multiport %}{{ url_for('installation_identity_page') }}{% else %}{{ url_for('modules_page') }}{% endif %}">
                     Back
                 </a>
-                <button class="button-primary" type="submit">Continue</button>
+
+                <button class="button-primary"
+                        type="submit">
+                    Continue
+                </button>
             </div>
         </form>
     </section>

@@ -17,7 +17,13 @@
             </div>
         </div>
 
-        <form action="/modules" method="post">
+        <form action="{{ url_for('modules_page') }}"
+              method="post">
+            {% if reconfigure %}
+                <input type="hidden"
+                       name="reconfigure"
+                       value="1">
+            {% endif %}
             <div class="note">
                 ModuleHelp and ModuleParrot are always enabled.<br>
                 Please have your <b>EchoLink credentials</b> to hand if you wish to enable that module.<br>
@@ -45,7 +51,8 @@
 
             <div class="button-row">
                 <a class="button-secondary"
-                href="{% if model.get('build', {}).get('return_after_modules') == 'port_ident_page' %}{{ url_for('port_modules_page') }}{% elif model.node.type == 'repeater' %}{{ url_for('repeater_page') }}{% else %}{{ url_for('ident_page') }}{% endif %}">                    Back
+                   href="{% if reconfigure %}{{ url_for('reconfigure_page') }}{% elif model.node.type == 'repeater' %}{{ url_for('repeater_page') }}{% else %}{{ url_for('ident_page') }}{% endif %}">
+                    Back
                 </a>
                 <button class="button-primary" type="submit">Continue</button>
             </div>

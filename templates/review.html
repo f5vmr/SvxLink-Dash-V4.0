@@ -86,7 +86,18 @@
 
         <form action="/review" method="post">
         <div class="button-row">
-            <a class="button-secondary" href="/reflector">Back</a>
+            {% if model.get("ports", {}).get("enabled", []) | length > 1
+                  or model.get("hardware", {}).get("family") == "ics" %}
+                <a class="button-secondary"
+                   href="{{ url_for('port_final_review_page') }}">
+                    Back
+                </a>
+            {% else %}
+                <a class="button-secondary"
+                   href="{{ url_for('node_info_page') }}">
+                    Back
+                </a>
+            {% endif %}
         
             <a class="button-secondary" href="{{ url_for('status_page') }}">
                 Return to Dashboard

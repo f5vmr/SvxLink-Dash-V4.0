@@ -71,7 +71,12 @@
     </div>
 
     <form method="post">
-    {% include "location_information_choice.html" %}
+    {% if reconfigure %}
+        <input type="hidden"
+               name="reconfigure"
+               value="1">
+    {% endif %}
+        {% include "location_information_choice.html" %}
 
     <div id="location_information_fields">
         <div class="note">

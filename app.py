@@ -1063,10 +1063,7 @@ def next_after_timezone(model):
     return url_for("node_page")
 
 def next_after_reflector(model):
-    if is_multiport_build(model):
-        return url_for("topology_page")
-
-    return url_for("review_page")
+    return url_for("node_info_page")
 
 def redirect_after_port_configuration(
     default_endpoint,
@@ -1722,18 +1719,25 @@ def port_modules_page():
 
         model["modules"]["enabled"] = sorted(global_enabled)
 
-        if metar_ports and not model.get("metar", {}).get("startdefault"):
-            if request.form.get("reconfigure") == "1":
-                model["build"]["return_after_metar"] = "build_page"
-            else:
-                model["build"]["return_after_metar"] = "port_ident_page"
-
-            model["build"].pop("return_after_modules", None)
+        if (
+            metar_ports
+            and not model.get(
+                "metar",
+                {},
+            ).get("startdefault")
+        ):
+            return_to = (
+                "build"
+                if request.form.get("reconfigure") == "1"
+                else "port_ident"
+            )
             save_node_model(model)
-            return redirect(url_for("metar_default_page"))
-
-        model["build"].pop("return_after_modules", None)
-        model["build"].pop("return_after_metar", None)
+            return redirect(
+                url_for(
+                    "metar_default_page",
+                    return_to=return_to,
+                )
+            )
 
         save_node_model(model)
 
@@ -3127,7 +3131,9 @@ def topology_page():
 @app.route("/port-final-review", methods=["GET", "POST"])
 def port_final_review_page():
     model = load_node_model()
-
+    reconfigure = (
+        request.values.get("reconfigure") == "1"
+    )
     hardware = model.get("hardware", {})
     nodes = model.get("nodes", {})
     enabled_ports = model.get("ports", {}).get("enabled", [])
@@ -3185,10 +3191,16 @@ def port_final_review_page():
 
         model.setdefault("build", {})
         model["build"]["port_final_review_confirmed"] = True
-
         save_node_model(model)
+        if reconfigure:
+            return redirect(url_for("build_page"))
+        if not model.get(
+            "dashboard_auth",
+            {},
+        ).get("password_hash"):
+            return redirect(url_for("setup_auth_page"))
 
-        return redirect(url_for("build_page"))
+        return redirect(url_for("review_page"))
 
     return render_template(
         "port_final_review.html",
@@ -3196,6 +3208,7 @@ def port_final_review_page():
         nodes=nodes,
         enabled_ports=enabled_ports,
         incomplete=incomplete,
+        reconfigure=reconfigure,
         version_info=get_version_info(),
     )
 #def render_port_rx_section(model, port_id, node):
@@ -3905,16 +3918,27 @@ def repeater_page():
     
 @app.route("/modules", methods=["GET", "POST"])
 def modules_page():
+
     model = load_node_model()
 
+    reconfigure = (
+        request.values.get("reconfigure") == "1"
+    )
+
     if request.method == "POST":
+
         modules = [
             "ModuleHelp",
             "ModuleParrot",
         ]
 
-        echolink_enabled = request.form.get("module_echolink") == "yes"
-        metar_enabled = request.form.get("module_metar") == "yes"
+        echolink_enabled = (
+            request.form.get("module_echolink") == "yes"
+        )
+
+        metar_enabled = (
+            request.form.get("module_metar") == "yes"
+        )
 
         if echolink_enabled:
             modules.append("ModuleEchoLink")
@@ -3929,50 +3953,110 @@ def modules_page():
         save_node_model(model)
 
         if echolink_enabled:
-            return redirect(url_for("echolink_page"))
+            route_arguments = {}
+
+            if reconfigure:
+                route_arguments["return_to"] = "build"
+
+            return redirect(
+                url_for(
+                    "echolink_page",
+                    **route_arguments,
+                )
+            )
 
         if metar_enabled:
-            return redirect(url_for("metar_default_page"))
+            route_arguments = {}
 
-        return_after_modules = model.get("build", {}).pop("return_after_modules", None)
+            if reconfigure:
+                route_arguments["return_to"] = "build"
 
-        if return_after_modules:
-            save_node_model(model)
-            return redirect(url_for(return_after_modules))
+            return redirect(
+                url_for(
+                    "metar_default_page",
+                    **route_arguments,
+                )
+            )
 
-        return_after_modules = model.get("build", {}).pop("return_after_modules", None)
-
-        if return_after_modules:
-            save_node_model(model)
-            return redirect(url_for(return_after_modules))
+        if reconfigure:
+            return redirect(url_for("build_page"))
 
         return redirect(url_for("reflector_page"))
 
-    return render_template("modules.html", model=model)
+    return render_template(
+        "modules.html",
+        model=model,
+        reconfigure=reconfigure,
+    )
 
 @app.route("/echolink", methods=["GET", "POST"])
 def echolink_page():
+
     model = load_node_model()
     error = None
 
+    return_to = str(
+        request.values.get("return_to") or ""
+    ).strip()
+
+    if return_to not in {
+        "",
+        "build",
+    }:
+        return_to = ""
+
+    location_text = str(
+        model.get(
+            "echolink",
+            {},
+        ).get("location") or ""
+    ).strip()
+
+    if location_text.lower().startswith("[svx]"):
+        location_text = location_text[5:].lstrip()
+
     if request.method == "POST":
-        callsign = request.form.get("echolink_callsign", "").strip().upper()
-        password = request.form.get("echolink_password", "").strip()
-        sysopname = request.form.get("echolink_sysopname", "").strip()
-        location_text = request.form.get("echolink_location", "").strip()
+
+        callsign = request.form.get(
+            "echolink_callsign",
+            "",
+        ).strip().upper()
+
+        password = request.form.get(
+            "echolink_password",
+            "",
+        ).strip()
+
+        sysopname = request.form.get(
+            "echolink_sysopname",
+            "",
+        ).strip()
+
+        location_text = request.form.get(
+            "echolink_location",
+            "",
+        ).strip()
 
         location = f"[Svx] {location_text}"
 
         if not callsign.endswith(("-L", "-R")):
             error = "EchoLink callsign must end in -L or -R."
+
         elif not password:
             error = "EchoLink password is required."
+
         elif not sysopname:
             error = "EchoLink sysop name is required."
+
         elif not location_text:
             error = "EchoLink location is required."
+
         elif len(location_text) > 12:
-            error = "EchoLink location must be 12 characters or fewer after [Svx]."
+            error = (
+                "EchoLink location must be 12 characters or "
+                "fewer after [Svx]."
+            )
+
         else:
             model["echolink"] = {
                 "enabled": True,
@@ -3985,17 +4069,45 @@ def echolink_page():
             save_node_model(model)
 
             if model["metar"]["enabled"]:
-                return redirect(url_for("metar_default_page"))
+                route_arguments = {}
+
+                if return_to:
+                    route_arguments["return_to"] = return_to
+
+                return redirect(
+                    url_for(
+                        "metar_default_page",
+                        **route_arguments,
+                    )
+                )
+
+            if return_to == "build":
+                return redirect(url_for("build_page"))
 
             return redirect(url_for("reflector_page"))
 
-    return render_template("echolink.html", model=model, error=error)
+    return render_template(
+        "echolink.html",
+        model=model,
+        location_text=location_text,
+        return_to=return_to,
+        error=error,
+    )
 
 @app.route("/metar-default", methods=["GET", "POST"])
 def metar_default_page():
     model = load_node_model()
     error = None
+    return_to = str(
+        request.values.get("return_to") or ""
+    ).strip()
 
+    if return_to not in {
+        "",
+        "build",
+        "port_ident",
+    }:
+        return_to = ""
     if "metar" not in model:
         model["metar"] = {}
 
@@ -4018,12 +4130,23 @@ def metar_default_page():
         else:
             model["metar"]["startdefault"] = startdefault
             save_node_model(model)
-            return redirect(url_for("metar_airports_page"))
+            route_arguments = {}
+
+            if return_to:
+                route_arguments["return_to"] = return_to
+
+            return redirect(
+                url_for(
+                    "metar_airports_page",
+                    **route_arguments,
+                )
+            )
 
     return render_template(
         "metar_default.html",
         model=model,
         airports=airports,
+        return_to=return_to,
         error=error,
         version_info=get_version_info(),
     )
@@ -4032,7 +4155,16 @@ def metar_default_page():
 def metar_airports_page():
     model = load_node_model()
     error = None
+    return_to = str(
+        request.values.get("return_to") or ""
+    ).strip()
 
+    if return_to not in {
+        "",
+        "build",
+        "port_ident",
+    }:
+        return_to = ""
     region = model["metar"].get("region", "ukwide")
     airports = METAR_REGIONS.get(region, {})
 
@@ -4045,26 +4177,15 @@ def metar_airports_page():
             error = "Please select no more than 6 additional airports."
         else:
             model["metar"]["airports"] = selected_airports
-
-            build = model.setdefault("build", {})
-
-            return_after_metar = build.pop(
-                "return_after_metar",
-                None,
-            )
-
-            return_after_modules = build.pop(
-                "return_after_modules",
-                None,
-            )
-
             save_node_model(model)
 
-            if return_after_metar:
-                return redirect(url_for(return_after_metar))
+            if return_to == "build":
+                return redirect(url_for("build_page"))
 
-            if return_after_modules:
-                return redirect(url_for(return_after_modules))
+            if return_to == "port_ident":
+                return redirect(
+                    url_for("port_ident_page")
+                )
 
             return redirect(url_for("reflector_page"))
     return render_template(
@@ -4073,6 +4194,7 @@ def metar_airports_page():
         airports=airports,
         startdefault=startdefault,
         error=error,
+        return_to=return_to,
         version_info=get_version_info(),
     )
 
@@ -4606,6 +4728,10 @@ def node_info_page():
             errors = validation_errors
         else:
             save_node_model(model)
+
+            if is_multiport_build(model):
+                return redirect(url_for("topology_page"))
+
             return redirect(url_for("setup_auth_page"))
 
     return render_template(
@@ -4799,6 +4925,9 @@ def update_location_information_from_form(model, form):
 @app.route("/edit/node-info", methods=["GET", "POST"])
 def node_info_edit_page():
     saved = request.args.get("saved") == "1"
+    reconfigure = (
+        request.values.get("reconfigure") == "1"
+    )
     if not session.get("authorised"):
         return redirect(url_for("authorise_page", next=request.path))
 
@@ -4850,6 +4979,9 @@ def node_info_edit_page():
         else:
             save_node_model(model)
 
+            if reconfigure:
+                return redirect(url_for("build_page"))
+
             result = build_svxlink_configuration(
                 model,
                 restart=True,
@@ -4875,6 +5007,7 @@ def node_info_edit_page():
         echolink_enabled=echolink_enabled,
         aprs_server_suggestion=aprs_server_suggestion,
         errors=errors,
+        reconfigure=reconfigure,
         saved=saved,
         primary_port_id=primary_port_id,
     )
@@ -4971,7 +5104,7 @@ def setup_auth_page():
             save_node_model(model)
             session.permanent = True
             session["authorised"] = True 
-            return redirect("/start")
+            return redirect(url_for("review_page"))
 
     return render_template(
         "setup_auth.html",
@@ -6288,7 +6421,35 @@ def reconfigure_page():
             "route": "timezone_page",
             "description": "Change the configured timezone.",
         },
+        {
+            "id": "modules",
+            "label": "Optional Modules",
+            "route": "modules_page",
+            "description": (
+                "Change EchoLink and METAR module selections "
+                "and their associated settings."
+            ),
+        },
+        {
+            "id": "reflector",
+            "label": "Reflector Connection",
+            "route": "reflector_page",
+            "description": (
+                "Change the reflector access route and "
+                "connection settings."
+            ),
+        },
+        {
+            "id": "node_info",
+            "label": "Node Information / LocationInfo",
+            "route": "node_info_edit_page",
+            "description": (
+                "Change published node details and optional "
+                "SvxLink LocationInfo settings."
+            ),
+        },
     ]
+
 
     if is_multi_port:
         reconfigure_targets.extend([

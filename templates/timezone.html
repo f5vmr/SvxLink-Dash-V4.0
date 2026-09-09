@@ -56,7 +56,7 @@
 
             <div class="button-row">
                 <a class="button-secondary"
-                   href="{{ url_for('environment_page') }}">
+                   href="{% if request.values.get('reconfigure') == '1' %}{{ url_for('reconfigure_page') }}{% else %}{{ url_for('environment_page') }}{% endif %}">
                     Back
                 </a>
 
