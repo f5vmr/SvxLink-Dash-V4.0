@@ -5172,16 +5172,6 @@ def setup_auth_page():
         {},
     )
 
-    return_to = str(
-        request.values.get("return_to") or "start"
-    ).strip().lower()
-
-    if return_to not in {
-        "start",
-        "review",
-    }:
-        return_to = "start"
-
     error = None
 
     if request.method == "POST":
@@ -5209,17 +5199,11 @@ def setup_auth_page():
             session.permanent = True
             session["authorised"] = True
 
-            if return_to == "review":
-                return redirect(url_for("review_page"))
-
             return redirect(url_for("start"))
 
     return render_template(
         "setup_auth.html",
-        model=model,
         auth=auth,
-        return_to=return_to,
-        is_multi_port=is_multiport_build(model),
         error=error,
         version_info=get_version_info(),
     )
