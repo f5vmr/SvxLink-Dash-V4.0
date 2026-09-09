@@ -200,7 +200,7 @@ class WorkflowRoutingTests(unittest.TestCase):
                         dashboard.next_after_reflector(model),
                         "/node-info",
                     )
-    def test_authentication_setup_continues_to_review(self):
+    def test_authentication_setup_continues_to_start(self):
         model = new_node_model()
 
         with patch.object(
@@ -228,7 +228,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             response.headers["Location"],
-            "/review",
+            "/start",
         )
         self.assertEqual(
             model["dashboard_auth"]["username"],
@@ -244,7 +244,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         cases = (
             (
                 new_node_model(),
-                "/setup-auth",
+                "/review",
             ),
             (
                 self.multiport_model(),
@@ -295,7 +295,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             (
                 False,
                 False,
-                "/setup-auth",
+                "/review",
             ),
             (
                 True,
