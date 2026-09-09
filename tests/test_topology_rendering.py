@@ -8,6 +8,28 @@ import renderers.svxlink_renderer as renderer
 
 class TopologyRenderingTests(unittest.TestCase):
 
+    def test_completed_configuration_spacing_is_normalised(self):
+        rendered = (
+            "\n\n"
+            "[GLOBAL]   \n"
+            "LOGICS=SimplexLogic\t\n"
+            "\n\n\n"
+            "[SimplexLogic]\n"
+            "TYPE=Simplex\n"
+            "\n\n"
+        )
+
+        self.assertEqual(
+            renderer.normalise_config_spacing(rendered),
+            (
+                "[GLOBAL]\n"
+                "LOGICS=SimplexLogic\n"
+                "\n"
+                "[SimplexLogic]\n"
+                "TYPE=Simplex\n"
+            ),
+        )
+
     def test_reflector_link_uses_selected_ports_only(self):
         model = {
             "hardware": {
@@ -274,7 +296,7 @@ class TopologyRenderingTests(unittest.TestCase):
                 renderer.render_svxlink_config(
                     ordinary_single
                 ),
-                "SINGLE",
+                "SINGLE\n",
             )
             self.assertEqual(
                 renderer.render_svxlink_config(
@@ -294,6 +316,38 @@ class TopologyRenderingTests(unittest.TestCase):
             2,
         )
 
+    def test_specialist_reference_sections_remain_commented(self):
+        rendered = (
+            renderer.render_specialist_reference_sections()
+        )
+
+        expected_sections = (
+            "#[QsoRecorder]",
+            "#[Voter]",
+            "#[MultiRx]",
+            "#[MultiTx]",
+            "#[NetRx]",
+            "#[NetTx]",
+            "#[WbRx1]",
+            "#[DevcalRtlRx]",
+        )
+
+        for section in expected_sections:
+            with self.subTest(section=section):
+                self.assertIn(section, rendered)
+
+        active_headers = [
+            line
+            for line in rendered.splitlines()
+            if line.startswith("[")
+        ]
+
+        self.assertEqual(active_headers, [])
+
+        self.assertIn(
+            "#AUTH_KEY=\"Change this key now!\"",
+            rendered,
+        )
 
 if __name__ == "__main__":
     unittest.main()

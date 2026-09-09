@@ -179,7 +179,7 @@ TERM=linux toilet -F metal {callsign}-SVX
 /usr/bin/vcgencmd measure_temp
 
 ## This file gives the login screen of a Raspberry Pi a new look
-## 24062026 - 3.1
+## 09092026 - 4.0
 """
 def deploy_motd_script(content):
     tmp_path = Path("/tmp/10-uname")

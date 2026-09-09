@@ -1,0 +1,97 @@
+###############################################################################
+# Manual and specialist SvxLink reference sections
+#
+# These sections are not managed by the dashboard. They remain commented
+# examples for an experienced operator who chooses to configure them manually.
+###############################################################################
+
+#[QsoRecorder]
+#REC_DIR=/var/spool/svxlink/qso_recorder
+#MIN_TIME=1000
+#MAX_TIME=3600
+#SOFT_TIME=300
+#MAX_DIRSIZE=1024
+#DEFAULT_ACTIVE=1
+#TIMEOUT=300
+#QSO_TIMEOUT=300
+#ENCODER_CMD=/usr/bin/oggenc -Q \"%f\" && rm \"%f\"
+
+#[Voter]
+#TYPE=Voter
+#RECEIVERS=Rx1,Rx2,Rx3
+#VOTING_DELAY=200
+#BUFFER_LENGTH=0
+#REVOTE_INTERVAL=1000
+#HYSTERESIS=50
+#SQL_CLOSE_REVOTE_DELAY=500
+#RX_SWITCH_DELAY=500
+#COMMAND_PTY=/dev/shm/voter_ctrl
+#VERBOSE=1
+
+#[MultiRx]
+#TYPE=Multi
+#RECEIVERS=Rx1,Rx2,Rx3
+
+#[MultiTx]
+#TYPE=Multi
+#TRANSMITTERS=Tx1,Tx2,Tx3
+
+# RemoteTrx and network receiver reference
+#[NetRx]
+#TYPE=Net
+#HOST=remote.rx.host
+#TCP_PORT=5210
+#LOG_DISCONNECTS_ONCE=0
+#AUTH_KEY="Change this key now!"
+#CODEC=S16
+#SPEEX_ENC_FRAMES_PER_PACKET=4
+#SPEEX_ENC_QUALITY=4
+#SPEEX_ENC_BITRATE=15000
+#SPEEX_ENC_COMPLEXITY=2
+#SPEEX_ENC_VBR=0
+#SPEEX_ENC_VBR_QUALITY=4
+#SPEEX_ENC_ABR=15000
+#SPEEX_DEC_ENHANCER=1
+#OPUS_ENC_FRAME_SIZE=20
+#OPUS_ENC_COMPLEXITY=10
+#OPUS_ENC_BITRATE=20000
+#OPUS_ENC_VBR=1
+
+# RemoteTrx and network transmitter reference
+#[NetTx]
+#TYPE=Net
+#TX_ID=T
+#HOST=remote.tx.host
+#TCP_PORT=5210
+#LOG_DISCONNECTS_ONCE=0
+#AUTH_KEY="Change this key now!"
+#CODEC=S16
+#SPEEX_ENC_FRAMES_PER_PACKET=4
+#SPEEX_ENC_QUALITY=4
+#SPEEX_ENC_BITRATE=15000
+#SPEEX_ENC_COMPLEXITY=2
+#SPEEX_ENC_VBR=0
+#SPEEX_ENC_VBR_QUALITY=4
+#SPEEX_ENC_ABR=15000
+#SPEEX_DEC_ENHANCER=1
+#OPUS_ENC_FRAME_SIZE=20
+#OPUS_ENC_COMPLEXITY=10
+#OPUS_ENC_BITRATE=20000
+#OPUS_ENC_VBR=1
+
+# RTL-SDR wideband receiver reference
+#[WbRx1]
+#TYPE=RtlUsb
+#DEV_MATCH=0
+#HOST=localhost
+#PORT=1234
+#CENTER_FQ=435075000
+#FQ_CORR=0
+#GAIN=0
+#PEAK_METER=1
+#SAMPLE_RATE=960000
+
+#[DevcalRtlRx]
+#TYPE=Ddr
+#WBRX=WbRx1
+#FQ=145700000

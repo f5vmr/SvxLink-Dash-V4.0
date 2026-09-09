@@ -1,5 +1,6 @@
 [ReflectorLogic]
 TYPE=ReflectorV2
+#DNS_DOMAIN=example.com
 HOSTS={{REFLECTOR_HOST}}
 HOST_PORT={{REFLECTOR_PORT}}
 HOST_PRIO=100

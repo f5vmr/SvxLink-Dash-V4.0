@@ -466,7 +466,7 @@ class LogicRenderingTests(unittest.TestCase):
                 template,
             )
         self.assertIn(
-            "#OPEN_ON_1750=800",
+            "#OPEN_ON_1750=1000",
             repeater,
         )
         self.assertIn(
@@ -478,7 +478,7 @@ class LogicRenderingTests(unittest.TestCase):
             repeater,
         )
         self.assertNotIn(
-            "\nOPEN_ON_1750=800",
+            "\nOPEN_ON_1750=1000",
             repeater,
         )
 

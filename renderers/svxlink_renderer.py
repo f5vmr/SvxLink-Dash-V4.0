@@ -1148,8 +1148,11 @@ def render_port_rx_section(model, port_id, node):
     lines = [
         f"[{rx_name}]",
         "TYPE=Local",
+        "#RX_ID=?",
         f"AUDIO_DEV={audio_dev}",
         "AUDIO_CHANNEL=0",
+        "#AUDIO_DEV_KEEP_OPEN=0",
+        "#LIMITER_THRESH=-6",
         f"DEEMPHASIS={1 if audio.get('deemphasis', False) else 0}",
     ]
 
@@ -1217,6 +1220,9 @@ def render_port_rx_section(model, port_id, node):
         "#SQL_EXTENDED_HANGTIME_THRESH=15",
         "#SQL_TIMEOUT=0",
         f"SQL_TAIL_ELIM={model.get('sql_tail_elim', 270)}",
+        "#GPIO_PATH=/sys/class/gpio",
+        "#GPIO_SQL_PIN=gpio30",
+        "#PREAMP=6",
     ])
 
     if method == "ctcss" and ctcss_freq:
@@ -1398,6 +1404,7 @@ def render_port_tx_section(model, port_id, node):
         ])
 
     lines.extend([
+        "#SERIAL_SET_PINS=DTR!RTS",
         "#GPIO_PATH=/sys/class/gpio",
         "#PTT_HANGTIME=1000",
         "#TIMEOUT=0",
@@ -2173,16 +2180,62 @@ def render_multiport_svxlink_config(model):
         "TX_SECTIONS": audio_result["tx_sections"],
 
         "MACROS_SECTION": render_macros(model),
+
+        "SPECIALIST_REFERENCE_SECTIONS": (
+            render_specialist_reference_sections()
+        ),
     }
 
-    return render_config_template(
-        "svxlink_multiport.conf.template",
-        values
+    return normalise_config_spacing(
+        render_config_template(
+            "svxlink_multiport.conf.template",
+            values,
+        )
     )
+
+def render_specialist_reference_sections():
+    """
+    Render the shared commented manual-reference sections.
+    """
+
+    return render_config_template(
+        "specialist_reference.template",
+        {},
+    )
+
 
 # =========================================================
 # Final configuration renderer
 # =========================================================
+
+def normalise_config_spacing(rendered_text):
+    """
+    Give the completed configuration consistent upstream-style spacing.
+
+    Trailing whitespace is removed, consecutive blank lines are reduced
+    to one, and the file is terminated by exactly one newline.
+    """
+
+    output_lines = []
+    previous_blank = False
+
+    for source_line in str(rendered_text).splitlines():
+        line = source_line.rstrip()
+        blank = not line
+
+        if blank and previous_blank:
+            continue
+
+        output_lines.append(line)
+        previous_blank = blank
+
+    while output_lines and not output_lines[0]:
+        output_lines.pop(0)
+
+    while output_lines and not output_lines[-1]:
+        output_lines.pop()
+
+    return "\n".join(output_lines) + "\n"
 
 def render_svxlink_config(model):
     """
@@ -2281,9 +2334,15 @@ def render_svxlink_config(model):
         ),
 
         "MACROS_SECTION": render_macros(model),
+
+        "SPECIALIST_REFERENCE_SECTIONS": (
+            render_specialist_reference_sections()
+        ),
     }
 
-    return render_config_template(
-        "svxlink.conf.template",
-        values
+    return normalise_config_spacing(
+        render_config_template(
+            "svxlink.conf.template",
+            values,
+        )
     )
