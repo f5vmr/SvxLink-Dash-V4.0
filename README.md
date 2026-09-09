@@ -2,28 +2,31 @@
 
 A modern Flask-based configuration and runtime dashboard for SvxLink systems.
 
-SvxLink-Dash-V4.0 provides:
+SvxLink-Dash-V4.0 provides a guided environment for configuring, building and operating SvxLink nodes. It supports general amateur-radio installations and is not tied to a particular reflector network, regional service or deployment model.
 
-- Guided SvxLink configuration using SvxLink V26.05.1 from Tobias Blomberg SM0SVX
+Principal features include:
+
+- Guided configuration for SvxLink 26.05.1 by Tobias Blömberg SM0SVX
+- Simplex, repeater and multi-port node configuration
+- SvxReflector connection configuration
 - Runtime operational dashboard
-- Reflector management
 - EchoLink and METAR module configuration
 - Live reflector activity monitoring
 - DTMF talkgroup control
-- Macro Installation and editing
-- Protected runtime editing environment
+- Macro installation and editing
+- Protected runtime configuration editing
 - Hardware and system telemetry
-- Live log viewer
-- Node information generation
+- Live SvxLink log viewer
+- Public node-information and LocationInfo generation
 - Multi-platform deployment support
 
-The project is intended for both:
+The project is intended for:
 
-1. Existing SvxLink users wanting a modern configuration/dashboard layer
+1. Existing SvxLink users who want a guided configuration and runtime dashboard.
+2. Appliance-style SvxLink installations on Raspberry Pi and NanoPi-Neo hardware.
+3. Linux PC and similar systems supported by the generic build structure.
 
-2. Complete appliance-style SvxLink images for Raspberry Pi, NanoPi-Neo, and a build structure for Linux PC and similar systems.
-NB the current structure is in English only and presented for the https://ukwide.svxlink.net, https://north.america.svxlink.net and the https://au.svxlink.net Svxreflectors
-
+The current dashboard is presented in English. Its configuration model is designed for use with standard SvxLink installations and independently operated SvxReflector services.
 ---
 
 # Features
