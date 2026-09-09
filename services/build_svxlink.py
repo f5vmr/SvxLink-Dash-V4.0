@@ -16,7 +16,6 @@ This is the authoritative build pipeline.
 
 from pathlib import Path
 import subprocess
-from unittest import result
 
 from models.node_model import (
     is_multiport_model,
@@ -25,7 +24,9 @@ from models.node_model import (
 from services.topology_validation import (
     validate_topology,
 )
-
+from services.node_info_validation import (
+    validate_node_information,
+)
 from services.node_info_service import write_node_info_json
 
 from hw_platforms import (
@@ -104,6 +105,12 @@ def validate_build(model):
     result = build_result()
 
     validation_errors = validate_model(model)
+    validation_errors.extend(
+        validate_node_information(
+            model.get("node_info", {}),
+            model.get("location_info", {}),
+        )
+    )
 
     if is_multiport_model(model):
         validation_errors.extend(

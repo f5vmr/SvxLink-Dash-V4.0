@@ -744,6 +744,22 @@ def validate_model(model):
 
     reflector = model.get("reflector", {})
 
+    reflector_route = str(
+        reflector.get("route") or "none"
+    ).strip().lower()
+
+    if (
+        not reflector.get("enabled")
+        and reflector_route not in {
+            "",
+            "none",
+        }
+    ):
+        errors.append(
+            "Complete the selected reflector route or choose "
+            "No reflector connection."
+        )
+
     if reflector.get("enabled"):
         route = str(
             reflector.get("route") or ""

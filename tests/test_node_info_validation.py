@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import unittest
-
+from models.node_model import new_node_model
+from services.build_svxlink import validate_build
 from services.node_info_validation import (
     validate_dms,
     validate_node_information,
@@ -118,6 +119,18 @@ class NodeInfoValidationTests(unittest.TestCase):
         self.assertIn(
             "LocationInfo comment must not exceed 36 characters.",
             errors,
+        )
+
+    def test_build_validation_includes_node_information(self):
+        model = new_node_model()
+        model["node_info"]["lat"] = "90.1"
+        model["location_info"]["enabled"] = False
+
+        result = validate_build(model)
+
+        self.assertIn(
+            "Decimal latitude must be between -90 and 90.",
+            result["validation_errors"],
         )
 
 if __name__ == "__main__":

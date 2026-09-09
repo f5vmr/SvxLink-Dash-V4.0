@@ -89,6 +89,31 @@ class ReflectorRouteValidationTests(
     unittest.TestCase
 ):
 
+    def test_selected_route_must_be_completed_or_cleared(self):
+        model = new_node_model()
+        model["reflector"].update({
+            "enabled": False,
+            "route": "v2",
+        })
+
+        errors = validate_model(model)
+
+        self.assertIn(
+            "Complete the selected reflector route or choose "
+            "No reflector connection.",
+            errors,
+        )
+
+        model["reflector"]["route"] = "none"
+
+        errors = validate_model(model)
+
+        self.assertNotIn(
+            "Complete the selected reflector route or choose "
+            "No reflector connection.",
+            errors,
+        )
+
     def test_federation_uses_nested_fields(self):
         model = new_node_model()
 

@@ -687,5 +687,231 @@ class WorkflowRoutingTests(unittest.TestCase):
                     template_text,
                 )
 
+    def test_invalid_model_cannot_start_build(self):
+        model = new_node_model()
+        validation = {
+            "validation_errors": [
+                "Callsign is required.",
+            ],
+            "platform_errors": [],
+        }
+        captured = {}
+
+        def capture_template(
+            template_name,
+            **context,
+        ):
+            captured["template_name"] = template_name
+            captured["context"] = context
+            return "rendered"
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "validate_build",
+            return_value=validation,
+        ) as validate_mock, patch.object(
+            dashboard,
+            "build_svxlink_configuration",
+        ) as build_mock, patch.object(
+            dashboard,
+            "render_template",
+            side_effect=capture_template,
+        ):
+            with dashboard.app.test_request_context(
+                "/build",
+                method="POST",
+                data={},
+            ):
+                response = dashboard.build_page()
+
+        self.assertEqual(response, "rendered")
+        self.assertEqual(
+            captured["template_name"],
+            "build.html",
+        )
+        self.assertFalse(
+            captured["context"]["build_allowed"],
+        )
+        self.assertEqual(
+            captured["context"]["validation_errors"],
+            validation["validation_errors"],
+        )
+        validate_mock.assert_called_once_with(model)
+        build_mock.assert_not_called()
+
+    def test_valid_model_may_start_build(self):
+        model = new_node_model()
+        validation = {
+            "validation_errors": [],
+            "platform_errors": [],
+        }
+        build_result = {
+            "success": True,
+            "service_status": "active",
+        }
+        captured = {}
+
+        def capture_template(
+            template_name,
+            **context,
+        ):
+            captured["template_name"] = template_name
+            captured["context"] = context
+            return "rendered"
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "validate_build",
+            return_value=validation,
+        ), patch.object(
+            dashboard,
+            "build_svxlink_configuration",
+            return_value=build_result,
+        ) as build_mock, patch.object(
+            dashboard,
+            "render_template",
+            side_effect=capture_template,
+        ):
+            with dashboard.app.test_request_context(
+                "/build",
+                method="POST",
+                data={},
+            ):
+                response = dashboard.build_page()
+
+        self.assertEqual(response, "rendered")
+        self.assertEqual(
+            captured["template_name"],
+            "done.html",
+        )
+        build_mock.assert_called_once_with(
+            model,
+            restart=True,
+        )
+
+    def test_invalid_review_cannot_continue_to_build(self):
+        model = new_node_model()
+        model["dashboard_auth"] = {
+            "username": "operator",
+            "password_hash": "test-password-hash",
+        }
+        validation = {
+            "validation_errors": [
+                "Callsign is required.",
+            ],
+            "platform_errors": [],
+        }
+        captured = {}
+
+        def capture_template(
+            template_name,
+            **context,
+        ):
+            captured["template_name"] = template_name
+            captured["context"] = context
+            return "rendered"
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "validate_build",
+            return_value=validation,
+        ), patch.object(
+            dashboard,
+            "render_template",
+            side_effect=capture_template,
+        ):
+            with dashboard.app.test_request_context(
+                "/review",
+                method="POST",
+                data={},
+            ):
+                response = dashboard.review_page()
+
+        self.assertEqual(response, "rendered")
+        self.assertEqual(
+            captured["template_name"],
+            "review.html",
+        )
+        self.assertFalse(
+            captured["context"]["review_allowed"],
+        )
+        self.assertEqual(
+            captured["context"]["validation_errors"],
+            validation["validation_errors"],
+        )
+
+    def test_valid_review_continues_to_build(self):
+        model = new_node_model()
+        model["dashboard_auth"] = {
+            "username": "operator",
+            "password_hash": "test-password-hash",
+        }
+        validation = {
+            "validation_errors": [],
+            "platform_errors": [],
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "validate_build",
+            return_value=validation,
+        ) as validate_mock:
+            with dashboard.app.test_request_context(
+                "/review",
+                method="POST",
+                data={},
+            ):
+                response = dashboard.review_page()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/build",
+        )
+        validate_mock.assert_called_once_with(model)
+
+    def test_review_template_contains_final_validation_summary(self):
+        template_text = Path(
+            "templates/review.html"
+        ).read_text(
+            encoding="utf-8"
+        )
+
+        dashboard.app.jinja_env.parse(template_text)
+
+        required_labels = (
+            "Primary-port completion",
+            "Reflector-route completion",
+            "ReflectorLogic callsign",
+            "Runtime-managed talkgroups",
+            "Installation-wide tones",
+            "LocationInfo completion",
+            "Reflector link ports",
+            "Independent ports",
+            "Local link",
+            "Resolve Configuration Issues",
+            "Repair Node Information",
+        )
+
+        for label in required_labels:
+            with self.subTest(label=label):
+                self.assertIn(label, template_text)
+
 if __name__ == "__main__":
     unittest.main()

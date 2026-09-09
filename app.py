@@ -48,7 +48,10 @@ from services.model_store import (
 from services.squelch_configuration import (
     parse_squelch_form,
 )
-from services.build_svxlink import build_svxlink_configuration
+from services.build_svxlink import (
+    build_svxlink_configuration,
+    validate_build,
+)
 
 from models.node_model import (
     ctcss_talkgroup_selection_available,
@@ -5014,16 +5017,74 @@ def node_info_edit_page():
 
 @app.route("/review", methods=["GET", "POST"])
 def review_page():
+
     model = load_node_model()
-    if not model.get("dashboard_auth", {}).get("password_hash"):
+
+    if not model.get(
+        "dashboard_auth",
+        {},
+    ).get("password_hash"):
         return redirect(url_for("setup_auth_page"))
-    if request.method == "POST":
+
+    validation = validate_build(model)
+
+    validation_errors = validation.get(
+        "validation_errors",
+        [],
+    )
+
+    platform_errors = validation.get(
+        "platform_errors",
+        [],
+    )
+
+    review_allowed = not (
+        validation_errors
+        or platform_errors
+    )
+
+    if request.method == "POST" and review_allowed:
         return redirect(url_for("build_page"))
 
-    return render_template("review.html", model=model)
+    reflector = model.get("reflector", {})
+    reflector_operational = reflector.get(
+        "operational",
+        {},
+    )
+    topology = model.get("topology", {})
+    enabled_ports = [
+        str(port)
+        for port in model.get("ports", {}).get("enabled", [])
+    ]
+
+    is_multi_port = is_multiport_build(model)
+
+    return render_template(
+        "review.html",
+        model=model,
+        validation_errors=validation_errors,
+        platform_errors=platform_errors,
+        review_allowed=review_allowed,
+        is_multi_port=is_multi_port,
+        enabled_ports=enabled_ports,
+        nodes=model.get("nodes", {}),
+        primary_port_id=get_primary_port_id(model),
+        primary_callsign=get_primary_callsign(model),
+        reflector=reflector,
+        reflector_operational=reflector_operational,
+        topology=topology,
+        tones=get_installation_tones(model),
+        location_info=model.get("location_info", {}),
+        node_information_errors=validate_node_information(
+            model.get("node_info", {}),
+            model.get("location_info", {}),
+        ),
+        version_info=get_version_info(),
+    )
 
 @app.route("/build", methods=["GET", "POST"])
 def build_page():
+
     model = load_node_model()
     result = None
 
@@ -5042,7 +5103,35 @@ def build_page():
         or len(enabled_ports) > 1
     )
 
+    validation = validate_build(model)
+    validation_errors = validation.get(
+        "validation_errors",
+        [],
+    )
+    platform_errors = validation.get(
+        "platform_errors",
+        [],
+    )
+
+    build_allowed = not (
+        validation_errors
+        or platform_errors
+    )
+
     if request.method == "POST":
+
+        if not build_allowed:
+            return render_template(
+                "build.html",
+                model=model,
+                build_result=None,
+                is_multi_port=is_multi_port,
+                validation_errors=validation_errors,
+                platform_errors=platform_errors,
+                build_allowed=False,
+                version_info=get_version_info(),
+            )
+
         result = build_svxlink_configuration(
             model,
             restart=True,
@@ -5053,7 +5142,11 @@ def build_page():
             model=model,
             svxlink_status=result.get("service_status"),
             build_result=result,
-            error=None if result.get("success") else "Build or launch failed.",
+            error=(
+                None
+                if result.get("success")
+                else "Build or launch failed."
+            ),
             is_multi_port=is_multi_port,
             version_info=get_version_info(),
         )
@@ -5063,6 +5156,9 @@ def build_page():
         model=model,
         build_result=result,
         is_multi_port=is_multi_port,
+        validation_errors=validation_errors,
+        platform_errors=platform_errors,
+        build_allowed=build_allowed,
         version_info=get_version_info(),
     )
 

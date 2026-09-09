@@ -17,7 +17,32 @@
             </div>
             
         </div>
+        {% if validation_errors or platform_errors %}
+            <div class="error">
+                The configuration cannot be built until the
+                following issues are corrected.
+            </div>
 
+            {% if validation_errors %}
+                <div class="form-section">
+                    <div class="label">Configuration issues</div>
+
+                    {% for err in validation_errors %}
+                        <p>{{ err }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if platform_errors %}
+                <div class="form-section">
+                    <div class="label">Platform issues</div>
+
+                    {% for err in platform_errors %}
+                        <p>{{ err }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
         {% if build_result %}
             {% if build_result.success %}
                 <p class="success">Configuration build completed successfully.</p>
@@ -86,7 +111,15 @@
                    href="{{ url_for('review_page') }}">
                     Back
                 </a>
-                <button class="button-primary" type="submit">Build Configuration</button>
+                <button class="button-primary"
+                        type="submit"
+                        {% if not build_allowed %}disabled{% endif %}>
+                    {% if build_allowed %}
+                        Build Configuration
+                    {% else %}
+                        Resolve Configuration Issues
+                    {% endif %}
+                </button>
             </div>
         </form>
     </section>

@@ -16,7 +16,70 @@
                 <p>Check the chosen settings before building the SvxLink configuration.</p>
             </div>
         </div>
+        {% if validation_errors or platform_errors %}
+            <div class="error">
+                The configuration is not ready to build. Correct
+                the following issues before continuing.
+            </div>
 
+            {% if validation_errors %}
+                <div class="form-section">
+                    <div class="label">Configuration issues</div>
+
+                    {% for err in validation_errors %}
+                        <p>{{ err }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if platform_errors %}
+                <div class="form-section">
+                    <div class="label">Platform issues</div>
+
+                    {% for err in platform_errors %}
+                        <p>{{ err }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="button-row">
+                {% if is_multi_port %}
+                    <a class="button-secondary"
+                       href="{{ url_for('port_config_page', reconfigure='1') }}">
+                        Repair Port Settings
+                    </a>
+
+                    <a class="button-secondary"
+                       href="{{ url_for('topology_page', reconfigure='1') }}">
+                        Repair Topology
+                    </a>
+                {% else %}
+                    <a class="button-secondary"
+                       href="{{ url_for('node_page', reconfigure='1') }}">
+                        Repair Node Settings
+                    </a>
+
+                    <a class="button-secondary"
+                       href="{{ url_for('interface_page', reconfigure='1') }}">
+                        Repair Radio Interface
+                    </a>
+
+                    <a class="button-secondary"
+                       href="{{ url_for('squelch_page', reconfigure='1') }}">
+                        Repair Squelch
+                    </a>
+                {% endif %}
+
+                <a class="button-secondary"
+                   href="{{ url_for('reflector_page', reconfigure='1') }}">
+                    Repair Reflector
+                </a>
+
+                <a class="button-secondary"
+                   href="{{ url_for('node_info_edit_page', reconfigure='1') }}">
+                    Repair Node Information
+                </a>
+            </div>
+            {% endif %}
         <div class="form-section">
             <div class="label">System</div>
             <p>Environment: {{ model.environment.region }}</p>
@@ -24,32 +87,94 @@
             <p>Time zone: {{ model.timezone.name }}</p>
         </div>
 
-        <div class="form-section">
-            <div class="label">Node</div>
-            <p>Type: {{ model.node.type }}</p>
-            <p>Callsign: {{ model.node.callsign }}</p>
-            <p>Platform: {{ model.platform.name }}</p>
-        </div>
+        {% if is_multi_port %}
+            <div class="form-section">
+                <div class="label">Primary installation identity</div>
 
-        <div class="form-section">
-            <div class="label">Interface</div>
-            <p>Mode: {{ model.interface.mode }}</p>
-            <p>SQL source: {{ model.interface.sql_source }}</p>
-            <p>PTT source: {{ model.interface.ptt_source }}</p>
-        </div>
+                <p>
+                    Primary port:
+                    {% if primary_port_id %}
+                        Port {{ primary_port_id }}
+                    {% else %}
+                        Not selected
+                    {% endif %}
+                </p>
 
-        <div class="form-section">
-            <div class="label">Squelch</div>
-            <p>Method: {{ model.squelch.method }}</p>
-            <p>CTCSS frequency: {{ model.squelch.ctcss_freq or 'Not set' }}</p>
-            <p>Transmit CTCSS: {{ 'Yes' if model.squelch.ctcss_tx else 'No' }}</p>
-        </div>
+                <p>
+                    Primary callsign:
+                    {{ primary_callsign }}
+                </p>
+                <p>
+                    Primary-port completion:
+                    {% if primary_port_id
+                          and nodes.get(
+                              primary_port_id,
+                              {}
+                          ).get("callsign") %}
+                        Complete
+                    {% else %}
+                        Incomplete
+                    {% endif %}
+                </p>
+            </div>
 
-        <div class="form-section">
-            <div class="label">Identification</div>
-            <p>Short: {{ model.ident.short.mode }} every {{ model.ident.short.interval }} minutes</p>
-            <p>Long: {{ model.ident.long.mode }} every {{ model.ident.long.interval }} minutes</p>
-        </div>
+            <div class="form-section">
+                <div class="label">Enabled radio ports</div>
+
+                {% for port_id in enabled_ports %}
+                    {% set node = nodes.get(port_id, {}) %}
+                    <p>
+                        Port {{ port_id }}:
+                        {{ node.get("callsign", "Callsign not set") }}
+                        —
+                        {{ node.get("role", "Role not set")|title }}
+                    </p>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="form-section">
+                <div class="label">Node</div>
+
+                <p>Type: {{ model.node.type }}</p>
+                <p>Callsign: {{ model.node.callsign }}</p>
+                <p>Platform: {{ model.platform.name }}</p>
+            </div>
+
+            <div class="form-section">
+                <div class="label">Interface</div>
+
+                <p>Mode: {{ model.interface.mode }}</p>
+                <p>SQL source: {{ model.interface.sql_source }}</p>
+                <p>PTT source: {{ model.interface.ptt_source }}</p>
+            </div>
+
+            <div class="form-section">
+                <div class="label">Squelch</div>
+
+                <p>Method: {{ model.squelch.method }}</p>
+                <p>
+                    CTCSS frequency:
+                    {{ model.squelch.ctcss_freq or "Not set" }}
+                </p>
+                <p>
+                    Transmit CTCSS:
+                    {{ "Yes" if model.squelch.ctcss_tx else "No" }}
+                </p>
+            </div>
+
+            <div class="form-section">
+                <div class="label">Identification</div>
+
+                <p>
+                    Short: {{ model.ident.short.mode }} every
+                    {{ model.ident.short.interval }} minutes
+                </p>
+                <p>
+                    Long: {{ model.ident.long.mode }} every
+                    {{ model.ident.long.interval }} minutes
+                </p>
+            </div>
+        {% endif %}
 
         <div class="form-section">
             <div class="label">Modules</div>
@@ -74,16 +199,224 @@
         </div>
         {% endif %}
 
+        {% set reflector_route = reflector.get("route", "none") %}
+        {% set reflector_settings = reflector.get(
+            reflector_route,
+            {}
+        ) %}
+
         <div class="form-section">
-            <div class="label">Reflector</div>
-            {% if model.reflector.enabled %}
-                <p>{{ model.reflector.name }}</p>
-                <p>{{ model.reflector.host }}:{{ model.reflector.port }}</p>
+            <div class="label">Reflector connection</div>
+
+            <p>
+                Route:
+                {% if reflector_route == "none" %}
+                    No reflector connection
+                {% elif reflector_route == "v2" %}
+                    SvxReflector Protocol 2
+                {% elif reflector_route == "v3" %}
+                    SvxReflector Protocol 3
+                {% else %}
+                    Federation Family reflector
+                {% endif %}
+            </p>
+            <p>
+                Reflector-route completion:
+                {% if reflector_route == "none"
+                      or reflector.get("enabled") %}
+                    Complete
+                {% else %}
+                    Incomplete
+                {% endif %}
+            </p>
+            {% if reflector.get("enabled") %}
+                <p>
+                    Reflector:
+                    {{ reflector_settings.get("name", "Not named") }}
+                </p>
+                <p>
+                    Server:
+                    {{ reflector_settings.get("host", "Not set") }}:
+                    {{ reflector_settings.get("port", "Not set") }}
+                </p>
+                <p>
+                    ReflectorLogic callsign:
+                    <strong>{{ primary_callsign }}</strong>
+                </p>
             {% else %}
-                <p>No reflector selected.</p>
+                <p>Reflector connection is disabled.</p>
             {% endif %}
         </div>
 
+        <div class="form-section">
+            <div class="label">Runtime-managed talkgroups</div>
+
+            <p>
+                Default talkgroup:
+                {{ reflector_operational.get("default_tg", 0) }}
+            </p>
+
+            <p>
+                Monitored talkgroups:
+                {% set monitored = reflector_operational.get(
+                    "monitor_tgs",
+                    []
+                ) %}
+                {% if monitored %}
+                    {{ monitored | join(", ") }}
+                {% else %}
+                    None
+                {% endif %}
+            </p>
+
+            <p>
+                Selection timeout:
+                {{ reflector_operational.get(
+                    "tg_select_timeout",
+                    60
+                ) }}
+                seconds
+            </p>
+        </div>
+        <div class="form-section">
+            <div class="label">Installation-wide tones</div>
+
+            <p>
+                Courtesy:
+                {{ tones.get("courtesy_mode", "none")|title }}
+                {% if tones.get("courtesy_mode", "none") != "none" %}
+                    at
+                    {{ tones.get("courtesy_frequency", 800) }} Hz
+                {% endif %}
+            </p>
+
+            <p>
+                Repeater idle:
+                {{ tones.get("idle_mode", "chime")|title }}
+            </p>
+
+            <p>
+                Repeater closedown:
+                {{ tones.get("closedown_mode", "biboop")|title }}
+            </p>
+
+            <p>
+                Completion:
+                {% if model.get("build", {}).get("tones_configured") %}
+                    Complete
+                {% else %}
+                    Incomplete
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="form-section">
+            <div class="label">Node Information / LocationInfo</div>
+
+            <p>
+                Node Information:
+                {% if node_information_errors %}
+                    Incomplete
+                {% else %}
+                    Complete
+                {% endif %}
+            </p>
+
+            <p>
+                LocationInfo publication:
+                {% if location_info.get("enabled") %}
+                    Enabled
+                {% else %}
+                    Disabled
+                {% endif %}
+            </p>
+
+            {% if location_info.get("enabled") %}
+                <p>
+                    LocationInfo completion:
+                    {% if node_information_errors %}
+                        Incomplete
+                    {% else %}
+                        Complete
+                    {% endif %}
+                </p>
+            {% endif %}
+        </div>
+
+        {% if is_multi_port %}
+            {% set reflector_ports = topology.get(
+                "reflector_link",
+                {}
+            ).get("ports", []) %}
+
+            {% set local_links = topology.get(
+                "local_links",
+                []
+            ) %}
+
+            {% set independent_ports = topology.get(
+                "independent_ports",
+                []
+            ) %}
+
+            <div class="form-section">
+                <div class="label">Port topology</div>
+
+                <p>
+                    Completion:
+                    {% if model.get("build", {}).get(
+                        "topology_configured"
+                    ) %}
+                        Complete
+                    {% else %}
+                        Incomplete
+                    {% endif %}
+                </p>
+
+                <p>
+                    Reflector link ports:
+                    {% if reflector_ports %}
+                        {% for port_id in reflector_ports %}
+                            Port {{ port_id }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        None
+                    {% endif %}
+                </p>
+
+                <p>
+                    Independent ports:
+                    {% if independent_ports %}
+                        {% for port_id in independent_ports %}
+                            Port {{ port_id }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        None
+                    {% endif %}
+                </p>
+
+                {% if local_links %}
+                    {% for link in local_links %}
+                        <p>
+                            Local link
+                            <strong>
+                                {{ link.get("name", "Unnamed link") }}
+                            </strong>:
+                            {% set link_ports = link.get("ports", []) %}
+                            {% if link_ports %}
+                                {% for port_id in link_ports %}
+                                    Port {{ port_id }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                No member ports
+                            {% endif %}
+                        </p>
+                    {% endfor %}
+                {% else %}
+                    <p>Local links: None</p>
+                {% endif %}
+            </div>
+        {% endif %}
         <form action="/review" method="post">
         <div class="button-row">
             {% if model.get("ports", {}).get("enabled", []) | length > 1
@@ -103,8 +436,14 @@
                 Return to Dashboard
             </a>
         
-            <button class="button-primary" type="submit">
-                Proceed to Build
+            <button class="button-primary"
+                    type="submit"
+                    {% if not review_allowed %}disabled{% endif %}>
+                {% if review_allowed %}
+                    Proceed to Build
+                {% else %}
+                    Resolve Configuration Issues
+                {% endif %}
             </button>
         </div>
         </form>
