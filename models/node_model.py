@@ -269,6 +269,11 @@ DEFAULT_MODEL = {
         "ctcss_freq": None,
         "ctcss_tx": False,
     },
+    "ctcss_to_tg": {
+        "enabled": False,
+        "delay_ms": 0,
+        "mappings": [],
+    },
     "echolink": {
         "enabled": False,
         "callsign": None,
@@ -499,6 +504,120 @@ def validate_squelch_configuration(
         )
     return errors
 
+def validate_ctcss_talkgroup_configuration(
+    configuration,
+    squelch,
+    label="CTCSS TalkGroup selection",
+):
+    """
+    Validate one logic core's local RF CTCSS-to-TalkGroup mapping.
+    """
+
+    if configuration is None:
+        return []
+
+    if not isinstance(configuration, dict):
+        return [
+            f"{label} configuration must be an object."
+        ]
+
+    errors = []
+
+    enabled = configuration.get("enabled", False)
+
+    if not isinstance(enabled, bool):
+        errors.append(
+            f"{label} enabled state must be true or false."
+        )
+
+    delay_ms = configuration.get("delay_ms", 0)
+
+    if (
+        not isinstance(delay_ms, int)
+        or isinstance(delay_ms, bool)
+        or delay_ms < 0
+    ):
+        errors.append(
+            f"{label} delay must be a whole number of "
+            "milliseconds, zero or greater."
+        )
+
+    mappings = configuration.get("mappings", [])
+
+    if not isinstance(mappings, list):
+        errors.append(
+            f"{label} mappings must be a list."
+        )
+        return errors
+
+    if enabled and not mappings:
+        errors.append(
+            f"{label} requires at least one tone mapping "
+            "when enabled."
+        )
+
+    if (
+        enabled
+        and not ctcss_talkgroup_selection_available(
+            squelch
+        )
+    ):
+        errors.append(
+            f"{label} is unavailable because CTCSS is "
+            "already used for squelch detection."
+        )
+
+    seen_tones = set()
+
+    for index, mapping in enumerate(mappings):
+        row_label = f"{label} row {index + 1}"
+
+        if not isinstance(mapping, dict):
+            errors.append(
+                f"{row_label} must be an object."
+            )
+            continue
+
+        tone_text = str(
+            mapping.get("tone") or ""
+        ).strip()
+
+        try:
+            tone = float(tone_text)
+        except (TypeError, ValueError):
+            tone = None
+
+        if tone is None or tone <= 0:
+            errors.append(
+                f"{row_label} must contain a positive "
+                "CTCSS frequency."
+            )
+        else:
+            normalised_tone = format(tone, "g")
+
+            if normalised_tone in seen_tones:
+                errors.append(
+                    f"{label} tone {normalised_tone} Hz "
+                    "is entered more than once."
+                )
+            else:
+                seen_tones.add(normalised_tone)
+
+        talkgroup_text = str(
+            mapping.get("talkgroup") or ""
+        ).strip()
+
+        if (
+            not talkgroup_text.isdigit()
+            or int(talkgroup_text) <= 0
+        ):
+            errors.append(
+                f"{row_label} must contain a positive "
+                "whole-number TalkGroup."
+            )
+
+    return errors
+
 
 def validate_model(model):
     """
@@ -538,7 +657,16 @@ def validate_model(model):
                 errors.append(
                     f"Port {port_id} callsign is required."
                 )
-
+            errors.extend(
+                validate_ctcss_talkgroup_configuration(
+                    node.get("ctcss_to_tg"),
+                    node.get("squelch", {}),
+                    label=(
+                        f"Port {port_id} CTCSS TalkGroup "
+                        "selection"
+                    ),
+                )
+            )
     else:
         if node_type not in SUPPORTED_NODE_TYPES:
             errors.append("Node type must be simplex or repeater.")
@@ -593,13 +721,23 @@ def validate_model(model):
         errors.append("Close-down tone mode is invalid.")
     
     if not multiport:
-        interface_mode = model.get("interface", {}).get("mode")
+        interface_mode = model.get(
+            "interface",
+            {},
+        ).get("mode")
 
         if interface_mode not in SUPPORTED_INTERFACE_MODES:
             errors.append("Interface mode is invalid.")
 
         errors.extend(
             validate_squelch_configuration(
+                model.get("squelch", {}),
+            )
+        )
+
+        errors.extend(
+            validate_ctcss_talkgroup_configuration(
+                model.get("ctcss_to_tg"),
                 model.get("squelch", {}),
             )
         )

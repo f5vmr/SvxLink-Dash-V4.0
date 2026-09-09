@@ -761,6 +761,53 @@ def render_macros(model):
         }
     )
 
+def render_ctcss_to_tg(configuration, example_delay=0):
+    """
+    Render local RF CTCSS-to-TalkGroup selection for one logic.
+    """
+
+    example_lines = (
+        "#CTCSS_TO_TG=77.0:999,123.0:9990,146.2:9992\n"
+        f"#CTCSS_TO_TG_DELAY={example_delay}"
+    )
+
+    if not isinstance(configuration, dict):
+        return example_lines
+
+    if not configuration.get("enabled"):
+        return example_lines
+
+    mappings = configuration.get("mappings", [])
+
+    if not isinstance(mappings, list) or not mappings:
+        return example_lines
+
+    mapping_values = []
+
+    for mapping in mappings:
+        if not isinstance(mapping, dict):
+            continue
+
+        tone = str(mapping.get("tone") or "").strip()
+        talkgroup = str(
+            mapping.get("talkgroup") or ""
+        ).strip()
+
+        if tone and talkgroup:
+            mapping_values.append(
+                f"{tone}:{talkgroup}"
+            )
+
+    if not mapping_values:
+        return example_lines
+
+    delay_ms = configuration.get("delay_ms", 0)
+
+    return (
+        f"CTCSS_TO_TG={','.join(mapping_values)}\n"
+        f"CTCSS_TO_TG_DELAY={delay_ms}"
+    )
+
 
 # =========================================================
 # Logic rendering
@@ -834,6 +881,12 @@ def render_active_logic(model):
 
         "ONLINE_CONTROL_BLOCK": render_online_control(),
         "DTMF_CTRL_PTY": get_dtmf_ctrl_pty(model),
+        "CTCSS_TO_TG_BLOCK": render_ctcss_to_tg(
+            model.get("ctcss_to_tg", {}),
+            example_delay=(
+                0 if node_type == "repeater" else 1000
+            ),
+        ),
         "IDLE_TIMEOUT": repeater.get(
             "idle_timeout",
             10,
@@ -922,7 +975,12 @@ def render_port_logic(model, port_id, node):
 
         "ONLINE_CONTROL_BLOCK": render_online_control(),
         "DTMF_CTRL_PTY": f"/dev/shm/port{port_id}_dtmf_ctrl",
-
+        "CTCSS_TO_TG_BLOCK": render_ctcss_to_tg(
+            node.get("ctcss_to_tg", {}),
+            example_delay=(
+                0 if role == "repeater" else 1000
+            ),
+        ),
         "IDLE_TIMEOUT": repeater.get("idle_timeout", 10),
         "OPEN_ON_CTCSS_LINE": render_open_on_ctcss_line(
             node.get("squelch", {})

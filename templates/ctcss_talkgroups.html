@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+<head>
+    <meta charset="UTF-8">
+    <title>Local RF CTCSS Talkgroups</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='site.css') }}">
+    <link rel="icon"
+          href="{{ url_for('static', filename='svxlink.ico') }}">
+</head>
+<body>
+<main class="page">
+<section class="card dashboard-container">
+    <div class="dashboard-header">
+        <h1>Local RF CTCSS Talkgroups</h1>
+        <p>
+            Assign locally received CTCSS tones to reflector
+            talkgroups.
+        </p>
+    </div>
+
+    {% include "navbar.html" %}
+
+    {% if saved %}
+        <p class="success">
+            CTCSS TalkGroup mappings saved successfully.
+        </p>
+    {% endif %}
+
+    {% if errors %}
+        <div class="error" role="alert">
+            <p>Please correct the following:</p>
+            <ul>
+                {% for message in errors %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="form-section">
+        <div class="note">
+            These mappings apply to local RF traffic received by
+            the selected radio logic. They are separate from
+            Monitoring TalkGroups, which control traffic received
+            from the reflector.
+            <br><br>
+            Do not use this facility where CTCSS is already the
+            port's ordinary squelch-access condition. Each selected
+            tone is deliberately assigned to one reflector
+            TalkGroup. DTMF TalkGroup selection remains available.
+        </div>
+    </div>
+
+    {% if multiport %}
+        {% if eligible_ports %}
+            <form method="get">
+                <div class="field-group">
+                    <label class="label" for="port">
+                        Radio port
+                    </label>
+                    <select class="input-field"
+                            id="port"
+                            name="port"
+                            onchange="this.form.submit()">
+                        {% for port in eligible_ports %}
+                            <option value="{{ port.id }}"
+                                    {% if port.id == selected_port %}selected{% endif %}>
+                                {{ port.label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        {% else %}
+            <p class="error">
+                No radio port is available for local RF CTCSS
+                TalkGroup selection.
+            </p>
+        {% endif %}
+    {% elif not logic_label %}
+        <p class="error">
+            Local RF CTCSS TalkGroup selection is unavailable
+            because CTCSS is already used for squelch detection.
+        </p>
+    {% endif %}
+
+    {% if logic_label %}
+        <form method="post"
+              action="{{ url_for(
+                  'ctcss_talkgroups_page',
+                  port=selected_port
+              ) if selected_port else url_for(
+                  'ctcss_talkgroups_page'
+              ) }}">
+            <div class="form-section">
+                <div class="label">{{ logic_label }}</div>
+
+                <div class="field-group">
+                    <label>
+                        <input type="checkbox"
+                               name="enabled"
+                               value="yes"
+                               {% if configuration.get("enabled") %}checked{% endif %}>
+                        Enable local RF CTCSS TalkGroup selection
+                        for this logic
+                    </label>
+                </div>
+
+                <div class="field-group">
+                    <label class="label" for="delay_ms">
+                        Tone detection delay, milliseconds
+                    </label>
+                    <input class="input-field"
+                           id="delay_ms"
+                           name="delay_ms"
+                           type="number"
+                           min="0"
+                           step="1"
+                           value="{{ configuration.get(
+                               'delay_ms',
+                               0
+                           ) }}">
+                    <div class="note">
+                        Use 0 for no additional delay. A positive
+                        delay prevents very short tone detections
+                        from selecting a TalkGroup.
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="label">
+                    Tone-to-TalkGroup mappings
+                </div>
+                <div class="note">
+                    Select a CTCSS tone and enter the positive
+                    whole-number TalkGroup assigned to it. The
+                    same tone cannot be entered more than once.
+                </div>
+
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>CTCSS tone</th>
+                            <th>TalkGroup</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mapping_rows">
+                    {% set mapping_rows = mappings if mappings else [
+                        {"tone": "", "talkgroup": ""}
+                    ] %}
+                    {% for mapping in mapping_rows %}
+                        <tr>
+                            <td>
+                                <select class="input-field"
+                                        name="tone_{{ loop.index0 }}">
+                                    {% for value, label in ctcss_tones %}
+                                        <option value="{{ value }}"
+                                                {% if mapping.get("tone", "") == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input class="input-field"
+                                       name="talkgroup_{{ loop.index0 }}"
+                                       type="text"
+                                       inputmode="numeric"
+                                       value="{{ mapping.get(
+                                           'talkgroup',
+                                           ''
+                                       ) }}"
+                                       placeholder="e.g. 235">
+                            </td>
+                            <td>
+                                <button class="button-secondary remove-mapping"
+                                        type="button">
+                                    Remove
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="button-row">
+                    <button class="button-secondary"
+                            id="add_mapping"
+                            type="button">
+                        Add mapping
+                    </button>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <a class="button-secondary"
+                   href="{{ url_for('status_page') }}">
+                    Cancel
+                </a>
+                <button class="button-primary" type="submit">
+                    Save and rebuild
+                </button>
+            </div>
+        </form>
+
+        <template id="mapping_template">
+            <tr>
+                <td>
+                    <select class="input-field" data-name="tone">
+                        {% for value, label in ctcss_tones %}
+                            <option value="{{ value }}">
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input class="input-field"
+                           data-name="talkgroup"
+                           type="text"
+                           inputmode="numeric"
+                           placeholder="e.g. 235">
+                </td>
+                <td>
+                    <button class="button-secondary remove-mapping"
+                            type="button">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+        </template>
+
+        <script>
+            (() => {
+                const rows = document.getElementById(
+                    "mapping_rows"
+                );
+                const addButton = document.getElementById(
+                    "add_mapping"
+                );
+                const template = document.getElementById(
+                    "mapping_template"
+                );
+
+                let nextIndex = rows.children.length;
+
+                function connectRemoveButton(button) {
+                    button.addEventListener("click", () => {
+                        button.closest("tr").remove();
+                    });
+                }
+
+                rows.querySelectorAll(
+                    ".remove-mapping"
+                ).forEach(connectRemoveButton);
+
+                addButton.addEventListener("click", () => {
+                    const fragment = template.content.cloneNode(
+                        true
+                    );
+
+                    fragment.querySelector(
+                        '[data-name="tone"]'
+                    ).name = `tone_${nextIndex}`;
+
+                    fragment.querySelector(
+                        '[data-name="talkgroup"]'
+                    ).name = `talkgroup_${nextIndex}`;
+
+                    const removeButton = fragment.querySelector(
+                        ".remove-mapping"
+                    );
+
+                    connectRemoveButton(removeButton);
+                    rows.appendChild(fragment);
+                    nextIndex += 1;
+                });
+            })();
+        </script>
+    {% endif %}
+
+    <footer class="site-footer">
+        SvxLink Software &copy; Tobias Blömberg SM0SVX<br>
+        SvxLink Configurator and Dashboard
+        &copy; Chris Jackson G4NAB<br>
+        Dashboard SvxLink-Dash-V4.0 |
+        SvxLink Package {{ version_info.package }} |
+        SvxLink {{ version_info.engine }}
+    </footer>
+</section>
+</main>
+</body>
+</html>

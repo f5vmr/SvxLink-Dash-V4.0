@@ -11,6 +11,7 @@ from models.node_model import (
     squelch_uses_ctcss,
     validate_model,
     validate_squelch_configuration,
+    validate_ctcss_talkgroup_configuration,
     ctcss_talkgroup_selection_available,
 )
 
@@ -358,6 +359,100 @@ class SquelchValidationTests(unittest.TestCase):
             )
         )
 
+class CtcssTalkgroupValidationTests(unittest.TestCase):
+
+    def valid_squelch(self):
+        return {
+            "method": "gpiod",
+            "advanced_example": None,
+            "combine_components": [],
+            "manual_detector": None,
+            "ctcss_freq": None,
+            "ctcss_tx": False,
+        }
+
+    def valid_configuration(self):
+        return {
+            "enabled": True,
+            "delay_ms": 1000,
+            "mappings": [
+                {
+                    "tone": "88.5",
+                    "talkgroup": "235",
+                },
+                {
+                    "tone": "123.0",
+                    "talkgroup": "2350",
+                },
+            ],
+        }
+
+    def errors(self, configuration, squelch=None):
+        return validate_ctcss_talkgroup_configuration(
+            configuration,
+            squelch or self.valid_squelch(),
+        )
+
+    def test_valid_mapping_configuration(self):
+        self.assertEqual(
+            self.errors(
+                self.valid_configuration()
+            ),
+            [],
+        )
+
+    def test_enabled_configuration_requires_mapping(self):
+        configuration = self.valid_configuration()
+        configuration["mappings"] = []
+
+        self.assertIn(
+            "requires at least one tone mapping",
+            " ".join(self.errors(configuration)),
+        )
+
+    def test_duplicate_tone_is_rejected(self):
+        configuration = self.valid_configuration()
+        configuration["mappings"][1]["tone"] = "88.50"
+
+        self.assertIn(
+            "tone 88.5 Hz is entered more than once",
+            " ".join(self.errors(configuration)),
+        )
+
+    def test_invalid_delay_and_talkgroup_are_rejected(self):
+        configuration = self.valid_configuration()
+        configuration["delay_ms"] = -1
+        configuration["mappings"][0]["talkgroup"] = "23.5"
+
+        errors = " ".join(
+            self.errors(configuration)
+        )
+
+        self.assertIn(
+            "delay must be a whole number",
+            errors,
+        )
+        self.assertIn(
+            "positive whole-number TalkGroup",
+            errors,
+        )
+
+    def test_ctcss_squelch_cannot_use_mapping(self):
+        squelch = self.valid_squelch()
+        squelch.update({
+            "method": "ctcss",
+            "ctcss_freq": "88.5",
+        })
+
+        self.assertIn(
+            "already used for squelch detection",
+            " ".join(
+                self.errors(
+                    self.valid_configuration(),
+                    squelch,
+                )
+            ),
+        )
 
 if __name__ == "__main__":
     unittest.main()

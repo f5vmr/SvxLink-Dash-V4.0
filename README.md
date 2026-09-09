@@ -63,10 +63,35 @@ Protected editing environment with authentication:
 
 - Talkgroup buttons
 - Monitoring talkgroups
+- Local RF CTCSS talkgroup selection
 - EchoLink module
 - Macro Editing
 - METAR module
 - Node information
+
+### Local RF CTCSS Talkgroup Selection
+
+The protected **CTCSS TGs** page maps CTCSS tones detected in locally
+received audio to SvxReflector talkgroups. Each eligible radio logic or
+multi-port receiver has its own independent mappings and selection delay.
+
+This facility is distinct from **Monitoring TalkGroups**:
+
+- CTCSS talkgroup mappings select a talkgroup from local RF activity.
+- Monitoring TalkGroups determine which talkgroups are received from the
+  connected reflector.
+- DTMF talkgroup selection remains available independently.
+
+A CTCSS tone may be mapped to only one talkgroup on a given radio logic.
+Different ports may use different mappings. Talkgroup values must be
+positive whole numbers, but the dashboard does not impose an arbitrary
+upper limit because the available talkgroups are determined by the
+connected reflector.
+
+The page is unavailable for a radio logic when CTCSS is already being
+used as its SQL detector. Saving valid mappings rebuilds the SvxLink
+configuration and restarts the service through the protected runtime
+editing path.
 
 ## Deployment Features
 

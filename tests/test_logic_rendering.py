@@ -263,6 +263,160 @@ class LogicRenderingTests(unittest.TestCase):
                     ],
                     expected_sql,
                 )
+    def test_disabled_single_logic_keeps_commented_example(self):
+        model = new_node_model()
+        model["node"].update({
+            "type": "simplex",
+            "callsign": "G4NAB",
+        })
+
+        captured = self.capture_single(model)
+
+        self.assertEqual(
+            captured["values"]["CTCSS_TO_TG_BLOCK"],
+            (
+                "#CTCSS_TO_TG="
+                "77.0:999,123.0:9990,146.2:9992\n"
+                "#CTCSS_TO_TG_DELAY=1000"
+            ),
+        )
+
+    def test_enabled_single_logic_renders_ctcss_talkgroups(self):
+        model = new_node_model()
+        model["node"].update({
+            "type": "simplex",
+            "callsign": "G4NAB",
+        })
+        model["ctcss_to_tg"] = {
+            "enabled": True,
+            "delay_ms": 750,
+            "mappings": [
+                {
+                    "tone": "77.0",
+                    "talkgroup": "235",
+                },
+                {
+                    "tone": "123.0",
+                    "talkgroup": "2350",
+                },
+            ],
+        }
+
+        captured = self.capture_single(model)
+
+        self.assertEqual(
+            captured["values"]["CTCSS_TO_TG_BLOCK"],
+            (
+                "CTCSS_TO_TG=77.0:235,123.0:2350\n"
+                "CTCSS_TO_TG_DELAY=750"
+            ),
+        )
+
+    def test_disabled_repeater_keeps_zero_delay_example(self):
+        model = new_node_model()
+        model["node"].update({
+            "type": "repeater",
+            "callsign": "G4NAB",
+        })
+
+        captured = self.capture_single(model)
+
+        self.assertEqual(
+            captured["values"]["CTCSS_TO_TG_BLOCK"],
+            (
+                "#CTCSS_TO_TG="
+                "77.0:999,123.0:9990,146.2:9992\n"
+                "#CTCSS_TO_TG_DELAY=0"
+            ),
+        )
+
+    def test_port_logic_uses_only_its_own_ctcss_mappings(self):
+        model = new_node_model()
+
+        port_one = {
+            "role": "simplex",
+            "callsign": "G4NAB-1",
+            "ident": {},
+            "cw": {},
+            "repeater": {},
+            "squelch": {
+                "method": "gpiod",
+                "ctcss_tx": False,
+            },
+            "ctcss_to_tg": {
+                "enabled": True,
+                "delay_ms": 400,
+                "mappings": [
+                    {
+                        "tone": "88.5",
+                        "talkgroup": "235",
+                    },
+                ],
+            },
+        }
+        port_two = {
+            "role": "repeater",
+            "callsign": "G4NAB-2",
+            "ident": {},
+            "cw": {},
+            "repeater": {},
+            "squelch": {
+                "method": "hidraw",
+                "ctcss_tx": False,
+            },
+            "ctcss_to_tg": {
+                "enabled": True,
+                "delay_ms": 900,
+                "mappings": [
+                    {
+                        "tone": "94.8",
+                        "talkgroup": "505",
+                    },
+                ],
+            },
+        }
+
+        captured = []
+
+        def capture(template_name, values):
+            captured.append({
+                "template": template_name,
+                "values": values,
+            })
+            return "rendered"
+
+        with patch(
+            "renderers.svxlink_renderer."
+            "render_config_template",
+            side_effect=capture,
+        ):
+            render_port_logic(model, "1", port_one)
+            render_port_logic(model, "2", port_two)
+
+        self.assertEqual(
+            captured[0]["values"]["CTCSS_TO_TG_BLOCK"],
+            (
+                "CTCSS_TO_TG=88.5:235\n"
+                "CTCSS_TO_TG_DELAY=400"
+            ),
+        )
+        self.assertNotIn(
+            "94.8:505",
+            captured[0]["values"]["CTCSS_TO_TG_BLOCK"],
+        )
+
+        self.assertEqual(
+            captured[1]["values"]["CTCSS_TO_TG_BLOCK"],
+            (
+                "CTCSS_TO_TG=94.8:505\n"
+                "CTCSS_TO_TG_DELAY=900"
+            ),
+        )
+        self.assertNotIn(
+            "88.5:235",
+            captured[1]["values"]["CTCSS_TO_TG_BLOCK"],
+        )
+
     def test_shared_template_structure(self):
         template_dir = Path(
             "templates/config"
@@ -286,6 +440,15 @@ class LogicRenderingTests(unittest.TestCase):
             simplex,
             repeater,
         ):
+
+            self.assertIn(
+                "{{CTCSS_TO_TG_BLOCK}}",
+                template,
+            )
+            self.assertNotIn(
+                "#CTCSS_TO_TG=77.0:999",
+                template,
+            )
             self.assertIn(
                 "RGR_SOUND_DELAY={{RGR_SOUND_DELAY}}",
                 template,

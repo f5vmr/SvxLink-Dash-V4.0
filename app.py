@@ -43,17 +43,18 @@ from services.model_store import (
     load_node_model,
     save_node_model,
     CTCSS_TONES,
+    normalise_ctcss_tone,
 )
 from services.squelch_configuration import (
     parse_squelch_form,
 )
 from services.build_svxlink import build_svxlink_configuration
 
-from services.model_store import (
-    load_node_model,
-    save_node_model,
+from models.node_model import (
+    ctcss_talkgroup_selection_available,
+    get_installation_tones,
+    validate_ctcss_talkgroup_configuration,
 )
-from models.node_model import get_installation_tones
 ## Wifi
 from services.wifi_service import (
     wifi_scan,
@@ -1132,6 +1133,19 @@ def initialise_port_nodes(model, profile):
         )
         node.setdefault("configured", False)
         node.setdefault("tx_delay", 500)
+        node.setdefault("ctcss_to_tg", {})
+        node["ctcss_to_tg"].setdefault(
+            "enabled",
+            False,
+        )
+        node["ctcss_to_tg"].setdefault(
+            "delay_ms",
+            0,
+        )
+        node["ctcss_to_tg"].setdefault(
+            "mappings",
+            [],
+        )
         node.setdefault("audio", {})
         node["audio"].setdefault("rx_audio", mapping.get("rx_audio"))
         node["audio"].setdefault("tx_audio", mapping.get("tx_audio"))
@@ -5478,6 +5492,261 @@ def macros_page():
         saved=saved,
         error=error,
     )
+
+@app.route(
+    "/ctcss-talkgroups",
+    methods=["GET", "POST"],
+)
+def ctcss_talkgroups_page():
+
+    if not session.get("authorised"):
+        return redirect(
+            url_for(
+                "authorise_page",
+                next=request.path,
+            )
+        )
+
+    model = load_node_model()
+    multiport = is_multiport_build(model)
+    eligible_ports = []
+    selected_port = None
+    logic_label = ""
+    target = None
+    squelch = {}
+    errors = []
+    saved = request.args.get("saved") == "1"
+
+    empty_configuration = {
+        "enabled": False,
+        "delay_ms": 0,
+        "mappings": [],
+    }
+
+    configuration = empty_configuration.copy()
+
+    if multiport:
+        nodes = model.get("nodes", {})
+        enabled_ports = [
+            str(port)
+            for port in model.get(
+                "ports",
+                {},
+            ).get("enabled", [])
+        ]
+
+        for port_id in enabled_ports:
+            node = nodes.get(port_id, {})
+
+            if ctcss_talkgroup_selection_available(
+                node.get("squelch", {})
+            ):
+                eligible_ports.append({
+                    "id": port_id,
+                    "label": (
+                        node.get("name")
+                        or f"Port {port_id}"
+                    ),
+                })
+
+        requested_port = str(
+            request.args.get("port") or ""
+        ).strip()
+
+        eligible_ids = [
+            port["id"]
+            for port in eligible_ports
+        ]
+
+        if requested_port in eligible_ids:
+            selected_port = requested_port
+        elif eligible_ids:
+            selected_port = eligible_ids[0]
+
+        if selected_port is not None:
+            target = nodes.get(selected_port, {})
+            squelch = target.get("squelch", {})
+            configuration = target.get(
+                "ctcss_to_tg",
+                empty_configuration,
+            )
+            logic_label = (
+                target.get("name")
+                or f"Port {selected_port}"
+            )
+
+    else:
+        squelch = model.get("squelch", {})
+
+        if ctcss_talkgroup_selection_available(
+            squelch
+        ):
+            target = model
+            configuration = model.get(
+                "ctcss_to_tg",
+                empty_configuration,
+            )
+            logic_label = (
+                model.get("node", {}).get("type")
+                or "single-port"
+            ).title()
+
+    if not isinstance(configuration, dict):
+        configuration = empty_configuration.copy()
+
+    mappings = configuration.get(
+        "mappings",
+        [],
+    )
+
+    if not isinstance(mappings, list):
+        mappings = []
+
+    if request.method == "POST":
+        if target is None:
+            errors.append(
+                "No eligible radio logic is available for "
+                "local RF CTCSS TalkGroup selection."
+            )
+        else:
+            enabled = (
+                request.form.get("enabled") == "yes"
+            )
+
+            delay_text = str(
+                request.form.get("delay_ms") or ""
+            ).strip()
+
+            try:
+                delay_ms = int(delay_text)
+            except ValueError:
+                delay_ms = delay_text
+
+            submitted_mappings = []
+            mapping_indices = sorted({
+                int(field_name[5:])
+                for field_name in request.form
+                if (
+                    field_name.startswith("tone_")
+                    and field_name[5:].isdigit()
+                )
+            })
+
+            for index in mapping_indices:
+                tone_text = str(
+                    request.form.get(
+                        f"tone_{index}"
+                    ) or ""
+                ).strip()
+
+                talkgroup_text = str(
+                    request.form.get(
+                        f"talkgroup_{index}"
+                    ) or ""
+                ).strip()
+
+                if not tone_text and not talkgroup_text:
+                    continue
+
+                tone = normalise_ctcss_tone(
+                    tone_text
+                )
+
+                if not tone:
+                    errors.append(
+                        f"Row {index + 1}: select a valid "
+                        "CTCSS tone."
+                    )
+                    tone = tone_text
+
+                if (
+                    talkgroup_text.isdigit()
+                    and int(talkgroup_text) > 0
+                ):
+                    talkgroup = str(
+                        int(talkgroup_text)
+                    )
+                else:
+                    talkgroup = talkgroup_text
+
+                submitted_mappings.append({
+                    "tone": tone,
+                    "talkgroup": talkgroup,
+                })
+
+            configuration = {
+                "enabled": enabled,
+                "delay_ms": delay_ms,
+                "mappings": submitted_mappings,
+            }
+            mappings = submitted_mappings
+
+            errors.extend(
+                validate_ctcss_talkgroup_configuration(
+                    configuration,
+                    squelch,
+                    label=(
+                        f"{logic_label} CTCSS TalkGroup "
+                        "selection"
+                    ),
+                )
+            )
+
+            if not errors:
+                target["ctcss_to_tg"] = configuration
+
+                if multiport:
+                    nodes[selected_port] = target
+                    model["nodes"] = nodes
+                else:
+                    model["ctcss_to_tg"] = (
+                        configuration
+                    )
+
+                save_node_model(model)
+
+                result = build_svxlink_configuration(
+                    model,
+                    restart=True,
+                )
+
+                if result.get("success"):
+                    redirect_arguments = {
+                        "saved": "1",
+                    }
+
+                    if selected_port is not None:
+                        redirect_arguments["port"] = (
+                            selected_port
+                        )
+
+                    return redirect(
+                        url_for(
+                            "ctcss_talkgroups_page",
+                            **redirect_arguments,
+                        )
+                    )
+
+                errors.append(
+                    "The mappings were saved, but the "
+                    "SvxLink rebuild or restart failed."
+                )
+
+    return render_template(
+        "ctcss_talkgroups.html",
+        model=model,
+        multiport=multiport,
+        eligible_ports=eligible_ports,
+        selected_port=selected_port,
+        logic_label=logic_label,
+        configuration=configuration,
+        mappings=mappings,
+        ctcss_tones=CTCSS_TONES,
+        errors=errors,
+        saved=saved,
+    )
+
+
 def normalise_monitor_talkgroup(value):
     """
     Validate and normalize one Monitoring TalkGroup entry.

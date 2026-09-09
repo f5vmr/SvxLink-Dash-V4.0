@@ -152,6 +152,11 @@
         "ctcss_freq": null,
         "ctcss_tx": false
     },
+    "ctcss_to_tg": {
+        "enabled": false,
+        "delay_ms": 0,
+        "mappings": []
+    },
     "echolink": {
         "enabled": false,
         "callsign": null,
