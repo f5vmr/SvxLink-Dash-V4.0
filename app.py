@@ -5169,8 +5169,18 @@ def setup_auth_page():
 
     auth = model.get(
         "dashboard_auth",
-        {}
+        {},
     )
+
+    return_to = str(
+        request.values.get("return_to") or "start"
+    ).strip().lower()
+
+    if return_to not in {
+        "start",
+        "review",
+    }:
+        return_to = "start"
 
     error = None
 
@@ -5178,20 +5188,18 @@ def setup_auth_page():
 
         username = request.form.get(
             "username",
-            ""
+            "",
         ).strip()
 
         password = request.form.get(
             "password",
-            ""
+            "",
         ).strip()
 
         if not username or not password:
-
             error = "Username and password are required."
 
         else:
-
             model["dashboard_auth"] = {
                 "username": username,
                 "password_hash": generate_password_hash(password),
@@ -5199,13 +5207,21 @@ def setup_auth_page():
 
             save_node_model(model)
             session.permanent = True
-            session["authorised"] = True 
-            return redirect(url_for("review_page"))
+            session["authorised"] = True
+
+            if return_to == "review":
+                return redirect(url_for("review_page"))
+
+            return redirect(url_for("start"))
 
     return render_template(
         "setup_auth.html",
+        model=model,
         auth=auth,
+        return_to=return_to,
+        is_multi_port=is_multiport_build(model),
         error=error,
+        version_info=get_version_info(),
     )
 
 @app.route("/done", methods=["GET"])
