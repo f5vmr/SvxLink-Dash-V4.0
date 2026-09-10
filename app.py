@@ -5301,6 +5301,23 @@ def status_page():
             for module in enabled_modules
         ]
 
+    primary_port_id = get_primary_port_id(model)
+    primary_callsign = get_primary_callsign(model)
+
+    try:
+        topology_memberships = get_topology_memberships(
+            model
+        )
+    except ValueError:
+        topology_memberships = {}
+
+    selected_topology_memberships = (
+        topology_memberships.get(
+            str(selected_port),
+            [],
+        )
+    )
+
     return render_template(
         "status.html",
         model=model,
@@ -5313,6 +5330,11 @@ def status_page():
         system_info=system_info,
         enabled_ports=enabled_ports,
         selected_port=selected_port,
+        primary_port_id=primary_port_id,
+        primary_callsign=primary_callsign,
+        selected_topology_memberships=(
+            selected_topology_memberships
+        ),
         port_count=len(enabled_ports),
         version_info=get_version_info(),
     )
@@ -6744,16 +6766,44 @@ def logout_page():
 @app.route("/dtmf", methods=["POST"])
 def dtmf_page():
     command = request.form.get("command", "").strip()
+    selected_port = str(
+        request.values.get("selected_port") or ""
+    ).strip()
 
+    model = load_node_model()
+
+    enabled_ports = [
+        str(port)
+        for port in model.get("ports", {}).get("enabled", [])
+    ]
+
+    if selected_port not in enabled_ports:
+        selected_port = (
+            enabled_ports[0]
+            if enabled_ports
+            else ""
+        )
 
     try:
-        send_dtmf(command)
+        send_dtmf(
+            command,
+            selected_port=selected_port,
+        )
 
     except Exception as exc:
         print(f"DTMF send failed: {exc}")
-        return redirect(url_for("status_page"))
 
-    return redirect(url_for("status_page"))
+    route_arguments = {}
+
+    if selected_port:
+        route_arguments["port"] = selected_port
+
+    return redirect(
+        url_for(
+            "status_page",
+            **route_arguments,
+        )
+    )
     
 if __name__ == "__main__":
     ensure_dirs()

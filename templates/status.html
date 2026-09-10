@@ -37,6 +37,13 @@
             <p>
                 Live runtime monitoring
             </p>
+            {% if primary_port_id %}
+                <p>
+                    <strong>Installation:</strong>
+                    {{ primary_callsign }}
+                    &mdash; Primary Port {{ primary_port_id }}
+                </p>
+            {% endif %}
         </div>
         {% include "navbar.html" %}
 
@@ -67,7 +74,12 @@
         
         </div>
         {% endif %}
-        
+        {% if selected_topology_memberships %}
+            <div class="note">
+                <strong>Port {{ selected_port }} topology:</strong>
+                {{ selected_topology_memberships | join(', ') }}
+            </div>
+        {% endif %}
         <div class="dashboard-grid">
 
             <div class="dashboard-panel">
@@ -259,7 +271,7 @@
 
                 {% if session.get("authorised") %}
                 <td>
-                    <form action="{{ url_for('dtmf_page') }}"
+                    <form action="{{ url_for('dtmf_page', selected_port=selected_port) }}"
                           method="post"
                           style="display:inline;">
                         <input type="hidden"
@@ -276,7 +288,7 @@
                 </td>
 
                 <td>
-                    <form action="{{ url_for('dtmf_page') }}"
+                    <form action="{{ url_for('dtmf_page', selected_port=selected_port) }}"
                           method="post"
                           style="display:inline;">
                         <input type="hidden"
@@ -309,7 +321,7 @@
 {% if session.get("authorised") %}
 <div class="tg-button-row">
     {% for tg in talkgroups %}
-    <form action="{{ url_for('dtmf_page') }}"
+    <form action="{{ url_for('dtmf_page', selected_port=selected_port) }}"
           method="post"
           style="display:inline;">
         <input type="hidden"
@@ -331,7 +343,7 @@
         Manual DTMF Command Entry
     </div>
 
-    <form action="{{ url_for('dtmf_page') }}"
+    <form action="{{ url_for('dtmf_page', selected_port=selected_port) }}"
           method="post"
           class="manual-dtmf-form">
         <input type="text"
@@ -481,7 +493,7 @@ function updateStatusPage(data) {
             if (activityControlsAuthorised) {
                 controls =
                     '<td>' +
-                        '<form action="{{ url_for("dtmf_page") }}" ' +
+                        '<form action="{{ url_for("dtmf_page", selected_port=selected_port) }}" ' +
                               'method="post" style="display:inline;">' +
                             '<input type="hidden" name="command" ' +
                                    'value="94' + row.tg + '#">' +
@@ -494,7 +506,7 @@ function updateStatusPage(data) {
                         '</form>' +
                     '</td>' +
                     '<td>' +
-                        '<form action="{{ url_for("dtmf_page") }}" ' +
+                        '<form action="{{ url_for("dtmf_page", selected_port=selected_port) }}" ' +
                               'method="post" style="display:inline;">' +
                             '<input type="hidden" name="command" ' +
                                    'value="91' + row.tg + '#">' +
