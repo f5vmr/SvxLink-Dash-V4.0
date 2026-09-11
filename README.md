@@ -715,130 +715,158 @@ A Rebuild can overwrite manual changes made directly to managed files. Before re
 
 Specialist configuration that is not guided by the dashboard should be maintained only in documented, manually managed sections or files.
 
+## Reflector configuration and security
 
-# Reflector Protocol Notice
+SvxLink-Dash V4.0 supports four distinct reflector routes:
 
-SvxLink-Dash-V3.2 was written primarily for the following SvxReflector Protocol 2 networks running SvxLink Version 26.05.1:
+* No reflector
+* Federation Family reflector using Protocol 2
+* Independent reflector using Protocol 2
+* Reflector using Protocol 3 and X.509 certificates
 
-* UKWide
-* North America
-* Australia
+Before configuring reflector access, confirm the required connection and authentication method with the destination reflector administrator.
 
-Other SvxReflectors may also be configured. Before beginning reflector setup, the operator must confirm the authentication method required by the destination reflector manager:
+## No reflector
 
-* Callsign and password authentication using SvxReflector Protocol 2.
-* X.509 certificate authentication using SvxReflector Protocol 3.
+The installation operates without `ReflectorLogic`.
 
-For Protocol 2, the operator must obtain the required connection address, port and password from the reflector manager.
+A single-port radio logic remains independently operational. Multi-port installations may contain independent ports and local port-to-port links.
 
-For Protocol 3, the configuration workflow will collect the information required to generate the appropriate `[ReflectorLogic]` certificate settings. SvxLink then manages creation of the private key and Certificate Signing Request, submission of the request to the reflector, and retrieval of the signed client certificate after approval by the reflector manager.
+No reflector connection, authentication or talkgroup-routing configuration is generated.
 
-Successful Protocol 3 access depends on the destination reflector having a correctly configured certificate chain, CA bundle and server identity.
+## Federation Family reflector
 
-## Reflector Selection Routes
+The Federation Family comprises:
 
-Reflector configuration provides four distinct routes.
-
-### No Reflector
-
-The installation operates locally without ReflectorLogic.
-
-For a multi-port installation, local port-to-port links may still be configured.
-
-### Federation Family Reflector
-
-The Federation Family currently comprises:
-
-* UKWide
+* UK-Wide
 * North America
 * Australia
 * YorkshireNet
 
-The selected reflector supplies predefined connection details, including its name, hostname, port, website and suggested monitoring talkgroups.
-
-The operator must enter the 16-character password issued by the selected reflector.
+The dashboard supplies the predefined connection information for the selected reflector, including its hostname, port, website and suggested monitoring talkgroups.
 
 Federation Family access uses SvxReflector Protocol 2 callsign-and-password authentication.
 
-The password must contain exactly 16 characters.
+The operator must enter the network password issued for the node callsign. This password must contain exactly 16 characters.
 
-### Other Protocol 2 Reflector
+The 16-character requirement applies specifically to the Federation Family route. It is not a general Protocol 2 requirement.
 
-The operator must obtain the following information from the destination reflector manager:
+## Independent Protocol 2 reflector
 
-* Reflector name.
-* Hostname or IP address.
-* Port number.
-* Authentication password.
-* Any recommended default or monitoring talkgroups.
+An independently operated Protocol 2 reflector uses connection information supplied by its administrator.
 
-The password is passed to SvxLink as the ReflectorLogic `AUTH_KEY`.
+The operator must obtain:
 
-The dashboard must not impose the Federation Family 16-character password rule on an independent Protocol 2 reflector. It must accept the password supplied by that reflector’s manager.
+* Reflector name
+* Hostname or IP address
+* Port number
+* Authentication password
+* Any recommended default or monitoring talkgroups
 
-### Protocol 3 Reflector
+The password is rendered as the `AUTH_KEY` in `ReflectorLogic`.
 
-The operator must obtain the following information from the destination reflector manager:
+The dashboard accepts the password specified by the reflector administrator. It does not apply the Federation Family’s 16-character password rule to an independent Protocol 2 reflector.
 
-* Reflector name.
-* Hostname or IP address.
-* Port number.
-* Any required certificate identity information.
-* Any recommended default or monitoring talkgroups.
+Protocol 2 uses a shared authentication password. It does not use the Protocol 3 certificate-request and approval process.
 
-Protocol 3 uses X.509 certificate authentication rather than a shared reflector password.
+## Protocol 3 reflector
 
-SvxLink generates the client private key and Certificate Signing Request, downloads the reflector CA bundle, and submits the request to the reflector.
+Protocol 3 uses X.509 client-certificate authentication rather than a shared reflector password.
 
-The reflector manager must inspect and approve the pending request before the node receives its signed client certificate and completes authentication.
+The operator must obtain:
 
-Successful access depends on the destination reflector having:
+* Reflector name
+* Hostname or IP address
+* Port number
+* Any identity information required by the reflector administrator
+* Any recommended default or monitoring talkgroups
 
-* A valid root, issuing and server certificate chain.
-* A CA bundle containing the active root certificate.
-* A server certificate covering the supplied hostname or IP address.
-* A working process for reviewing and signing pending client requests.
+The dashboard generates the required `ReflectorLogic` certificate settings using the primary installation callsign.
 
-The client cannot repair or bypass an incorrectly configured reflector certificate system.
+SvxLink then performs the client-certificate process:
 
-## Common Reflector Information
+1. Create the client private key.
+2. Create a Certificate Signing Request.
+3. Obtain the reflector’s CA bundle.
+4. Submit the certificate request to the reflector.
+5. Wait for approval by the reflector administrator.
+6. Retrieve the signed client certificate.
+7. Authenticate to the reflector using that certificate.
 
-The node callsign is taken from the configured radio installation and must not be entered again unless a separate reflector identity is explicitly required.
+The private key must remain on the node and must not be shared.
 
-Standard certificate paths, filenames and safe connection defaults are generated automatically and are not presented as routine questions.
+The reflector administrator must inspect and approve the pending request before the node can complete certificate authentication.
 
-Default and monitoring talkgroups remain specific to the selected reflector and installation.
+Successful Protocol 3 operation also depends on the reflector having:
 
-For multi-port installations, reflector access is configured after all ports have been defined. The operator then selects which available ports participate in the single reflector link.
+* A valid root, issuing and server certificate chain
+* A CA bundle containing the active root certificate
+* A server certificate covering the hostname or IP address used by the client
+* A working certificate-request review and approval process
+
+The hostname or IP address entered in the dashboard must match an identity contained in the reflector’s server certificate. A certificate issued for a DNS hostname will not validate when the node connects using an unrelated IP address.
+
+The client dashboard cannot repair or bypass an incorrectly configured reflector certificate system.
+
+### Certificate identity and reapproval
+
+The primary installation callsign becomes the `ReflectorLogic` callsign and the Protocol 3 client-certificate identity.
+
+Changing that callsign changes the node’s certificate identity. A deliberate primary-callsign change may therefore require:
+
+* A new private key and Certificate Signing Request
+* A new approval by the reflector administrator
+* A new signed client certificate
+
+Changing the primary installation identity should not be treated as an ordinary cosmetic change on a Protocol 3 installation.
+
+## Common reflector behaviour
+
+The reflector callsign is taken from the primary installation identity. It does not need to be entered again during routine reflector setup.
+
+Standard certificate paths, filenames and safe connection defaults are generated automatically where applicable.
+
+Default and monitoring talkgroups remain specific to the selected reflector and installation. They may be configured after the reflector connection has been established.
+
+In a multi-port installation, the operator selects which enabled radio ports participate in the reflector link.
 
 Each participating radio logic is added to `CONNECT_LOGICS` with the required `:9` DTMF control suffix.
 
-A port assigned to the reflector link cannot belong to any local port-to-port link.
+A port assigned to the reflector link cannot also belong to a local port-to-port link.
 
-# Current Limitations
+SvxLink-Dash supports one `ReflectorLogic` and one reflector destination within an installation. Multiple selected radio ports may share that connection.
 
-Currently not implemented:
+## Scope limitations
 
-- Browser audio streaming
+The initial SvxLink-Dash V4.0 release does not provide guided configuration for:
 
-This may be added in future versions.
+* Browser audio streaming
+* Complete RemoteTrx deployment
+* NetRx or NetTx deployment
+* MultiRx or MultiTx specialist deployment
+* Complete RTL-SDR installation and calibration
+* LADSPA filter design
+* Audio compressor design
+* Automatic reflector-account approval
+* Automatic Protocol 3 certificate approval
+* External network validation beyond safe connection checks
 
----
+Relevant upstream-compatible configuration sections may remain available for manual administration.
 
-# Credits
+A dashboard Rebuild can overwrite manual changes made to dashboard-managed files. Preserve specialist configuration in documented manually managed sections or files.
 
-SvxLink Software: Version 26.05.1
+## Credits
 
-Tobias Blömberg SM0SVX
+SvxLink 26.05.1 is developed by Tobias Blömberg, SM0SVX.
 
-Version 3.2
+SvxLink-Dash V4.0 is developed by Chris Jackson, G4NAB.
 
-was developed by Chris Jackson, G4NAB.
-Additional assistance with Python, Flask, configuration rendering,
-debugging and documentation was provided through ChatGPT by OpenAI.
+Additional assistance with Python, Flask, configuration rendering, testing, debugging and documentation was provided through ChatGPT by OpenAI.
 
----
+## Licence
 
-# License
+SvxLink-Dash V4.0 is free software distributed under the GNU General Public License version 3.
 
-This project is distributed as useful to the amateur radio community.
+You may use, modify and redistribute it under the terms contained in the repository’s [`LICENSE`](LICENSE) file.
+
+SvxLink itself is developed and licensed separately by Tobias Blömberg, SM0SVX. Files derived from or supplied by SvxLink retain their original copyright and licensing terms.
