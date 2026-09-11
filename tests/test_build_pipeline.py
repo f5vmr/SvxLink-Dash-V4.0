@@ -9,17 +9,18 @@ from services import build_svxlink as pipeline
 
 class BuildPipelineResultTests(unittest.TestCase):
 
-    def run_pipeline(self, restart, service_status):
-        model = {
-            "node": {
-                "type": "simplex",
-                "callsign": "G4NAB",
-            },
-            "ports": {
-                "enabled": [],
-            },
-            "nodes": {},
-        }
+    def run_pipeline(self, restart, service_status, model=None):
+        if model is None:
+            model = {
+                "node": {
+                    "type": "simplex",
+                    "callsign": "G4NAB",
+                },
+                "ports": {
+                    "enabled": [],
+                },
+                "nodes": {},
+            }
 
         replacements = {
             "validate_build": Mock(return_value={
@@ -50,6 +51,12 @@ class BuildPipelineResultTests(unittest.TestCase):
             "apply_courtesy_tone": Mock(return_value=Path(
                 "/usr/share/svxlink/events.d/local/Logic.tcl"
             )),
+            "apply_repeater_event_customisations": Mock(
+                return_value=Path(
+                    "/usr/share/svxlink/events.d/local/"
+                    "RepeaterLogicType.tcl"
+                )
+            ),
             "restart_svxlink": Mock(),
             "svxlink_status": Mock(return_value=service_status),
         }
@@ -95,6 +102,68 @@ class BuildPipelineResultTests(unittest.TestCase):
             "inactive",
         )
         self.assertEqual(result["deployment_errors"], [])
+        self.assertNotIn(
+            "/usr/share/svxlink/events.d/local/"
+            "RepeaterLogicType.tcl",
+            result["logic_files"],
+        )
+
+    def test_conventional_repeater_deploys_repeater_logic(self):
+        model = {
+            "node": {
+                "type": "repeater",
+                "callsign": "G4NAB",
+            },
+            "ports": {
+                "enabled": [],
+            },
+            "nodes": {},
+        }
+
+        result = self.run_pipeline(
+            restart=False,
+            service_status="inactive",
+            model=model,
+        )
+
+        self.assertTrue(result["success"])
+        self.assertIn(
+            "/usr/share/svxlink/events.d/local/"
+            "RepeaterLogicType.tcl",
+            result["logic_files"],
+        )
+
+    def test_enabled_multiport_repeater_deploys_repeater_logic(self):
+        model = {
+            "node": {
+                "type": "simplex",
+                "callsign": "G4NAB",
+            },
+            "ports": {
+                "enabled": [1, 2],
+            },
+            "nodes": {
+                "1": {
+                    "role": "simplex",
+                },
+                "2": {
+                    "role": "repeater",
+                },
+            },
+        }
+
+        result = self.run_pipeline(
+            restart=False,
+            service_status="inactive",
+            model=model,
+        )
+
+        self.assertTrue(result["success"])
+        self.assertIn(
+            "/usr/share/svxlink/events.d/local/"
+            "RepeaterLogicType.tcl",
+            result["logic_files"],
+        )
 
     def test_successful_restart_reports_success(self):
         result = self.run_pipeline(
