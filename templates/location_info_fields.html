@@ -108,11 +108,8 @@
         </script>
     {% endif %}
 
-    <div
-        class="field-group"
-        id="custom_tx_offset_fields"
-    >
-        <label class="label" for="custom_tx_offset_khz">
+    <div class="field-group">
+        <label class="label" for="tx_offset_khz">
             Transmitter offset
         </label>
 
@@ -219,7 +216,10 @@
             updateCustomOffsetFields();
         })();
     </script>
-    <div class="field-group">
+    <div
+        class="field-group"
+        id="custom_tx_offset_fields"
+    >
         <label class="label" for="custom_tx_offset_khz">
             Custom transmitter offset, kHz
         </label>

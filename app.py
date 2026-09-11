@@ -5679,6 +5679,18 @@ def macros_page():
     macros = model.get("macros", {})
     error = None
 
+    enabled_module_sections = set(
+        model.get("modules", {}).get("enabled", [])
+    )
+    available_macro_modules = [
+        module_name
+        for section_name, module_name in (
+            ("ModuleEchoLink", "EchoLink"),
+            ("ModuleMetarInfo", "MetarInfo"),
+        )
+        if section_name in enabled_module_sections
+    ]
+
     if len(macros) > MACRO_LIMIT:
         error = (
             f"This configuration contains more than {MACRO_LIMIT} macros. "
@@ -5804,6 +5816,7 @@ def macros_page():
         model=model,
         macro_rows=macro_rows,
         macro_limit=MACRO_LIMIT,
+        available_macro_modules=available_macro_modules,
         saved=saved,
         error=error,
     )

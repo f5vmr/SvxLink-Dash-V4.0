@@ -106,19 +106,37 @@
                     <td>
                         <div class="macro-value macro-value-reflector-tg">
                             Talkgroup:
+                            <strong>91</strong>
                             <input class="dtmf-command"
                                    type="text"
                                    name="talkgroup_{{ loop.index0 }}"
                                    value="{{ row.talkgroup }}">
+                            <strong>#</strong>
                         </div>
 
                         <div class="macro-value macro-value-module">
                             Module:
-                            <input class="dtmf-command"
-                                   type="text"
-                                   name="module_{{ loop.index0 }}"
-                                   value="{{ row.module }}">
-
+                            <select class="dtmf-command"
+                                    name="module_{{ loop.index0 }}">
+                                <option value="">
+                                    Select module
+                                </option>
+                                {% if (
+                                    row.module
+                                    and row.module
+                                        not in available_macro_modules
+                                ) %}
+                                    <option value="{{ row.module }}" selected>
+                                        {{ row.module }} — not enabled
+                                    </option>
+                                {% endif %}
+                                {% for module in available_macro_modules %}
+                                    <option value="{{ module }}"
+                                            {% if row.module == module %}selected{% endif %}>
+                                        {{ module }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                             Module Command:
                             <input class="dtmf-command"
                                    type="text"
