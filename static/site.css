@@ -1352,7 +1352,7 @@ footer a:hover {
 .sound-table-wrap {
     width: 100%;
     max-width: 100%;
-    overflow-x: visible;
+    overflow-x: auto;
 }
 
 .sound-table {
@@ -1408,15 +1408,18 @@ footer a:hover {
 
 .sound-slider-form {
     display: grid;
-    grid-template-columns: 1fr 2.5rem auto;
+    grid-template-columns: minmax(0, 1fr) 2.5rem auto;
     gap: 0.35rem;
     align-items: center;
+    width: 100%;
+    min-width: 0;
     margin: 0;
 }
 
 .sound-slider {
     width: 100%;
-    min-width: 80px;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .sound-slider-form output {
