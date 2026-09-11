@@ -1,606 +1,453 @@
-# SvxLink-Dash-V4.0
+# SvxLink-Dash V4.0
 
-A modern Flask-based configuration and runtime dashboard for SvxLink systems.
+SvxLink-Dash V4.0 is a Flask-based configuration and runtime dashboard for SvxLink 26.05.1.
 
-SvxLink-Dash-V4.0 provides a guided environment for configuring, building and operating SvxLink nodes. It supports general amateur-radio installations and is not tied to a particular reflector network, regional service or deployment model.
+It provides a guided environment for configuring, building and operating simplex, repeater and multi-port SvxLink installations. It is suitable for independently operated nodes and is not restricted to a particular reflector network, region or deployment model.
 
-Principal features include:
+SvxLink 26.05.1 is developed by Tobias Blömberg, SM0SVX.
 
-- Guided configuration for SvxLink 26.05.1 by Tobias Blömberg SM0SVX
-- Simplex, repeater and multi-port node configuration
-- SvxReflector connection configuration
-- Runtime operational dashboard
+## Principal features
+
+- Guided SvxLink configuration
+- Single-port and multi-port installations
+- SimplexLogic and RepeaterLogic configuration
+- Local port-to-port links
+- SvxReflector connection and authentication
+- Federation-family and independent reflector routes
 - EchoLink and METAR module configuration
-- Live reflector activity monitoring
-- DTMF talkgroup control
-- Macro installation and editing
-- Protected runtime configuration editing
-- Hardware and system telemetry
-- Live SvxLink log viewer
-- Public node-information and LocationInfo generation
-- Multi-platform deployment support
-
-The project is intended for:
-
-1. Existing SvxLink users who want a guided configuration and runtime dashboard.
-2. Appliance-style SvxLink installations on Raspberry Pi and NanoPi-Neo hardware.
-3. Linux PC and similar systems supported by the generic build structure.
-
-The current dashboard is presented in English. Its configuration model is designed for use with standard SvxLink installations and independently operated SvxReflector services.
----
-
-# Features
-
-## Configuration Builder
-
-- Guided SvxLink configuration workflow
-- Simplex and repeater node support on multiple ports
-- Reflector support
-- EchoLink support
-- METAR module support
-- Courtesy tone / roger tone support
-- GPIO and audio configuration
-- Node information generation
+- GPIO, serial, HIDRAW and audio-interface configuration
+- Installation-wide courtesy, idle and closedown tones
+- Public node information and optional LocationInfo generation
 - Configuration review before deployment
-
-## Runtime Dashboard
-
-- Live node status
-- Service monitoring
-- Reflector connection state
-- Squelch state
-- EchoLink activity
-- Monitored talkgroups display
-- Live reflector activity feed
-- DTMF talkgroup buttons
-- Manual DTMF command entry
-- Hardware telemetry
-- Live system log viewer
-
-## Operational Editing
-
-Protected editing environment with authentication:
-
-- Talkgroup buttons
-- Monitoring talkgroups
+- Managed configuration deployment and SvxLink restart
+- Protected runtime configuration editing
+- Live service, radio and reflector status
+- Talkgroup monitoring and DTMF control
 - Local RF CTCSS talkgroup selection
-- EchoLink module
-- Macro Editing
-- METAR module
+- Hardware and system telemetry
+- Live SvxLink log viewing
+
+## Intended installations
+
+SvxLink-Dash V4.0 is intended for:
+
+- New or existing SvxLink operators who require guided configuration.
+- Appliance-style installations using Raspberry Pi or NanoPi Neo hardware.
+- Generic Debian-based Linux computers running SvxLink.
+- Single-channel radio interfaces.
+- Independent dual-USB radio interfaces.
+- Supported ICS-CTRLS 1X, 2X, 4X and 8X hardware.
+
+The dashboard is currently presented in English.
+
+## Configuration builder
+
+The guided workflow covers:
+
+- Platform and hardware selection
+- Radio-port selection
+- Simplex and repeater roles
+- Audio and control interfaces
+- Squelch detection
+- Identification and CW
+- Courtesy, idle and closedown tones
+- Repeater operating settings
+- SvxReflector access
+- Local and reflector-link topology
+- EchoLink and METAR modules
 - Node information
+- Final configuration review and deployment
 
-### Local RF CTCSS Talkgroup Selection
+## Runtime dashboard
 
-The protected **CTCSS TGs** page maps CTCSS tones detected in locally
-received audio to SvxReflector talkgroups. Each eligible radio logic or
-multi-port receiver has its own independent mappings and selection delay.
+The runtime dashboard provides:
 
-This facility is distinct from **Monitoring TalkGroups**:
+- SvxLink service status
+- Reflector connection state
+- Radio and squelch status
+- Active and monitored talkgroups
+- EchoLink activity
+- Reflector activity
+- DTMF talkgroup controls
+- Manual DTMF command entry
+- Host and operating-system information
+- CPU temperature where available
+- Memory and disk utilisation
+- Live SvxLink log output
 
-- CTCSS talkgroup mappings select a talkgroup from local RF activity.
-- Monitoring TalkGroups determine which talkgroups are received from the
-  connected reflector.
-- DTMF talkgroup selection remains available independently.
+## Protected editing
 
-A CTCSS tone may be mapped to only one talkgroup on a given radio logic.
-Different ports may use different mappings. Talkgroup values must be
-positive whole numbers, but the dashboard does not impose an arbitrary
-upper limit because the available talkgroups are determined by the
-connected reflector.
+Authenticated runtime pages allow authorised operators to update supported settings without repeating the initial setup workflow.
 
-The page is unavailable for a radio logic when CTCSS is already being
-used as its SQL detector. Saving valid mappings rebuilds the SvxLink
-configuration and restarts the service through the protected runtime
-editing path.
+Protected facilities include:
 
-## Deployment Features
+- Talkgroup controls
+- Monitoring talkgroups
+- Local RF CTCSS talkgroup mappings
+- EchoLink configuration
+- METAR configuration
+- Macro configuration
+- Node information
+- Live log viewing
+- Guided reconfiguration
 
-- Automatic configuration rendering
-- Automatic SvxLink restart
-- Backup-aware deployment
-- Systemd service support
-- Automatic permission correction
-- Portable log-path detection
+Saved changes are presented for review before the managed configuration is rebuilt and deployed.
 
----
+## Supported platforms
 
-# Supported Platforms
+The configuration model recognises:
 
-Tested platforms currently include:
+- Raspberry Pi
+- NanoPi Neo
+- Generic Linux server
 
-Raspberry Pi / Raspberry Pi OS Bookworm / Raspberry Pi OS Trixie
-NanoPi Neo / Armbian Bookworm
-Linux PC Bookworm LTS
+Runtime architecture reporting recognises:
 
-Other Debian-based systems may also function correctly.
+- 32-bit ARM (`armhf`)
+- 64-bit ARM (`arm64`)
+- 64-bit x86 (`amd64`)
 
+The dashboard is intended for Debian-based operating systems on which SvxLink 26.05.1 is already installed and operational.
 
----
+Platform recognition and hardware-profile support are separate. Not every hardware profile is appropriate for every platform.
 
-# Browser Support
+## Hardware profiles
 
-Tested with:
+Available hardware profiles include:
 
-- Chromium
-- Chrome
-- Firefox
+- Generic Single Channel
+- Dual USB Sound Fob Interfaces
+- ICS-CTRLS 1X
+- ICS-CTRLS 2X
+- ICS-CTRLS 4X
+- ICS-CTRLS 8X
 
----
+Some hardware profiles require additional preparation, device-tree overlays, ALSA configuration or a system reboot. The guided workflow identifies those requirements when the profile is selected.
+## Installation
 
-# Installation
+### Prerequisites
 
-## Quick Install
+Before installing SvxLink-Dash V4.0, confirm that:
 
-The installer automatically:
+* SvxLink 26.05.1 is installed and operational.
+* `svxlink.service` is available.
+* The `svxlink` user and group exist.
+* `/etc/svxlink` is present.
+* The computer is connected to the local network.
+* You have local administrative access through `sudo`.
 
-- Downloads SvxLink-Dash-V3.2 into `/opt/dashboard`
-- Installs required Python packages
-- Configures permissions
-- Installs the systemd service
-- Configures restricted sudo permissions
-- Enables and starts the dashboard service
+SvxLink-Dash configures and operates an existing SvxLink installation. It does not install SvxLink itself.
 
-Run:
+### Download and run the installer
+
+Clone the repository into a temporary directory and run the executable installer:
 
 ```bash
 cd /tmp
-wget https://raw.githubusercontent.com/f5vmr/SvxLink-Dash-V3.2/main/install/install-dashboard.sh
-chmod +x install-dashboard.sh
-sudo ./install-dashboard.sh
+
+git clone \
+https://github.com/f5vmr/SvxLink-Dash-V4.0.git
+
+cd SvxLink-Dash-V4.0
+
+sudo ./install/install-dashboard.sh
 ```
 
-After installation:
+The installer places the operational dashboard in:
 
 ```text
-http://svxlink.local:5000/
+/opt/dashboard
 ```
 
----
-
-# Existing SvxLink Requirements
-
-SvxLink must already be operational.
-
-Expected components:
+Dashboard runtime data and managed backups are stored beneath:
 
 ```text
-SvxLink Version 26.05.1 in this case 
+/var/lib/svxlink-dash
 ```
 
-The dashboard assumes:
-
-- SvxLink already functions correctly
-- `/etc/svxlink` is present
-- DTMF PTY control is enabled
-- `/dev/shm/....Logic` exists..
-
----
-
-# Python Dependencies
-
-Installed automatically by the installer.
-
-Equivalent packages:
-
-```bash
-python3
-python3-flask
-python3-jinja2
-python3-werkzeug
-python3-psutil
-```
-
----
-
-# Log File Detection
-
-The dashboard automatically determines the active SvxLink log file.
-
-Priority:
-
-1. `LOGFILE=` from `/etc/default/svxlink`
-2. `/var/log/svxlink.log`
-3. `/var/log/svxlink`
-
-This allows compatibility with:
-
-- Standard SvxLink installations
-- Appliance-style images
-- Custom deployments
-
----
-
-# Authentication
-
-Runtime editing functions are protected by dashboard authentication.
-
-Public runtime monitoring remains accessible.
-
-Protected pages include:
-
-- Talkgroups
-- Monitoring TGs
-- EchoLink editing
-- METAR editing
-- Node information editing
-- Log viewer
-
-Dashboard credentials are configured during initial setup.
-
----
-
-# Forgotten Credentials
-
-Dashboard credentials can be reset locally on the Linux console.
-
-Run:
-
-```bash
-sudo /opt/dashboard/tools/reset_dashboard_auth.py
-```
-
----
-
-# Systemd Service
-
-Installed service:
-
-```text
-svxlink-dash.service
-```
-
-Service user:
+The dashboard service runs as:
 
 ```text
 svxlink:svxlink
 ```
 
-The dashboard intentionally runs as the SvxLink user to allow:
+### Confirm the installation
 
-- PTY DTMF control
-- Configuration deployment
-- Runtime management
-
----
-
-# Restricted sudo Permissions
-
-The installer configures restricted sudo access for:
-
-```text
-systemctl restart svxlink
-systemctl is-active svxlink
-and a number of other functions
-```
-
-via:
-
-```text
-/etc/sudoers.d/svxlink-dash
-```
-
----
-
-# Runtime Dashboard Overview
-
-The dashboard provides:
-
-## Left Column Operational State
-
-- Node
-- Service
-- Reflector
-- Modules
-- Radio Status
-- Squelch State
-- Monitoring TGs
-- Active TGs
-- EchoLink Activity
-- Uptime
-
-## Main Operational Area
-
-- Live reflector activity feed
-- Talkgroup controls
-- Manual DTMF command entry
-
-## System Footer
-
-- Hostname
-- IP address
-- OS information
-- Kernel version
-- CPU temperature
-- Disk usage
-- Memory usage
-
----
-
-# Manual DTMF Commands
-
-## Talkgroups
-
-Prefix TG numbers with:
-
-```text
-91
-```
-
-Terminate with:
-
-```text
-#
-```
-
-Example:
-
-```text
-91235#
-```
-
-## EchoLink
-
-Open module:
-
-```text
-2#
-```
-
-Then send:
-
-```text
-<node>#
-```
-
-Exit EchoLink:
-
-```text
-##
-```
-
-## METAR
-
-Open module:
-
-```text
-5#
-```
-
-Airport selection examples:
-
-```text
-1#
-2#
-3#
-```
-
-Exit METAR:
-
-```text
-#
-```
-
----
-
-# Node Information
-
-The dashboard generates:
-
-```text
-/etc/svxlink/node_info.json
-```
-
-The setup workflow supports:
-
-- Decimal latitude/longitude
-- Maidenhead locator
-- DMS coordinate formats
-- RF information
-- Antenna information
-
-Useful locator resource:
-
-https://www.levinecentral.com/ham/grid_square.php
-
----
-
-# Repository Layout
-
-```text
-/opt/dashboard
-├── app.py
-├── templates/
-├── static/
-├── services/
-├── renderers/
-├── install/
-├── config/
-├── backups/
-└── tools/
-```
-
----
-
-# Service Management
-
-## Restart Dashboard
+Check that the dashboard service is running:
 
 ```bash
-sudo systemctl restart svxlink-dash
+sudo systemctl status \
+svxlink-dash.service \
+--no-pager
 ```
 
-## View Dashboard Status
+The service should report:
+
+```text
+active (running)
+```
+
+### First access
+
+Open the dashboard from a browser on the same network:
+
+```text
+http://<dashboard-hostname-or-address>:5000/
+```
+
+Where local hostname resolution is available, the default hostname may be used:
+
+```text
+http://svxlink.local:5000/
+```
+
+The initial workflow collects the dashboard credentials and guides the operator through the installation configuration.
+
+## Authentication
+
+Runtime monitoring is publicly accessible on the local network. Configuration and management functions require dashboard authentication.
+
+Protected facilities include:
+
+* Talkgroup controls
+* Monitoring talkgroups
+* Local RF CTCSS talkgroup mappings
+* EchoLink configuration
+* METAR configuration
+* Macro configuration
+* Node information
+* Guided reconfiguration
+* Live log viewing
+
+Dashboard credentials are created during the initial setup workflow.
+
+### Forgotten credentials
+
+Dashboard credentials can be reset from the Linux console:
 
 ```bash
-sudo systemctl status svxlink-dash
+sudo /opt/dashboard/tools/reset_dashboard_auth.py
 ```
 
-## Restart SvxLink
+After resetting the credentials, follow the command’s displayed instructions and sign in again.
+
+## Service management
+
+The installer creates and enables:
+
+```text
+svxlink-dash.service
+```
+
+The dashboard runs as the `svxlink` user so that it can access dashboard-managed configuration, runtime controls and SvxLink operational information.
+
+### View dashboard status
 
 ```bash
-sudo systemctl restart svxlink
+sudo systemctl status \
+svxlink-dash.service \
+--no-pager
 ```
 
----
-
-# Troubleshooting
-
-## Dashboard Does Not Start
-
-Check:
+### Restart the dashboard
 
 ```bash
-sudo systemctl status svxlink-dash
+sudo systemctl restart \
+svxlink-dash.service
 ```
 
-## Live Log Viewer
-
-The dashboard includes a protected live log viewer.
-
-Alternatively:
+### View dashboard service messages
 
 ```bash
-tail -f /var/log/svxlink.log
+sudo journalctl \
+-u svxlink-dash.service \
+-n 100 \
+--no-pager
 ```
 
-or the configured log file from:
+### Restart SvxLink
+
+```bash
+sudo systemctl restart \
+svxlink.service
+```
+
+## SvxLink log detection
+
+The dashboard automatically locates the configured SvxLink log.
+
+It first checks the `LOGFILE` setting in:
 
 ```text
 /etc/default/svxlink
 ```
 
-## DTMF Buttons Not Working
-
-Verify:
+It can also recognise the standard locations:
 
 ```text
-/dev/shm/simplex_dtmf_ctrl or /dev/shm/repeater_dtmf_ctrl
+/var/log/svxlink.log
+/var/log/svxlink
 ```
 
-exists and is writable by user `svxlink`.
+The protected live-log page displays the detected log output.
 
-# Logic and Link Topology
+## Default manual DTMF commands
 
-SvxLink-Dash supports single-port and multi-port installations containing SimplexLogic, RepeaterLogic and ReflectorLogic instances.
+The runtime dashboard can send DTMF commands through the configured SvxLink control FIFO.
 
-## Logic Declaration
+### Talkgroup selection
 
-Every configured logic instance must be declared in the `[GLOBAL]` section.
+Prefix the talkgroup number with `91` and terminate the command with `#`.
 
-Example:
-
-```ini
-[GLOBAL]
-LOGICS=SimplexLogic1,RepeaterLogic2,SimplexLogic3,SimplexLogic4,ReflectorLogic
-LINKS=LinkToReflector,Link34
-```
-
-The `LOGICS` entry determines which logic instances SvxLink creates when it starts.
-
-The `LINKS` entry identifies the link sections used to connect selected logic instances together.
-
-Declaring a logic does not automatically connect it to another logic.
-
-## Link Membership
-
-Each link section uses `CONNECT_LOGICS` to specify its exact membership.
-
-A logic omitted from a link remains operational but does not participate in that link.
-
-Example reflector link:
-
-```ini
-[LinkToReflector]
-CONNECT_LOGICS=SimplexLogic1:9,RepeaterLogic2:9,ReflectorLogic
-DEFAULT_ACTIVE=1
-TIMEOUT=300
-```
-
-In this example:
-
-* SimplexLogic1 is connected to the reflector.
-* RepeaterLogic2 is connected to the reflector.
-* The `:9` suffix is required on each participating radio logic so that DTMF can control reflector talkgroups.
-* Other configured radio logics remain outside the reflector link.
-
-## Single-Port Topology
-
-A single-port installation has a simple reflector choice:
-
-* Local operation without ReflectorLogic.
-* Local operation linked to ReflectorLogic.
-
-When reflector access is enabled, the single SimplexLogic or RepeaterLogic is included automatically in `LinkToReflector`.
-
-## Multi-Port Topology
-
-A multi-port installation may contain:
-
-* Independent radio ports.
-* A local link joining two or more radio ports.
-* One reflector link joining selected radio ports to ReflectorLogic.
-
-Example:
+Example for talkgroup 235:
 
 ```text
-Port 1 ↔ Port 2 ↔ Reflector
-Port 3 ↔ Port 4
-Ports 5, 6, 7 and 8 independent
+91235#
 ```
 
-This topology requires one reflector link containing ports 1 and 2, and one local link containing ports 3 and 4.
+### EchoLink
 
-Ports 5 to 8 are declared in `[GLOBAL]/LOGICS` but are not included in either link.
-
-All radio ports connected through one ReflectorLogic share that reflector connection and its selected talkgroup state.
-
-## Strict Link Isolation
-
-A radio logic may belong to no more than one link section.
-
-This is a strict rule with no exceptions.
-
-The following topology is prohibited:
+Open the default EchoLink module:
 
 ```text
-Reflector link:
-RepeaterLogic1 ↔ SimplexLogic1 ↔ ReflectorLogic
-
-Local link:
-SimplexLogic1 ↔ RepeaterLogic2
+2#
 ```
 
-SimplexLogic1 appears in both links. When both links are active, it indirectly connects RepeaterLogic2 to ReflectorLogic and merges the two intended groups.
+Enter the required EchoLink node number followed by `#`:
 
-The configuration workflow must detect and reject this overlap before building `svxlink.conf`.
+```text
+<node-number>#
+```
 
-A port already assigned to one link must be removed from that link before it can be assigned to another.
+Exit the EchoLink module:
 
-## Link Validation
+```text
+##
+```
 
-Before configuration is built:
+### METAR
 
-* Every enabled radio port must have a corresponding logic declaration.
-* Every link member must refer to an enabled radio port or ReflectorLogic.
-* A local link must contain at least two radio logics.
-* A reflector link must contain at least one radio logic and ReflectorLogic.
-* ReflectorLogic may appear only in the reflector link.
-* No radio logic may appear in more than one link.
-* An unlinked radio logic remains independently operational.
-* Every radio logic in the reflector link must include the required `:9` DTMF control suffix.
+Open the default METAR module:
 
-The final configuration review must show each port as one of:
+```text
+5#
+```
 
-* Connected to the reflector.
-* Connected through a named local link.
-* Independent.
-## Primary Installation Identity
+Select a configured airport entry:
 
-Every multi-port installation must have exactly one primary port.
+```text
+1#
+```
 
-The callsign configured for that primary port is the primary callsign of the installation. Port ordering must not determine the installation identity once a primary port has been selected.
+Exit the METAR module:
 
-The primary callsign is used wherever one callsign must represent the installation as a whole, including:
+```text
+#
+```
+
+Module identifiers and macros may differ when the operator changes the generated configuration.
+
+## Troubleshooting
+
+### Dashboard does not start
+
+Check the service status:
+
+```bash
+sudo systemctl status \
+svxlink-dash.service \
+--no-pager
+```
+
+View its recent service messages:
+
+```bash
+sudo journalctl \
+-u svxlink-dash.service \
+-n 100 \
+--no-pager
+```
+
+### Dashboard page does not open
+
+Confirm that `svxlink-dash.service` is active and use the Linux computer’s current IP address:
+
+```bash
+hostname -I
+```
+
+Open the first reported address on port 5000:
+
+```text
+http://<ip-address>:5000/
+```
+
+### Live log viewer has no output
+
+Check the configured SvxLink log path:
+
+```bash
+grep '^LOGFILE=' \
+/etc/default/svxlink
+```
+
+If `/var/log/svxlink.log` is in use, inspect it directly:
+
+```bash
+tail -f \
+/var/log/svxlink.log
+```
+
+### DTMF controls do not work
+
+Confirm that the appropriate SvxLink DTMF control FIFO exists:
+
+```text
+/dev/shm/simplex_dtmf_ctrl
+/dev/shm/repeater_dtmf_ctrl
+```
+
+The required FIFO depends on the configured radio logic. It must be writable by the `svxlink` user.
+
+Also confirm that SvxLink is active:
+
+```bash
+sudo systemctl status \
+svxlink.service \
+--no-pager
+```
+
+
+## Guided configuration sequence
+
+The configuration workflow establishes the available hardware, configures every enabled radio port and identifies the primary installation identity before creating any local or reflector links.
+
+The normal sequence is:
+
+1. Select the hardware platform.
+2. Select the hardware profile and enable the required radio ports.
+3. Assign each enabled port as `SimplexLogic` or `RepeaterLogic`.
+4. Configure the node, interface, squelch, identification and CW settings for each enabled port.
+5. Select the installation-wide courtesy, idle and closedown tones.
+6. Complete the repeater settings for any repeater ports.
+7. Select the primary installation port. A single-port installation selects its only port automatically.
+8. Select whether the installation will use a reflector.
+9. Configure the reflector route and authentication method when required.
+10. Assign every enabled port to independent operation, a local link or the reflector link.
+11. Validate and review the complete configuration.
+12. Build and deploy the generated SvxLink configuration.
+
+The reflector route follows primary-port selection so that `ReflectorLogic` uses the correct installation callsign. This is especially important for Protocol 3, where the callsign forms part of the certificate identity.
+
+Link topology is configured after the available ports, their logic types and the reflector route are known.
+
+## Primary installation identity
+
+Every multi-port installation has one selected primary port.
+
+The callsign assigned to that port becomes the primary callsign of the installation. Port number and configuration order do not override the selected primary identity.
+
+The primary callsign is used where one callsign must represent the complete installation, including:
 
 * `ReflectorLogic`
 * Node information
@@ -611,11 +458,11 @@ A single-port installation automatically uses the callsign of its only configure
 
 When reflector operation is enabled:
 
-* The primary port must be included in the reflector link.
+* The primary port is included in the reflector link.
 * `ReflectorLogic` uses the primary installation callsign.
-* Additional ports may be included in the same reflector link.
-* Additional ports may use the same callsign or different callsigns.
-* A secondary-port callsign must never replace the selected primary installation callsign merely because of its port number or configuration order.
+* Additional ports may participate in the same reflector link.
+* Additional ports may use the same or different callsigns.
+* A secondary port never replaces the selected primary identity merely because it has a lower port number or was configured first.
 
 For example:
 
@@ -624,7 +471,7 @@ Port 1 — RepeaterLogic — AK6BL — Primary
 Port 2 — SimplexLogic — KO6IL-L
 ```
 
-Both ports may be connected to the reflector:
+Both ports may participate in the reflector link:
 
 ```ini
 [LinkToReflector]
@@ -640,300 +487,234 @@ The reflector identity remains:
 CALLSIGN=AK6BL
 ```
 
-For Protocol 3 operation, the `ReflectorLogic` callsign determines the X.509 client certificate identity. Deliberately changing the primary installation callsign may therefore require a new certificate request and approval by the reflector administrator.
+For Protocol 3 operation, the `ReflectorLogic` callsign determines the X.509 client-certificate identity. Changing the primary callsign may therefore require a new certificate request and approval by the reflector administrator.
 
-When reflector operation is disabled, the primary port may remain independent or participate in a local link. It still provides the primary callsign for the installation.
+When reflector operation is disabled, the primary port may remain independent or participate in a local link. It continues to provide the installation identity.
 
-## Installation-Wide Tone Settings
+## Installation-wide tone settings
 
-Courtesy, idle and closedown tones are installation-wide settings.
+Courtesy, idle and closedown tones are shared installation settings. They are not configured independently for each port because SvxLink produces them through common event-handling files.
 
-They must not be offered as independent per-port settings because the sounds are produced through shared SvxLink event-handling files.
-
-The installation provides one selection for each of the following:
+The available settings are:
 
 * Courtesy tone
 * Courtesy beep frequency
 * Repeater idle tone
 * Repeater closedown tone
 
-The selected courtesy behaviour applies through the shared `Logic.tcl` event handling.
+Courtesy behaviour is applied through the shared `Logic.tcl` event handling.
 
-The selected idle and closedown behaviour applies through the shared `RepeaterLogicType.tcl` event handling to every configured repeater logic.
+Idle and closedown behaviour is applied through the shared `RepeaterLogicType.tcl` event handling and affects every configured repeater logic.
 
-Valid courtesy choices are:
+Courtesy choices are:
 
 * None
 * Beep
 * Morse T
 * Morse K
 
-Valid idle-tone choices are:
+Repeater idle-tone choices are:
 
 * None
 * Pip
 * Chime
 
-Valid closedown-tone choices are:
+Repeater closedown-tone choices are:
 
 * None
 * Biboop
 * VA
 
-`None` is a valid deliberate selection in every case.
+`None` is a valid deliberate selection in every case. A courtesy tone is commonly used for repeater operation, but it is not mandatory.
 
-A courtesy tone is normally recommended for repeater operation, but it is not mandatory and the dashboard must not prevent the operator from selecting None.
+The dashboard applies each shared event-file customisation once, regardless of the number of configured radio ports.
 
-The configuration workflow must apply each shared event-file modification once, regardless of the number of configured radio ports.
+## Logic and link topology
 
-## Configuration Sequence
+SvxLink-Dash supports single-port and multi-port installations containing `SimplexLogic`, `RepeaterLogic` and, when selected, `ReflectorLogic`.
 
-The configuration workflow must establish the available hardware, configure every enabled radio port and identify the primary installation port before reflector or link topology is configured.
+Every enabled port has its own radio logic. The topology determines whether that logic operates independently or participates in a local or reflector link.
 
-The sequence is:
+### Logic declaration
 
-1. Select the hardware platform.
-2. Select and enable the required radio ports.
-3. Assign each enabled port as `SimplexLogic` or `RepeaterLogic`.
-4. Complete the node, interface, squelch, identification and CW configuration for every enabled port.
-5. Configure the installation-wide courtesy, idle and closedown tones.
-6. Complete any repeater-specific operating settings.
-7. Select the primary installation port. A single-port installation selects its only port automatically.
-8. Select whether a reflector will be used.
-9. Configure the reflector protocol and authentication method when required.
-10. Define the port-link topology.
-11. Validate the complete configuration.
-12. Review and build the SvxLink configuration.
-
-The primary installation port is selected only after the configured port callsigns and logic types are available for review.
-
-Reflector selection follows primary installation identity so that the correct callsign is applied to `ReflectorLogic` and, for Protocol 3 operation, to the X.509 certificate request.
-
-Link topology is deliberately the final configuration-parameter stage. This ensures that the enabled ports, their logic types, the primary installation identity and the selected reflector route are all known before any connections are created.
-
-
-### Reflector Selection
-
-Before link topology is configured, the user must select one of the following reflector routes:
-
-* No reflector
-* Federation Family Protocol 2 reflector
-* Other Protocol 2 reflector
-* Protocol 3 reflector using X.509 certification
-
-Selecting **No reflector** allows the system to contain independent radio ports and local links between radio ports.
-
-A Federation Family reflector uses the supplied network settings and requires the network-specific 16-character password.
-
-Other Protocol 2 reflectors require the hostname or IP address, port number, callsign, and password supplied by the reflector administrator. The Federation Family 16-character password requirement must not be imposed on these reflectors.
-
-Protocol 3 reflectors require the hostname or IP address, port number, callsign, certificate subject information, and the X.509 certificate request and approval process.
-
-### Single-Port Topology
-
-A single-port system does not require a separate topology-selection page.
-
-If reflector operation is disabled, the configured radio logic remains independent.
-
-If reflector operation is enabled, the configured radio logic is automatically linked to `ReflectorLogic`.
+Every configured logic is declared in the `[GLOBAL]` section of the generated `svxlink.conf`.
 
 Example:
 
 ```ini
-[ReflectorLink]
+[GLOBAL]
+LOGICS=SimplexLogic1,RepeaterLogic2,SimplexLogic3,SimplexLogic4,ReflectorLogic
+LINKS=LinkToReflector,LocalLink1
+```
+
+`LOGICS` determines which logic instances SvxLink creates.
+
+`LINKS` identifies the link sections that join selected logic instances. Declaring a logic does not automatically connect it to another logic.
+
+### Link membership
+
+A link section uses `CONNECT_LOGICS` to define its exact membership.
+
+Example reflector link:
+
+```ini
+[LinkToReflector]
+CONNECT_LOGICS=SimplexLogic1:9,RepeaterLogic2:9,ReflectorLogic
+DEFAULT_ACTIVE=1
+TIMEOUT=300
+```
+
+In this example:
+
+* `SimplexLogic1` participates in the reflector link.
+* `RepeaterLogic2` participates in the reflector link.
+* The `:9` suffix allows DTMF reflector talkgroup control.
+* Other declared radio logics remain outside this link.
+
+A declared radio logic that is not included in a link remains independently operational.
+
+## Single-port topology
+
+A single-port installation does not require a separate topology-selection page.
+
+Without reflector access, its `SimplexLogic` or `RepeaterLogic` operates independently.
+
+When reflector access is enabled, the radio logic is linked automatically to `ReflectorLogic`.
+
+Example:
+
+```ini
+[LinkToReflector]
 CONNECT_LOGICS=SimplexLogic:9,ReflectorLogic
 DEFAULT_ACTIVE=1
 TIMEOUT=300
 ```
 
-The `:9` suffix is required on each radio logic connected to `ReflectorLogic` so that DTMF talkgroup commands can be passed to the reflector.
+## Multi-port topology
 
-### Multi-Port Topology
-
-In a multi-port system, every enabled port must be assigned explicitly to one of the following:
+Every enabled port in a multi-port installation is assigned to one of these dispositions:
 
 * Independent operation
 * A named local link
 * The reflector link
 
-Local links may contain two or more radio ports.
+A local link joins two or more radio ports.
 
-Examples include:
+A reflector link joins one or more selected radio ports to the installation’s single `ReflectorLogic`.
 
-* Port 1 linked to Port 2
-* Port 3 linked to Port 4
-* Ports 1, 2, and 4 linked together
-* Ports 1 and 2 linked to the reflector while Ports 3 and 4 form a separate local link
+For example:
 
-Example reflector link:
-
-```ini
-[ReflectorLink]
-CONNECT_LOGICS=RepeaterLogic2:9,SimplexLogic3:9,ReflectorLogic
-DEFAULT_ACTIVE=1
-TIMEOUT=300
+```text
+Ports 1 and 2 — Reflector link
+Ports 3 and 4 — Local link
+Ports 5, 6, 7 and 8 — Independent
 ```
+
+Ports 1 and 2 share the same reflector connection and reflector talkgroup state. Ports 3 and 4 communicate through their separate local link. Ports 5 to 8 remain operational without participating in either link.
 
 Example local link:
 
 ```ini
 [LocalLink1]
-CONNECT_LOGICS=SimplexLogic1,RepeaterLogic2
+CONNECT_LOGICS=SimplexLogic3,RepeaterLogic4
 DEFAULT_ACTIVE=1
 TIMEOUT=300
 ```
 
-The user is responsible for defining the required local connectivity. The dashboard must validate the selected topology before allowing the configuration to be built.
+The operator selects the required connectivity. The dashboard generates the appropriate logic names and validates the resulting topology before configuration can be built.
 
-### Strict Port Membership Rule
+## Strict port-membership rule
 
-Each radio port or radio logic may belong to no more than one link.
+A radio port may belong to no more than one link.
 
-This rule has no exceptions.
-
-The following overlapping topology is invalid:
+For example, this arrangement is invalid:
 
 ```ini
-[ReflectorLink]
-CONNECT_LOGICS=RepeaterLogic1:9,SimplexLogic1:9,ReflectorLogic
+[LinkToReflector]
+CONNECT_LOGICS=RepeaterLogic1:9,SimplexLogic2:9,ReflectorLogic
 
 [LocalLink1]
-CONNECT_LOGICS=SimplexLogic1,RepeaterLogic2
+CONNECT_LOGICS=SimplexLogic2,RepeaterLogic3
 ```
 
-`SimplexLogic1` appears in both links and would create an overlapping path.
+`SimplexLogic2` appears in both links. That overlap would unintentionally connect the local group to the reflector group.
 
-The dashboard must reject this configuration and identify the port already assigned to another link.
+A port already assigned to one link must be removed from that link before it can be assigned elsewhere.
 
-### Incomplete Port Handling
+## Topology validation
 
-Because topology selection occurs after port configuration, every enabled port should normally be complete before it is offered for linking.
+Before the configuration can be built, the dashboard verifies that:
 
-If an incomplete port is encountered because of an interrupted setup, imported configuration, or later reconfiguration, the dashboard must:
-
-1. Identify the missing configuration.
-2. Preserve the pending link selection.
-3. Take the user directly to the first incomplete configuration stage for that port.
-4. Return the user to the topology page when the port configuration is complete.
-
-The configuration must not be built while any selected port remains incomplete.
-
-### Disabled Port Handling
-
-A port that was not enabled during hardware selection cannot be assigned to a link.
-
-If the user requires an additional port, the dashboard must return to the hardware-port selection stage so that the port can be enabled and prepared correctly.
-
-The topology page must not automatically enable hardware ports because additional hardware preparation, overlays, audio devices, and interface settings may be required.
-
-### Topology Validation
-
-Before continuing, the dashboard must confirm that:
-
-* Every enabled port has a completed logic configuration.
-* Every enabled port has an explicit topology assignment.
+* Every enabled port has a completed radio-logic configuration.
+* Every enabled port has an explicit topology disposition.
+* Every link member refers to an enabled radio port or `ReflectorLogic`.
 * Every local link contains at least two radio ports.
-* A reflector link contains at least one radio port and `ReflectorLogic`.
+* The reflector link contains at least one radio port and `ReflectorLogic`.
 * No radio port appears in more than one link.
 * `ReflectorLogic` appears only in the reflector link.
-* Every radio logic connected to `ReflectorLogic` includes the required `:9` suffix.
-* A reflector link cannot be created when reflector operation is disabled.
-* Only one `ReflectorLogic` and one reflector destination are configured.
+* Every radio logic connected to `ReflectorLogic` receives the required `:9` suffix.
+* A reflector link is not created when reflector operation is disabled.
+* No more than one `ReflectorLogic` and one reflector destination are configured.
 
-Support for simultaneous connections to multiple reflectors is outside the present scope.
+The final review identifies every enabled port as:
 
-### Completion Route
+* Connected to the reflector
+* Connected through a named local link
+* Independent
 
-During initial setup, a valid topology continues to the final review page. The review must show every enabled port, its logic type, and its link assignment before the configuration is built.
+## Incomplete and disabled ports
 
-When topology is changed through the dashboard reconfiguration menu, a valid saved configuration must return directly to the build page, preserving the established V3.2 reconfiguration behaviour.
+An incomplete port cannot be used to build the final configuration. The dashboard identifies its missing configuration and returns the operator to the required setup stage.
 
-## Current Scope
+A port that was not enabled during hardware selection cannot be assigned to a link. It must first be enabled and configured through the hardware workflow because additional audio devices, GPIO preparation or device-tree changes may be required.
 
-The supported topology contains no more than one ReflectorLogic and one reflector connection.
+## Independent ports
 
-Different local port groups may be configured on a case-by-case basis, subject to the strict isolation rule.
+An independent port has a valid `SimplexLogic` or `RepeaterLogic` declaration but does not appear in a link section.
 
-Connecting different ports to multiple independent reflectors is outside the current scope.
+It remains locally operational and retains its own radio, squelch, identification and logic settings.
 
-## User-Defined Local Links
+Independent operation is useful when one computer supports several unrelated radio systems that do not need to exchange audio or signalling.
 
-Multi-port local links are defined by the operator according to the requirements of the individual installation.
+## Reflector topology limit
 
-The configuration workflow will provide an example based on the standard SvxLink link structure:
+One installation supports no more than one `ReflectorLogic` and one reflector destination.
 
-```ini
-[LinkToR4]
-CONNECT_LOGICS=RepeaterLogic1:94:SK3AB,SimplexLogic2:92:SK3CD
-#DEFAULT_ACTIVE=1
-TIMEOUT=300
-#ACTIVATE_ON_ACTIVITY=RepeaterLogic1
-#ACTIVATE_ON_TG=SimplexLogic2:240.*
-```
+Multiple radio ports may share that reflector connection, subject to the strict port-membership rule.
 
-The operator may define:
+Other enabled ports may operate independently or form separate local groups. Simultaneous connections to multiple independent reflectors are outside the supported configuration scope.
 
-* The link section name.
-* The available radio ports participating in the link.
-* The DTMF command assigned to each participating logic.
-* The identification or announcement label associated with each logic.
-* Whether the link is active by default.
-* The link timeout.
-* Any supported activity or talkgroup activation conditions.
+## Reconfiguration behaviour
 
-The configuration workflow generates the appropriate SimplexLogic or RepeaterLogic section names from the selected ports.
-
-The operator remains responsible for deciding the intended operational connectivity of each local link.
-
-The configuration workflow remains responsible for:
-
-* Rejecting references to ports that are not enabled.
-* Rejecting duplicate or invalid link section names.
-* Rejecting a link containing fewer than two radio logics.
-* Preventing a radio port from belonging to more than one link.
-* Preventing a port assigned to the reflector link from also belonging to a local link.
-* Presenting the resulting topology for review before configuration is built.
-
-A local link may subsequently be replaced or reconfigured through the dashboard reconfiguration menu.
-
-## Reconfiguration Behaviour
-
-The initial configuration workflow and dashboard reconfiguration workflow follow different return paths.
-
-During initial setup, the operator progresses through the complete sequence:
+Initial setup follows the complete guided sequence:
 
 ```text
-Configure local node or ports
-→ Configure link topology and reflector access
-→ Review complete configuration
+Configure the installation
+→ Configure reflector access and topology
+→ Review
 → Build and deploy
 ```
 
-When an existing setting is opened through the dashboard reconfiguration menu, saving that setting must return directly to the Build page.
-
-The operator must not be sent through the remaining initial-setup pages.
-
-This preserves the established SvxLink-Dash-V3.2 reconfiguration behaviour:
+When an existing setting is opened from the protected reconfiguration menu, saving it returns directly to the Build page:
 
 ```text
-Dashboard
-→ Reconfiguration menu
+Runtime dashboard
+→ Reconfiguration
 → Selected configuration page
 → Build
-→ Deploy updated configuration
+→ Deploy
 ```
 
-This direct return applies to changes involving:
+The operator is not sent through unrelated initial-setup pages. The Build page remains the common point for reviewing, rendering and deploying the revised configuration.
 
-* Local link topology.
-* Reflector selection.
-* Reflector authentication.
-* Ports participating in the reflector link.
-* Other existing configuration pages opened through reconfiguration.
+## Rebuild warning
 
-The Build page remains the common point at which the revised model is rendered, reviewed and deployed.
+The dashboard manages generated SvxLink configuration and event files.
 
----
+A Rebuild can overwrite manual changes made directly to managed files. Before rebuilding, review the proposed configuration and preserve any manual work that must remain outside dashboard management.
+
+Specialist configuration that is not guided by the dashboard should be maintained only in documented, manually managed sections or files.
+
 
 # Reflector Protocol Notice
 
