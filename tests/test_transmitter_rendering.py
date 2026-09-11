@@ -87,6 +87,37 @@ class TransmitterRenderingTests(unittest.TestCase):
             rendered,
         )
 
+    def test_gpiod_sql_can_use_hidraw_ptt_for_hybrid(self):
+        rendered = render_port_tx_section(
+            self.make_model(),
+            "1",
+            self.make_node(
+                sql_method="gpiod",
+                ptt_source="hidraw",
+            ),
+        )
+
+        self.assertIn(
+            "PTT_TYPE=Hidraw",
+            rendered,
+        )
+        self.assertIn(
+            "HID_DEVICE=/dev/hidraw3",
+            rendered,
+        )
+        self.assertIn(
+            "HID_PTT_PIN=GPIO3",
+            rendered,
+        )
+        self.assertNotIn(
+            "PTT_TYPE=GPIOD",
+            rendered,
+        )
+        self.assertNotIn(
+            "PTT_TYPE=SerialPin",
+            rendered,
+        )
+
     def test_ctcss_sql_can_use_serial_ptt(self):
         rendered = render_port_tx_section(
             self.make_model(),

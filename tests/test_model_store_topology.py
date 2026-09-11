@@ -26,6 +26,38 @@ class TopologyMigrationTests(unittest.TestCase):
         ]
         self.topology["independent_ports"] = [4, 3, 3]
 
+    def test_new_default_model_is_fresh_complete_and_current(self):
+        first = new_node_model()
+        second = new_node_model()
+
+        self.assertEqual(first["schema_version"], 2)
+        self.assertEqual(
+            first["build"]["intent"],
+            "single_channel",
+        )
+        self.assertIsNone(
+            first["installation"]["primary_port_id"]
+        )
+        self.assertEqual(first["reflector"]["route"], "none")
+        self.assertEqual(
+            first["topology"]["reflector_link"]["ports"],
+            [],
+        )
+        self.assertEqual(
+            first["modules"]["enabled"],
+            ["ModuleHelp", "ModuleParrot"],
+        )
+
+        first["reflector"]["operational"][
+            "monitor_tgs"
+        ].append("235")
+
+        self.assertEqual(
+            second["reflector"]["operational"]["monitor_tgs"],
+            [],
+        )
+        self.assertFalse(store.migrate_node_model(second))
+
     def test_normalisation_preserves_order_membership_and_numeric_settings(self):
         self.assertTrue(store.normalise_port_ids(self.model))
         self.assertEqual(self.model["ports"], {
@@ -69,21 +101,53 @@ class TopologyMigrationTests(unittest.TestCase):
                 self.assertFalse(store.clean_stale_topology_ports(self.model))
                 self.assertEqual(self.model, before)
 
-    def test_legacy_migration_is_idempotent_with_and_without_reflector(self):
-        for enabled in (False, True):
-            with self.subTest(reflector_enabled=enabled):
-                model = {"ports": {"enabled": [1, 2]},
-                         "reflector": {"enabled": enabled}}
-                self.assertTrue(store.migrate_node_model(model))
-                self.assertEqual(model["installation"]["primary_port_id"], "1")
-                topology = model["topology"]
-                self.assertEqual(topology["reflector_link"]["ports"],
-                                 ["1", "2"] if enabled else [])
-                self.assertEqual(topology["independent_ports"],
-                                 [] if enabled else ["1", "2"])
-                before = deepcopy(model)
-                self.assertFalse(store.migrate_node_model(model))
-                self.assertEqual(model, before)
+    def test_v31_v32_migration_with_and_without_reflector(self):
+        # V3.1 and V3.2 used the same version 1 model structure.
+        for dashboard_version in ("V3.1", "V3.2"):
+            for enabled in (False, True):
+                with self.subTest(
+                    dashboard_version=dashboard_version,
+                    reflector_enabled=enabled,
+                ):
+                    model = {
+                        "schema_version": 1,
+                        "ports": {
+                            "enabled": [1, 2],
+                        },
+                        "reflector": {
+                            "enabled": enabled,
+                        },
+                    }
+
+                    self.assertTrue(
+                        store.migrate_node_model(model)
+                    )
+                    self.assertEqual(
+                        model["schema_version"],
+                        2,
+                    )
+                    self.assertEqual(
+                        model["installation"]["primary_port_id"],
+                        "1",
+                    )
+
+                    topology = model["topology"]
+
+                    self.assertEqual(
+                        topology["reflector_link"]["ports"],
+                        ["1", "2"] if enabled else [],
+                    )
+                    self.assertEqual(
+                        topology["independent_ports"],
+                        [] if enabled else ["1", "2"],
+                    )
+
+                    before = deepcopy(model)
+
+                    self.assertFalse(
+                        store.migrate_node_model(model)
+                    )
+                    self.assertEqual(model, before)
 
     def test_defaults_merge_preserves_operator_values(self):
         del self.topology["reflector_link"]["default_active"]
