@@ -13,7 +13,7 @@ from services.svxlink_config_discovery import discover_macros
 
 
 
-APP_ROOT = Path("/opt/dashboard")
+APP_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = APP_ROOT / "config"
 MODEL_FILE = CONFIG_DIR / "node_model.json"
 FEDERATION_HOST_IDS = {

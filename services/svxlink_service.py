@@ -28,7 +28,7 @@ from models.node_model import get_installation_tones
 # Paths
 # =========================================================
 
-APP_ROOT = Path("/opt/dashboard")
+APP_ROOT = Path(__file__).resolve().parent.parent
 
 SVXLINK_CONF = Path("/etc/svxlink/svxlink.conf")
 MODULE_DIR = Path("/etc/svxlink/svxlink.d")
@@ -183,7 +183,7 @@ def write_text_file(path, content):
     path.parent.mkdir(parents=True, exist_ok=True)
 
     path.write_text(content, encoding="utf-8")
-
+    path.chmod(0o664)
 
 def copy_file(src, dst):
     """

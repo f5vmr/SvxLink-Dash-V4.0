@@ -8,8 +8,8 @@ import json
 import subprocess
 from pathlib import Path
 
-
-GPIO_LINES_FILE = Path("/opt/dashboard/config/gpio_lines.json")
+APP_ROOT = Path(__file__).resolve().parent.parent
+GPIO_LINES_FILE = APP_ROOT / "config" / "gpio_lines.json"
 
 def build_raspberry_pi_gpio_lines():
     """

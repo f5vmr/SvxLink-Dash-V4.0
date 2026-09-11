@@ -90,6 +90,11 @@ from services.ics_prepare_service import (
     enable_i2c,
 )
 from services.log_service import get_svxlink_log_path
+from services.metar_validation import (
+    MetarVerificationUnavailable,
+    find_unavailable_metar_airports,
+    is_valid_icao_format,
+)
 from services.gpio_service import (
     flatten_gpio_lines,
     prepare_gpio_lines,
@@ -115,14 +120,9 @@ from services.transmitter_configuration import (
 )
 from renderers.svxlink_renderer import (
     get_primary_callsign,
-    render_echolink_module,
 )
 from services.version_service import get_version_info
-from services.svxlink_service import (
-    MODULE_DIR,
-    write_text_file,
-    restart_svxlink,
-)
+
 import subprocess
 import hw_platforms
 from services.system_service import (
@@ -140,7 +140,7 @@ from data.timezones import TIMEZONES
 # Core paths
 # =========================================================
 
-APP_ROOT = Path("/opt/dashboard")
+APP_ROOT = Path(__file__).resolve().parent
 TEMPLATE_DIR = APP_ROOT / "templates"
 STATIC_DIR = APP_ROOT / "static"
 
@@ -212,9 +212,6 @@ MACRO_LIMIT = 16
 # =========================================================
 
 SVXLINK_CONF = Path("/etc/svxlink/svxlink.conf")
-
-MODULE_DIR = Path("/etc/svxlink/svxlink.d")
-
 
 EVENT_FILES = ['Logic.tcl', 'RepeaterLogicType.tcl', 'CW.tcl']
 # =========================================================
@@ -5570,33 +5567,105 @@ def talkgroups_page():
     )
 
     talkgroups = load_talkgroups(environment)
-
+    error = None
     if request.method == "POST":
+
         updated = []
+        submitted = []
+
+        allowed_colours = {
+            "tg-yellow",
+            "tg-green",
+            "tg-blue",
+            "tg-red",
+            "tg-orange",
+            "tg-purple",
+            "tg-gold",
+        }
 
         for index in range(len(talkgroups)):
-            tg_id = request.form.get(f"id_{index}", "").strip()
-            label = request.form.get(f"label_{index}", "").strip()
-            colour = request.form.get(f"colour_{index}", "").strip()
-            command = request.form.get(f"command_{index}", "").strip()
+            tg_id = request.form.get(
+                f"id_{index}",
+                "",
+            ).strip()
 
-            if tg_id and label and colour and command:
-                updated.append({
-                    "id": tg_id,
-                    "label": label,
-                    "colour": colour,
-                    "command": command,
-                })
+            label = request.form.get(
+                f"label_{index}",
+                "",
+            ).strip()
 
-        save_talkgroups(environment, updated)
+            colour = request.form.get(
+                f"colour_{index}",
+                "tg-yellow",
+            ).strip()
 
-        return redirect(url_for("talkgroups_page", saved="1"))
+            command = (
+                f"91{tg_id}#"
+                if tg_id
+                else ""
+            )
+
+            row = {
+                "id": tg_id,
+                "label": label,
+                "colour": colour,
+                "command": command,
+            }
+
+            submitted.append(row)
+
+            if not tg_id and not label:
+                continue
+
+            if not tg_id or not label:
+                if error is None:
+                    error = (
+                        f"Talkgroup row {index + 1} is "
+                        "incomplete. Enter both a talkgroup "
+                        "and label, or clear the row."
+                    )
+                continue
+
+            if not tg_id.isdigit():
+                if error is None:
+                    error = (
+                        f"Talkgroup row {index + 1} must use "
+                        "digits only."
+                    )
+                continue
+
+            if colour not in allowed_colours:
+                if error is None:
+                    error = (
+                        f"Talkgroup row {index + 1} has an "
+                        "invalid colour."
+                    )
+                continue
+
+            updated.append(row)
+
+        if error:
+            talkgroups = submitted
+
+        else:
+            save_talkgroups(
+                environment,
+                updated,
+            )
+
+            return redirect(
+                url_for(
+                    "talkgroups_page",
+                    saved="1",
+                )
+            )
 
     return render_template(
         "talkgroups.html",
         model=model,
         talkgroups=talkgroups,
         saved=saved,
+        error=error,
     )
 @app.route("/macros", methods=["GET", "POST"])
 def macros_page():
@@ -6310,47 +6379,91 @@ def echolink_edit_page():
 
     if request.method == "POST":
 
-        echolink["enabled"] = (
+        enabled = (
             request.form.get("enabled") == "yes"
         )
 
-        echolink["callsign"] = request.form.get(
+        callsign = request.form.get(
             "callsign",
-            ""
+            "",
         ).strip().upper()
 
-        echolink["password"] = request.form.get(
+        password = request.form.get(
             "password",
-            ""
+            "",
         ).strip()
 
-        echolink["sysopname"] = request.form.get(
+        sysopname = request.form.get(
             "sysopname",
-            ""
+            "",
         ).strip()
 
-        echolink["location"] = request.form.get(
+        location_text = request.form.get(
             "location",
-            ""
+            "",
         ).strip()
 
-        save_node_model(model)
-        echolink_conf = render_echolink_module(model)
+        if location_text.lower().startswith("[svx]"):
+            location_text = location_text[5:].lstrip()
 
-        if echolink_conf:
-            write_text_file(
-                MODULE_DIR / "ModuleEchoLink.conf",
-                echolink_conf
+        location = (
+            f"[Svx] {location_text}"
+            if location_text
+            else ""
+        )
+
+        submitted_echolink = {
+            "enabled": enabled,
+            "callsign": callsign,
+            "password": password,
+            "sysopname": sysopname,
+            "location": location,
+        }
+
+        if enabled:
+            if not callsign.endswith(("-L", "-R")):
+                error = (
+                    "EchoLink callsign must end in -L or -R."
+                )
+            elif not password:
+                error = "EchoLink password is required."
+            elif not sysopname:
+                error = "EchoLink sysop name is required."
+            elif not location_text:
+                error = "EchoLink location is required."
+            elif len(location_text) > 12:
+                error = (
+                    "EchoLink location must be 12 characters "
+                    "or fewer after [Svx]."
+                )
+
+        if error:
+            echolink = submitted_echolink
+        else:
+            model["echolink"] = submitted_echolink
+            echolink = submitted_echolink
+
+            save_node_model(model)
+
+            result = build_svxlink_configuration(
+                model,
+                restart=True,
             )
-    
-        restart_svxlink()
-    
-        return redirect(
-            url_for(
-        "echolink_edit_page",
-        saved="1"
-    )
-)
+
+            if not result.get("success"):
+                error = (
+                    "EchoLink settings were saved, but the "
+                    "SvxLink rebuild or restart failed."
+                )
+
+            else:
+                return redirect(
+                    url_for(
+                        "echolink_edit_page",
+                        saved="1",
+                    )
+                )
+
     
     return render_template(
                 "echolink_edit.html",
@@ -6375,61 +6488,146 @@ def metar_edit_page():
 
     if request.method == "POST":
 
-        metar["enabled"] = (
+        enabled = (
             request.form.get("enabled") == "yes"
         )
 
-        metar["startdefault"] = request.form.get(
+        startdefault = request.form.get(
             "startdefault",
-            ""
+            "",
         ).strip().upper()
 
-        airports = request.form.get(
-            "airports",
-            ""
-        )
+        airports = [
+            value.strip().upper()
+            for value in request.form.get(
+                "airports",
+                "",
+            ).split(",")
+            if value.strip()
+        ]
 
-        metar["airports"] = [
-            x.strip().upper()
-            for x in airports.split(",")
-            if x.strip()
-        ][:6]
+        submitted_metar = dict(metar)
+        submitted_metar.update({
+            "enabled": enabled,
+            "startdefault": startdefault,
+            "airports": airports,
+        })
 
-        if "modules" not in model:
-            model["modules"] = {"enabled": []}
+        if enabled:
+            if not startdefault:
+                error = "Default airport ICAO is required."
 
-        if "enabled" not in model["modules"]:
-            model["modules"]["enabled"] = []
+            elif not is_valid_icao_format(startdefault):
+                error = (
+                    "Default airport ICAO must contain exactly "
+                    "four letters."
+                )
 
-        if metar["enabled"]:
-            if "ModuleMetarInfo" not in model["modules"]["enabled"]:
-                model["modules"]["enabled"].append("ModuleMetarInfo")
+            elif len(airports) > 6:
+                error = (
+                    "Please enter no more than 6 additional "
+                    "airports."
+                )
+
+            else:
+                invalid_airports = [
+                    airport
+                    for airport in airports
+                    if not is_valid_icao_format(airport)
+                ]
+
+                if invalid_airports:
+                    error = (
+                        "Additional airport ICAO codes must each "
+                        "contain exactly four letters."
+                    )
+
+            if not error:
+                try:
+                    unavailable_airports = (
+                        find_unavailable_metar_airports(
+                            [startdefault] + airports
+                        )
+                    )
+
+                except MetarVerificationUnavailable:
+                    error = (
+                        "METAR airport verification is temporarily "
+                        "unavailable. No settings were changed."
+                    )
+
+                else:
+                    if unavailable_airports:
+                        error = (
+                            "No METAR weather source is available "
+                            "for: "
+                            + ", ".join(unavailable_airports)
+                            + "."
+                        )
+
+        if error:
+            metar = submitted_metar
+
         else:
-            if "ModuleMetarInfo" in model["modules"]["enabled"]:
-                model["modules"]["enabled"].remove("ModuleMetarInfo")
+            model["metar"] = submitted_metar
+            metar = submitted_metar
 
-        save_node_model(model)
+            if "modules" not in model:
+                model["modules"] = {
+                    "enabled": [],
+                }
 
-        result = build_svxlink_configuration(
-            model,
-            restart=True,
-        )
+            if "enabled" not in model["modules"]:
+                model["modules"]["enabled"] = []
 
-        if result["validation_errors"] or result["platform_errors"] or result["deployment_errors"]:
-            error = "; ".join(
+            if enabled:
+                if (
+                    "ModuleMetarInfo"
+                    not in model["modules"]["enabled"]
+                ):
+                    model["modules"]["enabled"].append(
+                        "ModuleMetarInfo"
+                    )
+
+            elif (
+                "ModuleMetarInfo"
+                in model["modules"]["enabled"]
+            ):
+                model["modules"]["enabled"].remove(
+                    "ModuleMetarInfo"
+                )
+
+            save_node_model(model)
+
+            result = build_svxlink_configuration(
+                model,
+                restart=True,
+            )
+
+            if (
                 result["validation_errors"]
-                + result["platform_errors"]
-                + result["deployment_errors"]
-            )
+                or result["platform_errors"]
+                or result["deployment_errors"]
+            ):
+                error = "; ".join(
+                    result["validation_errors"]
+                    + result["platform_errors"]
+                    + result["deployment_errors"]
+                )
 
-            return render_template(
-                "metar_edit.html",
-                metar=metar,
-                error=error,
-                saved=False,
-            )
+                return render_template(
+                    "metar_edit.html",
+                    metar=metar,
+                    error=error,
+                    saved=False,
+                )
 
-        return redirect(url_for("metar_edit_page", saved="1"))
+            return redirect(
+                url_for(
+                    "metar_edit_page",
+                    saved="1",
+                )
+        )
 
     return render_template(
         "metar_edit.html",

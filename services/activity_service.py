@@ -9,9 +9,9 @@ Extracts operator-facing reflector talker activity from svxlink.log.
 import re
 from datetime import datetime, timezone
 
-from services.log_service import get_svxlink_log_path
-
-LOG_FILE = get_svxlink_log_path()
+from services.log_service import (
+    read_recent_svxlink_log_lines,
+)
 
 ACTIVE_TIMEOUT_SECONDS = 10
 
@@ -40,15 +40,9 @@ def get_reflector_activity(limit=10):
     does not show multiple rows for the same recent station.
     """
 
-    if not LOG_FILE.exists():
-        return []
+    lines = read_recent_svxlink_log_lines(300)
 
-    try:
-        lines = LOG_FILE.read_text(
-            encoding="utf-8",
-            errors="ignore",
-        ).splitlines()
-    except Exception:
+    if not lines:
         return []
 
     talker_re = re.compile(

@@ -10,7 +10,8 @@ import json
 from data.talkgroups import TALKGROUPS
 
 
-CONFIG_DIR = Path("/opt/dashboard/config")
+APP_ROOT = Path(__file__).resolve().parent.parent
+CONFIG_DIR = APP_ROOT / "config"
 
 TALKGROUP_FILE = CONFIG_DIR / "talkgroups.json"
 MAX_TALKGROUP_BUTTONS = 18

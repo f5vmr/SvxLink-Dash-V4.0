@@ -157,14 +157,19 @@ nmcli connection modify Hotspot \
 #end- Wifi profile
 
 cat > /etc/logrotate.d/svxlink <<'EOF'
-/var/log/svxlink.log /var/log/svxlink {
+/var/log/svxlink.log {
     su svxlink svxlink
-    weekly
-    rotate 4
+    daily
+    rotate 7
     compress
+    delaycompress
     missingok
     notifempty
-    copytruncate
+    create 0664 svxlink svxlink
+    sharedscripts
+    postrotate
+        /usr/bin/systemctl reload svxlink.service
+    endscript
 }
 EOF
 

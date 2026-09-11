@@ -12,7 +12,10 @@ import subprocess
 import time
 import re 
 from services.svxlink_service import svxlink_status
-from services.log_service import get_svxlink_log_path
+from services.log_service import (
+    get_svxlink_log_path,
+    read_recent_svxlink_log_lines,
+)
 
 UPTIME_FILE = Path("/proc/uptime")
 
@@ -54,7 +57,7 @@ def get_connected_reflector(model=None):
     The latest relevant ReflectorLogic event wins.
     """
 
-    log_file = get_svxlink_log_path()
+
 
     reflector_name = "Connected"
 
@@ -67,16 +70,9 @@ def get_connected_reflector(model=None):
         if candidate and str(candidate).strip().lower() != "none":
             reflector_name = str(candidate).strip()
 
-    if not log_file.exists():
-        return "unknown"
+    lines = read_recent_svxlink_log_lines(800)
 
-    try:
-        lines = log_file.read_text(
-            encoding="utf-8",
-            errors="ignore"
-        ).splitlines()
-
-    except Exception:
+    if not lines:
         return "unknown"
 
     connected_terms = (
@@ -117,7 +113,6 @@ def get_radio_state(selected_port="1"):
         RX/input state is detected from Rx1 squelch messages.
         """
 
-        log_file = get_svxlink_log_path()
 
         tx_active = False
         rx_open = False
@@ -125,7 +120,9 @@ def get_radio_state(selected_port="1"):
         rx_name = f"rx{selected_port}:"
         tx_name = f"tx{selected_port}:"
 
-        if not log_file.exists():
+        lines = read_recent_svxlink_log_lines(300)
+
+        if not lines:
             return {
                 "label": "Listening",
                 "input": "Unknown",
@@ -133,22 +130,6 @@ def get_radio_state(selected_port="1"):
                 "tx": False,
                 "rx": False,
             }
-
-        try:
-            lines = log_file.read_text(
-                encoding="utf-8",
-                errors="ignore"
-            ).splitlines()
-
-        except Exception:
-            return {
-                "label": "Listening",
-                "input": "Unknown",
-                "class": "radio-standby",
-                "tx": False,
-                "rx": False,
-            }
-
         for line in reversed(lines[-300:]):
             lower = line.lower()
             if tx_name not in lower:
@@ -194,7 +175,6 @@ def get_echolink_state():
     most recent EchoLink QSO state transition.
     """
 
-    log_file = get_svxlink_log_path()
 
     idle_state = {
         "active": False,
@@ -203,22 +183,10 @@ def get_echolink_state():
         "class": "status-good",
     }
 
-    if not log_file.exists():
+    lines = read_recent_svxlink_log_lines(1000)
+
+    if not lines:
         return idle_state
-
-    try:
-        lines = log_file.read_text(
-            encoding="utf-8",
-            errors="ignore",
-        ).splitlines()
-
-    except Exception:
-        return {
-            "active": False,
-            "label": "Unknown",
-            "station": "",
-            "class": "status-warn",
-        }
 
     qso_pattern = re.compile(
         r"([A-Za-z0-9-]+):\s+"
@@ -258,18 +226,10 @@ def get_active_talkgroup():
         ReflectorLogic: Selecting TG #505 -> 505
     """
 
-    log_file = get_svxlink_log_path()
 
-    if not log_file.exists():
-        return "Unknown"
+    lines = read_recent_svxlink_log_lines(1000)
 
-    try:
-        lines = log_file.read_text(
-            encoding="utf-8",
-            errors="ignore"
-        ).splitlines()
-
-    except Exception:
+    if not lines:
         return "Unknown"
 
     tg_pattern = re.compile(

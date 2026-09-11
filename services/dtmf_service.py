@@ -11,8 +11,8 @@ from pathlib import Path
 import json
 import re
 
-
-NODE_MODEL = Path("/opt/dashboard/config/node_model.json")
+APP_ROOT = Path(__file__).resolve().parent.parent
+NODE_MODEL = APP_ROOT / "config" / "node_model.json"
 
 
 def get_dtmf_control_path(selected_port=None):

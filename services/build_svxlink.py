@@ -452,6 +452,19 @@ def build_svxlink_configuration(
 
     result["service_status"] = svxlink_status()
 
+    if (
+        restart
+        and result["service_status"] != "active"
+        and not any(
+            error.startswith("SvxLink restart failed:")
+            for error in result["deployment_errors"]
+        )
+    ):
+        result["deployment_errors"].append(
+            "Configuration files were deployed, but SvxLink "
+            f"finished in the {result['service_status']} state."
+        )
+
     if not result["deployment_errors"]:
         result["success"] = True
 

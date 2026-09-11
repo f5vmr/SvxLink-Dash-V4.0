@@ -132,4 +132,6 @@ def write_node_info_json(model):
         encoding="utf-8",
     )
 
+    NODE_INFO_FILE.chmod(0o664)
+
     return NODE_INFO_FILE

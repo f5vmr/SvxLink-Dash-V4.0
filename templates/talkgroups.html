@@ -31,6 +31,9 @@
             Talkgroup buttons saved successfully.
         </p>
     {% endif %}
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
     <form method="post">
 
         <table class="dashboard-table">
@@ -83,7 +86,9 @@
                         <input class="dtmf-command"
                                type="text"
                                name="command_{{ loop.index0 }}"
-                               value="{{ tg.command }}">
+                               value="{{ tg.command }}"
+                               readonly
+                               aria-readonly="true">
                     </td>
 
                 </tr>
@@ -104,7 +109,39 @@
         </div>
 
     </form>
+    <script>
+        (() => {
+            const talkgroupInputs = document.querySelectorAll(
+                'input[name^="id_"]'
+            );
 
+            talkgroupInputs.forEach((talkgroupInput) => {
+                const index = talkgroupInput.name.substring(3);
+                const commandInput = document.querySelector(
+                    `input[name="command_${index}"]`
+                );
+
+                if (!commandInput) {
+                    return;
+                }
+
+                const updateCommand = () => {
+                    const talkgroup = talkgroupInput.value.trim();
+
+                    commandInput.value = talkgroup
+                        ? `91${talkgroup}#`
+                        : "";
+                };
+
+                talkgroupInput.addEventListener(
+                    "input",
+                    updateCommand
+                );
+
+                updateCommand();
+            });
+        })();
+    </script>
 <footer class="site-footer">
     SvxLink Software &copy; Tobias Blömberg SM0SVX<br>
     SvxLink Configurator and Dashboard &copy; Chris Jackson G4NAB<br>

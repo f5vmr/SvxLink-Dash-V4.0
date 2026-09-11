@@ -171,6 +171,44 @@ class RuntimeStatusTests(unittest.TestCase):
             ["Independent operation"],
         )
 
+    def test_radio_state_uses_rotation_aware_log_reader(self):
+
+        lines = [
+            "Rx2: The squelch is open",
+            "Unrelated event after log rotation",
+        ]
+
+        with patch.object(
+            status_service,
+            "read_recent_svxlink_log_lines",
+            return_value=lines,
+        ) as log_mock:
+            state = status_service.get_radio_state(
+                selected_port="2"
+            )
+
+        self.assertEqual(state["label"], "Receiving")
+        self.assertEqual(state["input"], "Open")
+        self.assertTrue(state["rx"])
+        self.assertFalse(state["tx"])
+        log_mock.assert_called_once_with(300)
+
+    def test_talkgroup_state_uses_rotation_aware_log_reader(self):
+
+        lines = [
+            "ReflectorLogic: Selecting TG #235",
+            "Unrelated event after log rotation",
+        ]
+
+        with patch.object(
+            status_service,
+            "read_recent_svxlink_log_lines",
+            return_value=lines,
+        ) as log_mock:
+            talkgroup = status_service.get_active_talkgroup()
+
+        self.assertEqual(talkgroup, "235")
+        log_mock.assert_called_once_with(1000)
 
 if __name__ == "__main__":
     unittest.main()
