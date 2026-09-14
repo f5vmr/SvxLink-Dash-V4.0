@@ -8,22 +8,47 @@ from services.node_info_service import build_node_info_json
 
 class NodeInfoServiceTests(unittest.TestCase):
 
-    def test_disabled_location_information_produces_empty_json(self):
-        model = new_node_model()
-        model["location_info"]["enabled"] = False
-        model["node_info"].update({
-            "nodeLocation": "Northumberland",
-            "qth_name": "Alnwick",
-            "sysop": "G4NAB",
-        })
-
-        self.assertEqual(
-            build_node_info_json(model),
-            {},
+    def test_node_info_and_location_info_are_independent(self):
+        combinations = (
+            (False, False, False),
+            (False, True, False),
+            (True, False, True),
+            (True, True, True),
         )
+
+        for (
+            node_info_enabled,
+            location_info_enabled,
+            expect_information,
+        ) in combinations:
+            with self.subTest(
+                node_info_enabled=node_info_enabled,
+                location_info_enabled=location_info_enabled,
+            ):
+                model = new_node_model()
+                model["node_info"].update({
+                    "enabled": node_info_enabled,
+                    "nodeLocation": "Northumberland",
+                    "qth_name": "Alnwick",
+                    "sysop": "G4NAB",
+                })
+                model["location_info"]["enabled"] = (
+                    location_info_enabled
+                )
+
+                data = build_node_info_json(model)
+
+                if expect_information:
+                    self.assertEqual(
+                        data["nodeLocation"],
+                        "Northumberland",
+                    )
+                else:
+                    self.assertEqual(data, {})
 
     def test_single_port_uses_rx1_and_tx1(self):
         model = new_node_model()
+        model["node_info"]["enabled"] = True
         model["location_info"]["enabled"] = True
         model["node_info"].update({
             "rx_freq": "145.500",
@@ -44,6 +69,7 @@ class NodeInfoServiceTests(unittest.TestCase):
 
     def test_multiport_uses_selected_primary_port_names(self):
         model = new_node_model()
+        model["node_info"]["enabled"] = True
         model["location_info"]["enabled"] = True
         model["ports"] = {
             "enabled": ["1", "2"],
@@ -68,6 +94,7 @@ class NodeInfoServiceTests(unittest.TestCase):
 
     def test_single_port_ctcss_is_published_as_ctcss(self):
         model = new_node_model()
+        model["node_info"]["enabled"] = True
         model["location_info"]["enabled"] = True
         model["squelch"]["method"] = "ctcss"
 
@@ -80,6 +107,7 @@ class NodeInfoServiceTests(unittest.TestCase):
 
     def test_multiport_primary_physical_sql_is_published_as_cor(self):
         model = new_node_model()
+        model["node_info"]["enabled"] = True
         model["location_info"]["enabled"] = True
         model["ports"] = {
             "enabled": ["1", "2"],

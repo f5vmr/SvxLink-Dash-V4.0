@@ -78,7 +78,7 @@
     {% endif %}
         {% include "location_information_choice.html" %}
 
-    <div id="location_information_fields">
+    <div id="node_information_fields">
         <div class="note">
             {% if primary_port_id %}
                 The RF details below describe primary Port
@@ -209,7 +209,9 @@
                    value="{{ node_info.antenna_direction }}">
         </div>
 
-    {% include "location_info_fields.html" %}
+    <div id="location_info_specific_fields">
+        {% include "location_info_fields.html" %}
+    </div>
     </div>
     <div class="button-row">
         <a class="button-secondary"
@@ -225,36 +227,59 @@
     </form>
     <script>
         (() => {
-            const fields = document.getElementById(
-                "location_information_fields"
+            const nodeFields = document.getElementById(
+                "node_information_fields"
+            );
+            const locationFields = document.getElementById(
+                "location_info_specific_fields"
             );
             const choices = document.querySelectorAll(
-                'input[name="location_info_enabled"]'
+                'input[name="node_info_enabled"], '
+                + 'input[name="location_info_enabled"]'
             );
 
-            function updateLocationFields() {
+            function choiceIsEnabled(name) {
                 const selected = document.querySelector(
-                    'input[name="location_info_enabled"]:checked'
+                    `input[name="${name}"]:checked`
                 );
-                const enabled = selected && selected.value === "yes";
+                return selected && selected.value === "yes";
+            }
 
-                fields.hidden = !enabled;
-
-                fields.querySelectorAll(
+            function setFieldState(container, enabled) {
+                container.hidden = !enabled;
+                container.querySelectorAll(
                     "input, select, textarea"
                 ).forEach((control) => {
                     control.disabled = !enabled;
                 });
             }
 
+            function updatePublicationFields() {
+                const nodeEnabled = choiceIsEnabled(
+                    "node_info_enabled"
+                );
+                const locationEnabled = choiceIsEnabled(
+                    "location_info_enabled"
+                );
+
+                setFieldState(
+                    nodeFields,
+                    nodeEnabled || locationEnabled
+                );
+                setFieldState(
+                    locationFields,
+                    locationEnabled
+                );
+            }
+
             choices.forEach((choice) => {
                 choice.addEventListener(
                     "change",
-                    updateLocationFields
+                    updatePublicationFields
                 );
             });
 
-            updateLocationFields();
+            updatePublicationFields();
         })();
     </script>
 <footer class="site-footer">

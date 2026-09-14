@@ -166,6 +166,7 @@ DEFAULT_MODEL = {
         "independent_ports": [],
     },
         "node_info": {
+            "enabled": False,
             "nodeLocation": "",
             "hidden": False,
             "qth_name": "",

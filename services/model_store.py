@@ -295,6 +295,32 @@ def migrate_reflector_operational(model):
 
     return before != operational
 
+
+def migrate_node_info_publication(model):
+    """
+    Preserve the historical combined publication choice.
+
+    Models saved before node_info and LocationInfo were separated used
+    location_info.enabled to control both generated outputs.
+    """
+    node_info = model.get("node_info")
+
+    if node_info is None:
+        node_info = {}
+        model["node_info"] = node_info
+    elif not isinstance(node_info, dict):
+        return False
+
+    if "enabled" in node_info:
+        return False
+
+    location_info = model.get("location_info", {})
+    node_info["enabled"] = bool(
+        isinstance(location_info, dict)
+        and location_info.get("enabled")
+    )
+    return True
+
 def migrate_node_model(model):
     """
     Migrate an existing saved model to the current schema.
@@ -308,12 +334,19 @@ def migrate_node_model(model):
     except (TypeError, ValueError):
         schema_version = 1
 
+    node_info_changed = migrate_node_info_publication(
+        model
+    )
+
     operational_changed = (
         migrate_reflector_operational(model)
     )
 
     if schema_version >= 2:
-        changed = operational_changed
+        changed = (
+            operational_changed
+            or node_info_changed
+        )
         changed = (
             merge_missing_defaults(model)
             or changed

@@ -34,7 +34,7 @@ def get_primary_port_id(model):
 
 
 def build_node_info_json(model):
-    if not model.get("location_info", {}).get("enabled"):
+    if not model.get("node_info", {}).get("enabled"):
         return {}
 
     info = model.get("node_info", {})

@@ -31,6 +31,25 @@ class NodeInfoConfigurationTests(unittest.TestCase):
             "",
         )
 
+    def test_node_info_publication_choice_is_saved(self):
+        model = new_node_model()
+
+        node_info = dashboard.update_node_information_from_form(
+            model,
+            {
+                "node_info_enabled": "yes",
+            },
+        )
+        self.assertTrue(node_info["enabled"])
+
+        node_info = dashboard.update_node_information_from_form(
+            model,
+            {
+                "node_info_enabled": "no",
+            },
+        )
+        self.assertFalse(node_info["enabled"])
+
     def test_echolink_publication_requires_echolink(self):
         model = new_node_model()
         model["echolink"]["enabled"] = False

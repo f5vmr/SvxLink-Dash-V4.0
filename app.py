@@ -4746,7 +4746,9 @@ def update_node_information_from_form(model, form):
     """
 
     node_info = model.setdefault("node_info", {})
-
+    node_info["enabled"] = (
+        form.get("node_info_enabled") == "yes"
+    )
     node_info["nodeLocation"] = str(
         form.get("node_location") or ""
     ).strip()

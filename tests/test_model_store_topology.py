@@ -31,6 +31,7 @@ class TopologyMigrationTests(unittest.TestCase):
         second = new_node_model()
 
         self.assertEqual(first["schema_version"], 2)
+        self.assertFalse(first["node_info"]["enabled"])
         self.assertEqual(
             first["build"]["intent"],
             "single_channel",
@@ -148,6 +149,28 @@ class TopologyMigrationTests(unittest.TestCase):
                         store.migrate_node_model(model)
                     )
                     self.assertEqual(model, before)
+
+    def test_node_info_publication_migrates_from_combined_choice(self):
+        inherited = new_node_model()
+        del inherited["node_info"]["enabled"]
+        inherited["location_info"]["enabled"] = True
+
+        self.assertTrue(
+            store.migrate_node_model(inherited)
+        )
+        self.assertTrue(inherited["node_info"]["enabled"])
+        self.assertFalse(
+            store.migrate_node_model(inherited)
+        )
+
+        explicit = new_node_model()
+        explicit["node_info"]["enabled"] = False
+        explicit["location_info"]["enabled"] = True
+
+        self.assertFalse(
+            store.migrate_node_model(explicit)
+        )
+        self.assertFalse(explicit["node_info"]["enabled"])
 
     def test_defaults_merge_preserves_operator_values(self):
         del self.topology["reflector_link"]["default_active"]

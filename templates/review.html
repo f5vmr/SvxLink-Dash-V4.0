@@ -310,30 +310,38 @@
             </p>
         </div>
 
+        {% set node_info_enabled = model.get(
+            "node_info",
+            {}
+        ).get("enabled") %}
+        {% set location_info_enabled = location_info.get(
+            "enabled"
+        ) %}
+
         <div class="form-section">
-            <div class="label">Node Information / LocationInfo</div>
+            <div class="label">Node and location publication</div>
 
             <p>
-                Node Information:
-                {% if node_information_errors %}
-                    Incomplete
-                {% else %}
-                    Complete
-                {% endif %}
-            </p>
-
-            <p>
-                LocationInfo publication:
-                {% if location_info.get("enabled") %}
+                Reflector node-map publication:
+                {% if node_info_enabled %}
                     Enabled
                 {% else %}
                     Disabled
                 {% endif %}
             </p>
 
-            {% if location_info.get("enabled") %}
+            <p>
+                SvxLink LocationInfo / APRS publication:
+                {% if location_info_enabled %}
+                    Enabled
+                {% else %}
+                    Disabled
+                {% endif %}
+            </p>
+
+            {% if node_info_enabled or location_info_enabled %}
                 <p>
-                    LocationInfo completion:
+                    Publication information:
                     {% if node_information_errors %}
                         Incomplete
                     {% else %}

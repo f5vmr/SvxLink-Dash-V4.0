@@ -72,6 +72,9 @@
         "local_links": [],
         "independent_ports": []
     },
+    "node_info": {
+        "enabled": false
+    },
     "location_info": {
         "enabled": false,
         "aprs_server_list": "",

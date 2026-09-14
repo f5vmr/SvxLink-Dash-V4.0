@@ -1,10 +1,43 @@
 <div class="form-section">
-    <div class="label">Public node and location information</div>
-
+    <div class="label">Reflector node-map information</div>
     <div class="note">
-        These details are optional. When enabled, the dashboard generates
-        node_info.json and enables the SvxLink LocationInfo section for the
-        primary radio port.
+        When enabled, the dashboard populates
+        <strong>/etc/svxlink/node_info.json</strong> with public
+        location and RF information for the connected reflector’s
+        node map.
+    </div>
+
+    <label>
+        <input
+            type="radio"
+            id="node_information_yes"
+            name="node_info_enabled"
+            value="yes"
+            {% if node_info.get("enabled", false) %}checked{% endif %}
+        >
+        Publish this installation on the reflector node map
+    </label>
+
+    <br>
+
+    <label>
+        <input
+            type="radio"
+            id="node_information_no"
+            name="node_info_enabled"
+            value="no"
+            {% if not node_info.get("enabled", false) %}checked{% endif %}
+        >
+        Do not publish reflector node-map information
+    </label>
+</div>
+
+<div class="form-section">
+    <div class="label">SvxLink LocationInfo and APRS</div>
+    <div class="note">
+        This is separate from reflector node-map publication.
+        Enable it only when this installation should generate the
+        SvxLink LocationInfo section and publish through APRS.
     </div>
 
     <label>
@@ -15,7 +48,7 @@
             value="yes"
             {% if location_info.get("enabled", false) %}checked{% endif %}
         >
-        Configure and publish node location information
+        Enable SvxLink LocationInfo and APRS publication
     </label>
 
     <br>
@@ -28,12 +61,12 @@
             value="no"
             {% if not location_info.get("enabled", false) %}checked{% endif %}
         >
-        Do not configure location information at this time
+        Do not enable SvxLink LocationInfo
     </label>
 
     <div class="note">
-        If this option is declined, node_info.json will contain no node
-        information and LOCATION_INFO will remain commented. You can return
-        here later through Rebuild.
+        Public node and RF fields are available when either publication
+        method is enabled. LocationInfo adds its own DMS, APRS, antenna
+        and beacon requirements.
     </div>
 </div>
