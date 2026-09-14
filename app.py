@@ -135,7 +135,6 @@ from data.metar_airports import METAR_REGIONS
 from data.timezones import TIMEZONES
 
 
-
 # =========================================================
 # Core paths
 # =========================================================
@@ -232,6 +231,8 @@ app.permanent_session_lifetime = datetime.timedelta(minutes=15)
 # =========================================================
 # Authorisation and protection
 # =========================================================
+
+
 def dashboard_auth_exists():
     """
     Return True only when dashboard credentials exist and are parseable.
@@ -249,6 +250,7 @@ def dashboard_auth_exists():
 
     except Exception:
         return False
+
 
 @app.before_request
 def require_dashboard_auth():
@@ -312,6 +314,8 @@ def require_dashboard_auth():
 # ========================================================
 # Context processors
 # ========================================================
+
+
 @app.context_processor
 def inject_versions():
     return {
@@ -363,6 +367,8 @@ def detect_platform():
 # =========================================================
 # Hardware Profiles
 # =========================================================
+
+
 @app.route("/hardware-profiles")
 def hardware_profiles():
     profiles = list_hardware_profiles()
@@ -399,6 +405,7 @@ def platform_supports_gpiod(model):
 # =========================================================
 # Node model defaults
 # =========================================================
+
 
 def default_node_model():
     """
@@ -456,7 +463,6 @@ def ensure_dirs():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-
 # =========================================================
 # SvxLink service wrapper
 # =========================================================
@@ -473,6 +479,7 @@ def svxlink_status():
 # =========================================================
 # Wizard routes
 # =========================================================
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -504,6 +511,7 @@ def start():
 
     return render_template("start.html", model=model)
 
+
 @app.route("/platform", methods=["GET", "POST"])
 def platform_page():
     model = load_node_model()
@@ -514,6 +522,7 @@ def platform_page():
         return redirect(url_for("hardware_page"))
 
     return render_template("platform.html", model=model)
+
 
 @app.route("/hardware", methods=["GET", "POST"])
 def hardware_page():
@@ -602,6 +611,8 @@ def hardware_page():
         build_intent=build_intent,
         error=None,
     )
+
+
 @app.route("/hardware-prepare")
 def hardware_prepare_page():
     model = load_node_model()
@@ -667,6 +678,8 @@ def hardware_prepare_reviewed_page():
         return redirect(url_for("ics_prepare_page"))
 
     return redirect(url_for("hardware_ports_page"))
+
+
 @app.route("/hardware-ports", methods=["GET", "POST"])
 def hardware_ports_page():
     model = load_node_model()
@@ -752,6 +765,8 @@ def hardware_ports_page():
         enabled_ports=enabled_ports,
         error=None,
     )
+
+
 @app.route("/hardware-review", methods=["GET", "POST"])
 def hardware_review_page():
     model = load_node_model()
@@ -784,6 +799,8 @@ def hardware_review_page():
         error=None,
         version_info=get_version_info
     )
+
+
 @app.route("/ics_prepare", methods=["GET", "POST"])
 def ics_prepare_page():
     model = load_node_model()
@@ -940,12 +957,16 @@ def ics_prepare_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/rebooting")
 def rebooting_page():
     return render_template(
         "rebooting.html",
         version_info=get_version_info(),
     )      
+
+
 @app.route("/environment", methods=["GET", "POST"])
 def environment_page():
     model = load_node_model()
@@ -997,6 +1018,8 @@ def environment_page():
         model=model,
         error=error,
     )
+
+
 @app.route("/timezone", methods=["GET", "POST"])
 def timezone_page():
     model = load_node_model()
@@ -1041,6 +1064,7 @@ def timezone_page():
         error=error,
     )
     
+
 def is_multiport_build(model):
     enabled_ports = model.get("ports", {}).get("enabled", [])
     hardware = model.get("hardware", {})
@@ -1056,14 +1080,17 @@ def is_multiport_build(model):
         or len(enabled_ports) > 1
     )
 
+
 def next_after_timezone(model):
     if is_multiport_build(model):
         return url_for("port_roles_page")
 
     return url_for("node_page")
 
+
 def next_after_reflector(model):
     return url_for("node_info_page")
+
 
 def redirect_after_port_configuration(
     default_endpoint,
@@ -1092,6 +1119,7 @@ def redirect_after_port_configuration(
         return redirect(url_for("build_page"))
 
     return redirect(url_for(default_endpoint))
+
 
 def initialise_port_nodes(model, profile):
     ports = model.get("ports", {})
@@ -1179,6 +1207,8 @@ def initialise_port_nodes(model, profile):
         nodes[port_id] = node
 
     return nodes
+
+
 @app.route("/port-roles", methods=["GET", "POST"])
 def port_roles_page():
     model = load_node_model()
@@ -1238,6 +1268,8 @@ def port_roles_page():
         error=None,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-config", methods=["GET", "POST"])
 def port_config_page():
     model = load_node_model()
@@ -1304,6 +1336,8 @@ def port_config_page():
         all_ports_configured=all_ports_configured,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-node/<port_id>", methods=["GET", "POST"])
 def port_node_page(port_id):
     model = load_node_model()
@@ -1406,6 +1440,8 @@ def port_node_page(port_id):
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-profile-review", methods=["GET", "POST"])
 def port_profile_review_page():
     model = load_node_model()
@@ -1450,6 +1486,8 @@ def port_profile_review_page():
         enabled_ports=enabled_ports,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-squelch", methods=["GET"])
 def port_squelch_page():
     model = load_node_model()
@@ -1476,6 +1514,8 @@ def port_squelch_page():
         all_ports_configured=all_ports_configured,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-squelch-complete", methods=["GET"])
 def port_squelch_complete_page():
     model = load_node_model()
@@ -1501,6 +1541,8 @@ def port_squelch_complete_page():
     save_node_model(model)
 
     return redirect(url_for("port_modules_page"))
+
+
 @app.route("/port-squelch/<port_id>", methods=["GET", "POST"])
 def port_squelch_detail_page(port_id):
     model = load_node_model()
@@ -1656,6 +1698,8 @@ def port_squelch_detail_page(port_id):
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-modules", methods=["GET", "POST"])
 def port_modules_page():
     model = load_node_model()
@@ -1754,6 +1798,8 @@ def port_modules_page():
         modules_multi=modules_multi,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-ident", methods=["GET", "POST"])
 def port_ident_page():
     model = load_node_model()
@@ -1887,6 +1933,8 @@ def port_ident_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-cw", methods=["GET", "POST"])
 def port_cw_page():
     model = load_node_model()
@@ -1956,6 +2004,8 @@ def port_cw_page():
         enabled_ports=enabled_ports,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-courtesy", methods=["GET", "POST"])
 def port_courtesy_page():
     """
@@ -1976,6 +2026,8 @@ def port_courtesy_page():
         )
 
     return redirect(url_for("courtesy_page"))
+
+
 @app.route("/port-repeater", methods=["GET", "POST"])
 def port_repeater_page():
     model = load_node_model()
@@ -2092,6 +2144,8 @@ def port_repeater_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/installation-identity", methods=["GET", "POST"])
 def installation_identity_page():
     model = load_node_model()
@@ -2153,6 +2207,8 @@ def installation_identity_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route(
     "/topology/independent",
     methods=["GET", "POST"],
@@ -2307,6 +2363,8 @@ def topology_independent_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route(
     "/topology/local-link/<int:link_index>",
     methods=["GET", "POST"],
@@ -2579,6 +2637,8 @@ def topology_local_link_edit_page(link_index):
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route(
     "/topology/local-link/add",
     methods=["GET", "POST"],
@@ -2799,6 +2859,8 @@ def topology_local_link_add_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route(
     "/topology/reflector",
     methods=["GET", "POST"],
@@ -2976,6 +3038,8 @@ def topology_reflector_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route(
     "/topology",
     methods=["GET", "POST"],
@@ -3128,6 +3192,8 @@ def topology_page():
         topology_errors=topology_errors,
         version_info=get_version_info(),
     )
+
+
 @app.route("/port-final-review", methods=["GET", "POST"])
 def port_final_review_page():
     model = load_node_model()
@@ -3490,6 +3556,8 @@ def interface_page():
         gpio_lines=gpio_lines,
         supports_gpiod=supports_gpiod,
     )
+
+
 @app.route("/reconfigure/reset", methods=["GET", "POST"])
 def reconfigure_reset_page():
     if request.method == "POST":
@@ -3516,6 +3584,7 @@ def reconfigure_reset_page():
         error=None,
     )
     
+
 @app.route("/squelch", methods=["GET", "POST"])
 def squelch_page():
     model = load_node_model()
@@ -3631,6 +3700,8 @@ def squelch_page():
         ctcss_frequencies=CTCSS_FREQUENCIES,
         version_info=get_version_info(),
     )
+
+
 @app.route("/ident", methods=["GET", "POST"])
 def ident_page():
     model = load_node_model()
@@ -3709,6 +3780,8 @@ def ident_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/cw", methods=["GET", "POST"])
 def cw_page():
     model = load_node_model()
@@ -3753,6 +3826,7 @@ def cw_page():
         error=error,
     )
     
+
 @app.route("/courtesy", methods=["GET", "POST"])
 def courtesy_page():
     model = load_node_model()
@@ -3864,6 +3938,8 @@ def courtesy_page():
         error=error,
         version_info=get_version_info(),
     )
+
+
 @app.route("/repeater", methods=["GET", "POST"])
 def repeater_page():
     model = load_node_model()
@@ -3911,6 +3987,7 @@ def repeater_page():
         error=error,
     )
     
+
 @app.route("/modules", methods=["GET", "POST"])
 def modules_page():
 
@@ -3983,6 +4060,7 @@ def modules_page():
         model=model,
         reconfigure=reconfigure,
     )
+
 
 @app.route("/echolink", methods=["GET", "POST"])
 def echolink_page():
@@ -4089,6 +4167,7 @@ def echolink_page():
         error=error,
     )
 
+
 @app.route("/metar-default", methods=["GET", "POST"])
 def metar_default_page():
     model = load_node_model()
@@ -4146,6 +4225,7 @@ def metar_default_page():
         version_info=get_version_info(),
     )
 
+
 @app.route("/metar-airports", methods=["GET", "POST"])
 def metar_airports_page():
     model = load_node_model()
@@ -4193,6 +4273,7 @@ def metar_airports_page():
         version_info=get_version_info(),
     )
 
+
 FEDERATION_REFLECTORS = {
     "north_america": {
         "name": "North America",
@@ -4223,6 +4304,7 @@ FEDERATION_REFLECTORS = {
         "suggested_monitor_tgs": [23450],
     },
 }
+
 
 @app.route("/reflector", methods=["GET", "POST"])
 def reflector_page():
@@ -4318,6 +4400,7 @@ def reflector_page():
         version_info=get_version_info(),
     )
 
+
 @app.route("/reflector/federation", methods=["GET", "POST"])
 def reflector_federation_page():
     model = load_node_model()
@@ -4383,6 +4466,7 @@ def reflector_federation_page():
         error=error,
         version_info=get_version_info(),
     )
+
 
 @app.route("/reflector/v2", methods=["GET", "POST"])
 def reflector_v2_page():
@@ -4461,6 +4545,7 @@ def reflector_v2_page():
         error=error,
         version_info=get_version_info(),
     )
+
 
 @app.route("/reflector/v3", methods=["GET", "POST"])
 def reflector_v3_page():
@@ -4614,6 +4699,8 @@ def reflector_v3_page():
         version_info=get_version_info(),
     )
 ## Wifi
+
+
 @app.route("/wifi", methods=["GET", "POST"])
 def wifi_page():
     screen = []
@@ -4661,6 +4748,8 @@ def wifi_page():
         password=password,
     )
 ## End Wifi
+
+
 def get_aprs_server_suggestion(model):
     """
     Return the documented initial APRS server suggestion where applicable.
@@ -4674,6 +4763,7 @@ def get_aprs_server_suggestion(model):
         return "euro.aprs2.net:14580"
 
     return ""
+
 
 @app.route("/node-info", methods=["GET", "POST"])
 def node_info_page():
@@ -4738,6 +4828,7 @@ def node_info_page():
         primary_port_id=primary_port_id,
         errors=errors,
     )
+
 
 def update_node_information_from_form(model, form):
     """
@@ -4811,6 +4902,7 @@ def update_node_information_from_form(model, form):
     model["node_info"] = node_info
 
     return node_info
+
 
 def update_location_information_from_form(model, form):
     """
@@ -4919,6 +5011,7 @@ def update_location_information_from_form(model, form):
 
     return location_info
 
+
 @app.route("/edit/node-info", methods=["GET", "POST"])
 def node_info_edit_page():
     saved = request.args.get("saved") == "1"
@@ -5009,6 +5102,7 @@ def node_info_edit_page():
         primary_port_id=primary_port_id,
     )
 
+
 @app.route("/review", methods=["GET", "POST"])
 def review_page():
 
@@ -5075,6 +5169,7 @@ def review_page():
         ),
         version_info=get_version_info(),
     )
+
 
 @app.route("/build", methods=["GET", "POST"])
 def build_page():
@@ -5156,6 +5251,7 @@ def build_page():
         version_info=get_version_info(),
     )
 
+
 @app.route("/setup-auth", methods=["GET", "POST"])
 def setup_auth_page():
 
@@ -5202,6 +5298,7 @@ def setup_auth_page():
         version_info=get_version_info(),
     )
 
+
 @app.route("/done", methods=["GET"])
 def done():
     model = load_node_model()
@@ -5229,6 +5326,7 @@ def launch():
         build_result=result,
         error=None if result.get("success") else "Build or launch failed.",
     )
+
 
 @app.route("/status", methods=["GET"])
 def status_page():
@@ -5337,6 +5435,8 @@ def status_page():
         port_count=len(enabled_ports),
         version_info=get_version_info(),
     )
+
+
 @app.route("/sound-levels", methods=["GET", "POST"])
 def sound_levels_page():
     result = None
@@ -5374,6 +5474,7 @@ def sound_levels_page():
         result=result,
         error=error,
     )
+
 
 @app.route("/sound-calibration", methods=["GET", "POST"])
 def sound_calibration_page():
@@ -5477,6 +5578,7 @@ def sound_calibration_page():
         devcal_values=devcal_values,
     )
 
+
 @app.route("/authorise", methods=["GET", "POST"])
 def authorise_page():
     error = None
@@ -5516,6 +5618,8 @@ def authorise_page():
         error=error,
         next_page=next_page,
     )
+
+
 @app.route("/api/status", methods=["GET"])
 def api_status_page():
     model = load_node_model()
@@ -5552,6 +5656,8 @@ def api_status_page():
         "selected_port": selected_port,
         "port_count": len(enabled_ports),
     })
+
+
 @app.route("/talkgroups", methods=["GET", "POST"])
 def talkgroups_page():
     saved = request.args.get("saved")
@@ -5559,7 +5665,6 @@ def talkgroups_page():
         return redirect(url_for("authorise_page", next=request.path))    
     model = load_node_model()
         
-
     environment = model.get(
         "environment",
         {}
@@ -5669,6 +5774,8 @@ def talkgroups_page():
         saved=saved,
         error=error,
     )
+
+
 @app.route("/macros", methods=["GET", "POST"])
 def macros_page():
     saved = request.args.get("saved")
@@ -5822,6 +5929,7 @@ def macros_page():
         saved=saved,
         error=error,
     )
+
 
 @app.route(
     "/ctcss-talkgroups",
@@ -6123,6 +6231,8 @@ def normalise_monitor_talkgroup(value):
         str(int(talkgroup_number))
         + priority
     )
+
+
 @app.route("/monitor-tgs", methods=["GET", "POST"])
 def monitor_tgs_page():
     saved = request.args.get("saved")
@@ -6377,6 +6487,8 @@ def monitor_tgs_page():
         saved=saved,
         error=error,
     )
+
+
 @app.route("/edit/echolink", methods=["GET", "POST"])
 def echolink_edit_page():
     saved = request.args.get("saved")
@@ -6479,13 +6591,14 @@ def echolink_edit_page():
                     )
                 )
 
-    
     return render_template(
                 "echolink_edit.html",
                 echolink=echolink,
                 error=error,
                 saved=saved
     )
+
+
 @app.route("/edit/metar", methods=["GET", "POST"])
 def metar_edit_page():
     saved = request.args.get("saved")
@@ -6650,6 +6763,8 @@ def metar_edit_page():
         error=error,
         saved=saved
     )
+
+
 @app.route("/log", methods=["GET"])
 def log_page():
 
@@ -6680,6 +6795,8 @@ def log_page():
         "log.html",
         log_lines=log_lines,
     )
+
+
 @app.route("/log-data", methods=["GET"])
 def log_data():
 
@@ -6705,6 +6822,7 @@ def log_data():
 
     return ""
 
+
 @app.route("/maintenance")
 def maintenance_page():
 
@@ -6714,6 +6832,8 @@ def maintenance_page():
     return render_template(
         "maintenance.html"
     )
+
+
 @app.route("/reconfigure", methods=["GET", "POST"])
 def reconfigure_page():
     model = load_node_model()
@@ -6776,7 +6896,6 @@ def reconfigure_page():
         },
     ]
 
-
     if is_multi_port:
         reconfigure_targets.extend([
             {
@@ -6822,7 +6941,6 @@ def reconfigure_page():
                 "description": "Review the current multi-port model before rebuilding.",
             },
         ])
-
 
     else:
         reconfigure_targets.extend([
@@ -6930,6 +7048,8 @@ def reconfigure_page():
         error=None,
         version_info=get_version_info(),
     )
+
+
 @app.route("/maintenance/restart", methods=["POST"])
 def restart_services_page():
 
@@ -6944,6 +7064,7 @@ def restart_services_page():
         message="SvxLink services are restarting."
     )
 
+
 @app.route("/maintenance/reboot", methods=["POST"])
 def reboot_device_page():
 
@@ -6957,6 +7078,8 @@ def reboot_device_page():
         title="Reboot Requested",
         message="The device is rebooting."
     )
+
+
 @app.route("/maintenance/shutdown", methods=["POST"])
 def shutdown_device_page():
 
@@ -6971,10 +7094,12 @@ def shutdown_device_page():
         message="The device is shutting down."
     )
 
+
 @app.route("/logout", methods=["GET"])
 def logout_page():
     session.pop("authorised", None)
     return redirect(url_for("status_page"))
+
 
 @app.route("/dtmf", methods=["POST"])
 def dtmf_page():
@@ -7018,6 +7143,7 @@ def dtmf_page():
         )
     )
     
+
 if __name__ == "__main__":
     ensure_dirs()
 

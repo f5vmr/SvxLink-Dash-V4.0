@@ -6,6 +6,7 @@ from hw_platforms import get_platform_profile
 from services.hardware_profile_service import load_hardware_profile
 from services.ics_prepare_service import VALID_ICS_PROFILES
 
+
 class HardwareMatrixTests(unittest.TestCase):
 
     def test_supported_platform_profiles_are_os_release_independent(self):

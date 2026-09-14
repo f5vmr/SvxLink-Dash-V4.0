@@ -23,7 +23,6 @@ from datetime import datetime
 from models.node_model import get_installation_tones
 
 
-
 # =========================================================
 # Paths
 # =========================================================
@@ -37,7 +36,6 @@ LOGIC_DIR_SRC = Path("/usr/share/svxlink/events.d")
 LOGIC_DIR_DST = Path("/usr/share/svxlink/events.d/local")
 
 BACKUP_DIR = APP_ROOT / "backups"
-
 
 
 # =========================================================
@@ -172,6 +170,8 @@ def ensure_logic_dir():
         ["sudo", "chmod", "775", str(LOGIC_DIR_DST)],
         check=True,
     )
+
+
 def write_text_file(path, content):
     """
     Write text content to a file.
@@ -184,6 +184,7 @@ def write_text_file(path, content):
 
     path.write_text(content, encoding="utf-8")
     path.chmod(0o664)
+
 
 def copy_file(src, dst):
     """
@@ -223,6 +224,7 @@ def copy_file(src, dst):
 
     return dst
 
+
 def deploy_logic_file(filename):
     """
     Copy a logic/event file from LOGIC_DIR_SRC to LOGIC_DIR_DST.
@@ -253,6 +255,8 @@ def deploy_required_logic_files():
         deployed.append(deploy_logic_file(filename))
 
     return deployed
+
+
 def apply_courtesy_tone(model):
     """
     Modify local Logic.tcl according to selected courtesy tone.
@@ -308,6 +312,7 @@ def apply_courtesy_tone(model):
     logic_tcl.write_text(content, encoding="utf-8")
 
     return logic_tcl
+
 
 def apply_repeater_event_customisations(model):
     """
@@ -397,6 +402,8 @@ def apply_repeater_event_customisations(model):
     os.chmod(logic_tcl, 0o664)
 
     return logic_tcl
+
+
 def apply_va_barred_cw_symbol():
     """
     Add '-' as VA barred (...-.-) to local CW.tcl.

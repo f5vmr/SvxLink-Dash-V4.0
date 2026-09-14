@@ -25,7 +25,6 @@ class MetarVerificationUnavailable(Exception):
 
 
 def is_valid_icao_format(code):
-
     """
     Return True only for a four-letter ICAO identifier.
     """
@@ -38,7 +37,6 @@ def is_valid_icao_format(code):
 
 
 def find_unavailable_metar_airports(codes, timeout=10):
-
     """
     Return submitted ICAO codes that are not registered as METAR
     stations by AviationWeather.gov.

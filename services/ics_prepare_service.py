@@ -119,8 +119,10 @@ def enable_i2c():
 def check_overlay():
     return _run_helper("check-overlay")
 
+
 def gpio_names():
     return _run_helper("gpio-names")
+
 
 def set_overlay(profile_id):
     profile = get_profile(profile_id)
@@ -136,6 +138,7 @@ def set_overlay(profile_id):
 
     return _run_helper("set-overlay", profile["overlay"])
 
+
 def configure_audio_boot(profile_id):
     """
     Configure boot-time audio overlays required by selected ICS profile.
@@ -145,6 +148,7 @@ def configure_audio_boot(profile_id):
         "configure-audio-boot",
         profile_id,
     )
+
 
 def configure_pcm1803(profile_id):
     profile = get_profile(profile_id)
@@ -159,6 +163,7 @@ def configure_pcm1803(profile_id):
         }
 
     return _run_helper("configure-pcm1803", profile_id)
+
 
 def build_ics_status(profile_id=None):
     """

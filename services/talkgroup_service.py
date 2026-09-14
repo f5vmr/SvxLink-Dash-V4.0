@@ -16,6 +16,7 @@ CONFIG_DIR = APP_ROOT / "config"
 TALKGROUP_FILE = CONFIG_DIR / "talkgroups.json"
 MAX_TALKGROUP_BUTTONS = 18
 
+
 def ensure_config_dir():
     """
     Ensure config directory exists.
@@ -59,6 +60,7 @@ def load_talkgroups(environment):
         TALKGROUPS.get(environment, [])
     )
 
+
 def save_talkgroups(environment, talkgroups):
     """
     Save talkgroups to local JSON config.
@@ -88,6 +90,7 @@ def save_talkgroups(environment, talkgroups):
     )
 
     return TALKGROUP_FILE
+
 
 def pad_talkgroups(talkgroups):
     """

@@ -57,8 +57,6 @@ def get_connected_reflector(model=None):
     The latest relevant ReflectorLogic event wins.
     """
 
-
-
     reflector_name = "Connected"
 
     if model:
@@ -105,6 +103,7 @@ def get_connected_reflector(model=None):
 
     return "not connected"
 
+
 def get_radio_state(selected_port="1"):
         """
         Determine current radio state from recent SvxLink log lines.
@@ -112,7 +111,6 @@ def get_radio_state(selected_port="1"):
         TX state is detected from either Tx1 messages.
         RX/input state is detected from Rx1 squelch messages.
         """
-
 
         tx_active = False
         rx_open = False
@@ -169,12 +167,13 @@ def get_radio_state(selected_port="1"):
             "tx": tx_active,
             "rx": rx_open,
     }
+
+
 def get_echolink_state():
     """
     Determine the current EchoLink connection state from SvxLink's
     most recent EchoLink QSO state transition.
     """
-
 
     idle_state = {
         "active": False,
@@ -216,6 +215,7 @@ def get_echolink_state():
 
     return idle_state
 
+
 def get_active_talkgroup():
     """
     Determine the currently selected SvxReflector talkgroup
@@ -225,7 +225,6 @@ def get_active_talkgroup():
         ReflectorLogic: Selecting TG #0   -> Standby
         ReflectorLogic: Selecting TG #505 -> 505
     """
-
 
     lines = read_recent_svxlink_log_lines(1000)
 
@@ -250,6 +249,8 @@ def get_active_talkgroup():
         return talkgroup
 
     return "Standby"
+
+
 def get_status_callsign(model, selected_port="1"):
     """
     Return the callsign for the selected dashboard port.
@@ -268,6 +269,8 @@ def get_status_callsign(model, selected_port="1"):
         or model.get("ident", {}).get("callsign")
         or "unknown"
     )
+
+
 def get_runtime_status(model, selected_port="1"):
     """
     Collect dashboard runtime information.
@@ -312,6 +315,8 @@ def get_runtime_status(model, selected_port="1"):
         "radio_state": get_radio_state(selected_port=selected_port),
         "echolink_state": get_echolink_state(),
     }
+
+
 def get_recent_log_lines(limit=40):
     """
     Return recent SvxLink log lines for dashboard display.

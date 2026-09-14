@@ -210,5 +210,6 @@ class RuntimeStatusTests(unittest.TestCase):
         self.assertEqual(talkgroup, "235")
         log_mock.assert_called_once_with(1000)
 
+
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,7 @@ from services.topology_ports import (
     get_topology_ports,
 )
 
+
 class TopologyPortTests(unittest.TestCase):
     def test_ordinary_roles_have_virtual_identity_without_mutation(self):
         for role, logic in (("simplex", "SimplexLogic"), ("repeater", "RepeaterLogic")):

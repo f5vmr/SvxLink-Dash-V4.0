@@ -12,7 +12,6 @@ from hw_platforms import get_platform_profile
 from services.svxlink_config_discovery import discover_macros
 
 
-
 APP_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = APP_ROOT / "config"
 MODEL_FILE = CONFIG_DIR / "node_model.json"
@@ -90,6 +89,7 @@ def normalise_ctcss_tone(value):
 
     return ""
 
+
 def ensure_config_dir():
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -97,6 +97,7 @@ def ensure_config_dir():
 def create_default_model():
     platform = get_platform_profile()
     return new_node_model(platform=platform)
+
 
 def merge_missing_defaults(model, defaults=None):
     """
@@ -123,6 +124,7 @@ def merge_missing_defaults(model, defaults=None):
                 changed = True
 
     return changed
+
 
 def normalise_port_ids(model):
     """Convert integer radio-port references to strings without changing membership.
@@ -201,6 +203,7 @@ def clean_stale_topology_ports(model):
         for link in local_links:
             clean_members(link, "ports")
     return changed
+
 
 def migrate_reflector_operational(model):
     """
@@ -320,6 +323,7 @@ def migrate_node_info_publication(model):
         and location_info.get("enabled")
     )
     return True
+
 
 def migrate_node_model(model):
     """
@@ -489,6 +493,7 @@ def migrate_node_model(model):
 
     return True
 
+
 def save_node_model(model):
     model.pop("online_control", None)
     normalise_port_ids(model)
@@ -536,6 +541,7 @@ def load_node_model():
         model = create_default_model()
         save_node_model(model)
         return model
+
 
 def reset_node_model():
     model = create_default_model()

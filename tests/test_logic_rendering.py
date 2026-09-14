@@ -129,6 +129,7 @@ class LogicRenderingTests(unittest.TestCase):
             captured["values"]["RGR_SOUND_DELAY"],
             200,
         )
+
     def test_single_repeater_opening_follows_sql_detector(self):
         for method in (
             "hidraw",
@@ -263,6 +264,7 @@ class LogicRenderingTests(unittest.TestCase):
                     ],
                     expected_sql,
                 )
+
     def test_disabled_single_logic_keeps_commented_example(self):
         model = new_node_model()
         model["node"].update({
@@ -481,6 +483,7 @@ class LogicRenderingTests(unittest.TestCase):
             "\nOPEN_ON_1750=1000",
             repeater,
         )
+
 
 if __name__ == "__main__":
     unittest.main()

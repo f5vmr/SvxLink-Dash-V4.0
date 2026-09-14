@@ -74,6 +74,7 @@ def get_memory_usage():
     except Exception:
         return "unknown"
 
+
 def get_architecture_label():
     try:
         result = subprocess.run(
@@ -98,6 +99,7 @@ def get_architecture_label():
         return "64-bit x86"
 
     return arch
+
 
 def get_system_info():
     return {

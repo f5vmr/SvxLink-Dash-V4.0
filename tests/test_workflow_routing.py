@@ -200,6 +200,7 @@ class WorkflowRoutingTests(unittest.TestCase):
                         dashboard.next_after_reflector(model),
                         "/node-info",
                     )
+
     def test_authentication_setup_continues_to_start(self):
         model = new_node_model()
 
@@ -914,6 +915,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         for label in required_labels:
             with self.subTest(label=label):
                 self.assertIn(label, template_text)
+
 
 if __name__ == "__main__":
     unittest.main()

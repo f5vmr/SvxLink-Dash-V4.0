@@ -46,6 +46,7 @@ def classify_macro_command(command):
         "command": command,
     }
 
+
 def build_macro_command(
     macro_type,
     talkgroup="",

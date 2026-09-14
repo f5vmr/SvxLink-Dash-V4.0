@@ -405,5 +405,6 @@ class CtcssTalkgroupPageTests(unittest.TestCase):
         )
         save_mock.assert_called_once_with(self.model)
 
+
 if __name__ == "__main__":
     unittest.main()

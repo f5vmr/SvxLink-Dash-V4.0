@@ -20,6 +20,7 @@ def run_nmcli(args):
 
     return output
 
+
 def wifi_scan():
     run_nmcli(["dev", "wifi", "rescan"])
     return run_nmcli(["dev", "wifi", "list"])
@@ -36,6 +37,7 @@ def wifi_status():
 def wifi_on():
     run_nmcli(["radio", "wifi", "on"])
     return run_nmcli(["radio", "wifi"])
+
 
 def switch_wifi(ssid):
     output = []
@@ -63,6 +65,8 @@ def delete_wifi(ssid):
         "delete",
         ssid,
     ])
+
+
 def hotspot_status():
     return run_nmcli([
         "-t",
@@ -72,6 +76,7 @@ def hotspot_status():
         "show",
         "--active",
     ])
+
 
 def connect_wifi(ssid, password):
     output = []
@@ -115,6 +120,7 @@ def connect_wifi(ssid, password):
 
     return output
     
+
 def start_hotspot():
     return run_nmcli([
         "connection",

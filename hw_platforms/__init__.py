@@ -49,6 +49,8 @@ def detect_platform_id():
         return "linux_server"
 
     return "unknown"
+
+
 def get_platform_profile(platform_id=None):
     """
     Return platform profile.

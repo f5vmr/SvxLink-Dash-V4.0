@@ -281,6 +281,7 @@ def classify_control(control: AlsaControl) -> None:
         control.confidence = "medium"
         return
     
+
 def parse_amixer_contents(card_index: int) -> List[AlsaControl]:
     contents = run_cmd(["amixer", "-c", str(card_index), "contents"])
     controls: List[AlsaControl] = []
@@ -348,6 +349,8 @@ def discover_sound_cards() -> List[Dict[str, Any]]:
         }
         for card in cards
     ]
+
+
 def discover_default_audio_dev() -> Optional[str]:
     """
     Return the preferred duplex ALSA device for a generic SvxLink node.
@@ -383,6 +386,8 @@ def discover_default_audio_dev() -> Optional[str]:
     )
 
     return selected.get("audio_dev")
+
+
 def percent_to_raw(control: AlsaControl, percent: int) -> Optional[int]:
     if control.min_value is None or control.max_value is None:
         return None
@@ -473,6 +478,8 @@ def apply_safe_baseline(card_index: int) -> Dict[str, Any]:
         "skipped": skipped,
         "alsactl_store": store_output,
     }
+
+
 def set_slider_control(card_index: int, numid: int, raw_value: int) -> Dict[str, Any]:
     controls = parse_amixer_contents(card_index)
 
@@ -508,6 +515,8 @@ def set_slider_control(card_index: int, numid: int, raw_value: int) -> Dict[str,
         "result": result,
         "alsactl_store": store_output,
     }
+
+
 if __name__ == "__main__":
     import json
 

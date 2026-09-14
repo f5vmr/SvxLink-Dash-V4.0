@@ -61,7 +61,6 @@ class ProtectedEditingTests(unittest.TestCase):
         save_mock.assert_not_called()
         build_mock.assert_not_called()
 
-
     def test_valid_echolink_edit_saves_and_restarts(self):
 
         model = {
@@ -521,6 +520,7 @@ class ProtectedEditingTests(unittest.TestCase):
         )
         save_mock.assert_not_called()
         build_mock.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -38,6 +38,7 @@ def get_library_path():
 # Module rendering
 # =========================================================
 
+
 def build_modules(model):
     """
     Render MODULES= line content.
@@ -46,6 +47,7 @@ def build_modules(model):
     enabled = model.get("modules", {}).get("enabled", [])
 
     return ",".join(enabled)
+
 
 def build_modules_line(model):
     """
@@ -82,6 +84,8 @@ def build_modules_line_for_node(node):
 # =========================================================
 # Language rendering
 # =========================================================
+
+
 def get_default_language(model):
     """
     Return selected default language.
@@ -100,6 +104,7 @@ def get_default_language(model):
 # =========================================================
 # Module-specific renderers
 # =========================================================
+
 
 def render_echolink_module(model):
     """
@@ -125,6 +130,8 @@ def render_echolink_module(model):
 # =========================================================
 # METAR rendering
 # =========================================================
+
+
 def render_metar_module(model):
     """
     Render ModuleMetarInfo section if enabled.
@@ -161,6 +168,7 @@ def render_metar_module(model):
 # =========================================================
 # Ident rendering
 # =========================================================
+
 
 def ident_enabled(mode, ident_type):
     """
@@ -246,6 +254,7 @@ def render_tx_ctcss_logic(model):
 
     return "#TX_CTCSS=ALWAYS"
 
+
 def render_open_on_ctcss_line(squelch):
     """
     Enable CTCSS opening only when CTCSS is the active SQL
@@ -277,6 +286,7 @@ def render_open_on_sql_line(squelch):
 # =========================================================
 # RX rendering
 # =========================================================
+
 
 def render_rx_sql_block(model):
     """
@@ -373,6 +383,7 @@ def render_rx_gpiod_block(model):
         f"SQL_GPIOD_BIAS={bias}",
     ])
 
+
 def render_rx_hidraw_block(model):
     """
     Render RX HIDRAW block.
@@ -395,6 +406,7 @@ def render_rx_hidraw_block(model):
         f"HID_DEVICE={device}",
         f"HID_SQL_PIN={pin}",
     ])
+
 
 def render_commented_squelch_example(
     squelch,
@@ -544,6 +556,7 @@ def render_commented_squelch_example(
 
     return ""
 
+
 def render_receiver_common_options(rx_name):
     """
     Render common active DTMF defaults and retained manual
@@ -578,6 +591,7 @@ def render_receiver_common_options(rx_name):
         "#Makeup Gain=15",
         "#Function=13",
     ])
+
 
 def render_rx_combine_sections(model):
     """
@@ -620,6 +634,8 @@ def render_rx_ctcss_combine_block(model):
         "#CTCSS_BPF_HIGH=270",
         "#CTCSS_EMIT_TONE_DETECTED=0",
     ])
+
+
 def render_rx_gpiod_combine_block(model):
     gpio = model.get("gpio", {}).get("sql", {})
 
@@ -632,6 +648,8 @@ def render_rx_gpiod_combine_block(model):
         f"SQL_GPIOD_CHIP={chip}",
         f"SQL_GPIOD_LINE={line}",
     ])
+
+
 def render_rx_serial_block(model):
     """
     Render RX SERIAL squelch block.
@@ -647,6 +665,8 @@ def render_rx_serial_block(model):
         "SERIAL_PIN=" + serial.get("sql_pin", "CTS"),
         "SERIAL_SET_PINS=" + serial.get("sql_set_pins", "DTR!RTS"),
     ])
+
+
 def render_rx_serial_combine_block(model):
     """
     Render RX SERIAL subsection for COMBINE squelch.
@@ -664,6 +684,7 @@ def render_rx_serial_combine_block(model):
 # =========================================================
 # TX rendering
 # =========================================================
+
 
 def render_tx_ptt_block(model):
     """
@@ -760,6 +781,7 @@ def render_macros(model):
             "MACRO_LINES": macro_lines,
         }
     )
+
 
 def render_ctcss_to_tg(configuration, example_delay=0):
     """
@@ -915,6 +937,8 @@ def render_active_logic(model):
 # =========================================================
 # ICS port logic rendering
 # =========================================================
+
+
 def render_port_logic(model, port_id, node):
     """
     Render one SimplexLogic or RepeaterLogic section for an ICS port.
@@ -1001,6 +1025,8 @@ def render_port_logic(model, port_id, node):
         "simplex_logic.template",
         values
     )
+
+
 def build_modules_for_node(node):
     """
     Build the MODULES line for one multi-port node.
@@ -1031,6 +1057,7 @@ def render_port_report_ctcss(node):
 
     return "#REPORT_CTCSS=1"
 
+
 def render_port_tx_ctcss_logic(node):
     """
     Render optional TX CTCSS for one multi-port node.
@@ -1046,6 +1073,7 @@ def render_port_tx_ctcss_logic(node):
         return "TX_CTCSS=ALWAYS"
 
     return "#TX_CTCSS=ALWAYS"
+
 
 def resolve_gpiod_line(model, node, label):
     """
@@ -1100,6 +1128,7 @@ def resolve_gpiod_line(model, node, label):
         "offset": resolved.get("offset", offset),
     }
 
+
 def render_multiport_logic_sections(model):
     """
     Render all radio logic sections for an explicit multi-port model.
@@ -1129,6 +1158,8 @@ def render_multiport_logic_sections(model):
         "logics": ",".join(logic_names),
         "sections": "\n\n".join(logic_sections),
     }
+
+
 def render_port_rx_section(model, port_id, node):
     """
     Render one Rx section for a multi-port node.
@@ -1260,6 +1291,7 @@ def render_port_rx_section(model, port_id, node):
 
     return "\n".join(lines)
 
+
 def render_transmitter_common_options(tx_name):
     """
     Render retained manual transmitter facilities.
@@ -1289,6 +1321,7 @@ def render_transmitter_common_options(tx_name):
         "#Makeup Gain=15",
         "#Function=13",
     ])
+
 
 def render_port_tx_section(model, port_id, node):
     """
@@ -1435,6 +1468,7 @@ def render_port_tx_section(model, port_id, node):
 
     return "\n".join(lines)
 
+
 def render_multiport_rx_tx_sections(model):
     """
     Render all Rx and Tx sections for an explicit multi-port model.
@@ -1469,6 +1503,8 @@ def render_multiport_rx_tx_sections(model):
 # =========================================================
 # DTMF Sender Renderer
 # =========================================================
+
+
 def get_dtmf_ctrl_pty(model):
     node_type = model.get("node", {}).get("type")
 
@@ -1479,6 +1515,8 @@ def get_dtmf_ctrl_pty(model):
 # =========================================================
 # Reflector rendering
 # =========================================================
+
+
 def get_primary_callsign(model):
     """
     Return the callsign representing the installation as a whole.
@@ -1520,6 +1558,8 @@ def get_primary_callsign(model):
     )
 
     return str(callsign).strip().upper()
+
+
 def get_primary_port_id(model):
     """
     Return the explicitly selected primary port for a multi-port build.
@@ -1563,6 +1603,7 @@ def get_primary_logic_name(model):
 
     return "SimplexLogic"
 
+
 def get_location_info_callsign(model):
     """
     Return the APRS identity for LocationInfo.
@@ -1585,6 +1626,8 @@ def get_location_info_callsign(model):
             return f"EL-{echolink_callsign[:-2]}"
 
     return get_primary_callsign(model)
+
+
 def render_location_info(model):
     """
     Render the optional installation-wide LocationInfo section.
@@ -1723,6 +1766,7 @@ def render_location_info(model):
             "COMMENT_LINE": comment_line,
         },
     )
+
 
 def render_reflector_logic(model):
     """
@@ -1903,6 +1947,7 @@ def render_reflector_logic(model):
         values,
     )
 
+
 def render_link_to_reflector(model):
     """
     Render LinkToReflector section if reflector is enabled.
@@ -1933,6 +1978,8 @@ def render_link_to_reflector(model):
         "link_to_reflector.template",
         values
     )
+
+
 def render_multiport_link_to_reflector(
     model,
     active_logics=None,
@@ -2002,6 +2049,8 @@ def render_multiport_link_to_reflector(
         "link_to_reflector.template",
         values,
     )
+
+
 def render_local_links(model):
     """
     Render every operator-defined local radio link.
@@ -2076,6 +2125,8 @@ def render_local_links(model):
         )
 
     return "\n\n".join(rendered_links)
+
+
 def render_topology_links_line(model):
     """
     Render the GLOBAL LINKS setting from the saved topology.
@@ -2115,6 +2166,8 @@ def render_topology_links_line(model):
         return "#LINKS="
 
     return "LINKS=" + ",".join(link_names)
+
+
 def render_multiport_svxlink_config(model):
     """
     Render final svxlink.conf text for ICS multi-port builds.
@@ -2193,6 +2246,7 @@ def render_multiport_svxlink_config(model):
         )
     )
 
+
 def render_specialist_reference_sections():
     """
     Render the shared commented manual-reference sections.
@@ -2236,6 +2290,7 @@ def normalise_config_spacing(rendered_text):
         output_lines.pop()
 
     return "\n".join(output_lines) + "\n"
+
 
 def render_svxlink_config(model):
     """

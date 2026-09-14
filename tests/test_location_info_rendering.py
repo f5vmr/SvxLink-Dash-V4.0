@@ -217,5 +217,6 @@ class LocationInfoRenderingTests(unittest.TestCase):
             template,
         )
 
+
 if __name__ == "__main__":
     unittest.main()

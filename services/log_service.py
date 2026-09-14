@@ -58,8 +58,8 @@ def get_svxlink_log_path():
 
     return LEGACY_LOG
 
-def read_recent_svxlink_log_lines(max_lines=300):
 
+def read_recent_svxlink_log_lines(max_lines=300):
     """
     Return a bounded chronological view across the most recent
     SvxLink log rotation.

@@ -176,6 +176,8 @@ def render_all(model):
 # =========================================================
 # Deployment phase
 # =========================================================
+
+
 def render_motd_script(model):
     callsign = get_primary_callsign(model)
 
@@ -188,6 +190,8 @@ TERM=linux toilet -F metal {callsign}-SVX
 ## This file gives the login screen of a Raspberry Pi a new look
 ## 09092026 - 4.0
 """
+
+
 def deploy_motd_script(content):
     tmp_path = Path("/tmp/10-uname")
 
@@ -241,6 +245,7 @@ def ensure_language_pack(model):
 
     return str(target_dir)
 
+
 def deploy_rendered_files(rendered_files):
     """
     Deploy rendered configuration files.
@@ -250,7 +255,6 @@ def deploy_rendered_files(rendered_files):
     """
 
     deployed = []
-
 
 
 # =====================================================
@@ -292,6 +296,7 @@ def deploy_rendered_files(rendered_files):
 # =========================================================
 # Full build pipeline
 # =========================================================
+
 
 def build_svxlink_configuration(
     model,

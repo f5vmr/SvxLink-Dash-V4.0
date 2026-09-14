@@ -39,6 +39,7 @@ def reboot_device():
         ]
     )
 
+
 def schedule_reboot(delay_seconds=3):
     return subprocess.run(
         [
@@ -54,6 +55,7 @@ def schedule_reboot(delay_seconds=3):
         text=True,
         capture_output=True,
     )
+
 
 def shutdown_device():
     """

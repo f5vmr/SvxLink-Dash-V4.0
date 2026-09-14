@@ -11,6 +11,7 @@ from pathlib import Path
 APP_ROOT = Path(__file__).resolve().parent.parent
 GPIO_LINES_FILE = APP_ROOT / "config" / "gpio_lines.json"
 
+
 def build_raspberry_pi_gpio_lines():
     """
     Build the selectable Raspberry Pi GPIO list used by the setup wizard.
@@ -39,6 +40,7 @@ def build_raspberry_pi_gpio_lines():
             }
         ],
     }
+
 
 def load_gpio_lines():
     """
@@ -99,6 +101,8 @@ def flatten_gpio_lines(data=None, available_only=False, chip_filter=None):
             })
 
     return rows
+
+
 def scan_gpio_lines():
     """
     Scan current GPIO chips and lines using gpioinfo.
@@ -213,6 +217,8 @@ def save_gpio_lines(data):
         json.dumps(data, indent=2),
         encoding="utf-8",
     )
+
+
 def prepare_gpio_lines(platform_id, force=False):
     """
     Prepare the GPIO map required by the selected platform.
@@ -254,6 +260,7 @@ def prepare_gpio_lines(platform_id, force=False):
 
     save_gpio_lines(data)
     return data
+
 
 def refresh_gpio_lines():
     """

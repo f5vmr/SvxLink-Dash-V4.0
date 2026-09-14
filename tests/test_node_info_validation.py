@@ -133,5 +133,6 @@ class NodeInfoValidationTests(unittest.TestCase):
             result["validation_errors"],
         )
 
+
 if __name__ == "__main__":
     unittest.main()

@@ -83,6 +83,7 @@ def hotspot_active():
 #
 #    return is_wifi_connected()
 
+
 def start_hotspot_if_needed():
     nmcli(["radio", "wifi", "on"])
 
@@ -108,5 +109,7 @@ def start_hotspot_if_needed():
     )
 
     return "hotspot start requested"
+
+
 if __name__ == "__main__":
     print(start_hotspot_if_needed())

@@ -9,6 +9,7 @@ from unittest.mock import patch
 from services import dtmf_service
 import app as dashboard
 
+
 class DtmfControlPathTests(unittest.TestCase):
 
     def get_path(self, model, selected_port=None):
@@ -146,6 +147,7 @@ class DtmfControlPathTests(unittest.TestCase):
                 "91235#",
             )
 
+
 class DtmfRouteTests(unittest.TestCase):
 
     def test_route_sends_to_selected_port_and_returns_to_it(self):
@@ -190,6 +192,7 @@ class DtmfRouteTests(unittest.TestCase):
             response.headers["Location"],
             "/status?port=2",
         )
+
 
 if __name__ == "__main__":
     unittest.main()

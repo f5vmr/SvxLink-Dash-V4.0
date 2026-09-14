@@ -200,6 +200,7 @@ class TopologyCompletionTests(unittest.TestCase):
             "COMBINE requires at least two",
             issues[0]["message"],
         )
+
     def test_shared_page_destination_has_no_port_parameter(self):
         self.node["ident_configured"] = False
         issue = get_incomplete_topology_ports(self.model)[0]

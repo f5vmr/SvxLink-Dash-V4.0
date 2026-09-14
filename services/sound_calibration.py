@@ -17,6 +17,7 @@ DEVCAL_TX_STATE = Path("/tmp/svxlink-devcal.tx")
 
 SVXLINK_SERVICE = "svxlink.service"
 
+
 def prepare_devcal_input_pipe() -> None:
     if DEVCAL_INPUT.exists():
         try:
@@ -32,6 +33,7 @@ def prepare_devcal_input_pipe() -> None:
     os.mkfifo(DEVCAL_INPUT, 0o666)
     os.chmod(DEVCAL_INPUT, 0o666)
     
+
 def run_cmd(cmd: List[str], timeout: int = 30) -> Dict[str, Any]:
     result = subprocess.run(
         cmd,
@@ -48,12 +50,14 @@ def run_cmd(cmd: List[str], timeout: int = 30) -> Dict[str, Any]:
         "stderr": result.stderr.strip(),
     }
 
+
 def get_svxlink_service_state() -> Dict[str, Any]:
     return run_cmd(["/usr/bin/systemctl", "is-active", SVXLINK_SERVICE], timeout=10)
 
 
 def stop_svxlink_for_calibration() -> Dict[str, Any]:
     return run_cmd(["sudo", "/usr/bin/systemctl", "stop", SVXLINK_SERVICE], timeout=20)
+
 
 def kill_devcal_processes() -> Dict[str, Any]:
     """
@@ -88,6 +92,7 @@ def kill_devcal_processes() -> Dict[str, Any]:
 
     return result
 
+
 def restart_svxlink_after_calibration() -> Dict[str, Any]:
     kill_result = kill_devcal_processes()
 
@@ -104,6 +109,7 @@ def restart_svxlink_after_calibration() -> Dict[str, Any]:
         timeout=30,
     )
     
+
 def run_devcal(
     config_file: str,
     section: str,
@@ -161,6 +167,7 @@ def run_devcal(
         cmd.append("--wide")
 
     return run_cmd(cmd, timeout=180)
+
 
 def build_devcal_command(
     config_file: str,
@@ -225,6 +232,8 @@ def build_devcal_command(
     ])
 
     return cmd
+
+
 def devcal_is_running() -> bool:
     if not DEVCAL_PID.exists():
         return False
@@ -305,6 +314,8 @@ def start_devcal_session(
         "stdout": f"devcal started with PID {process.pid}",
         "stderr": "",
     }
+
+
 def get_devcal_mode() -> str:
     if not DEVCAL_MODE.exists():
         return ""
@@ -317,6 +328,8 @@ def get_devcal_mode() -> str:
 
     except Exception:
         return ""
+
+
 def get_devcal_tx_state() -> str:
     if not DEVCAL_TX_STATE.exists():
         return "off"
@@ -347,6 +360,7 @@ def toggle_devcal_tx_state() -> str:
     set_devcal_tx_state(new_state)
     return new_state
 
+
 def toggle_devcal_tx() -> Dict[str, Any]:
     if not devcal_is_running():
         raise RuntimeError("devcal is not running.")
@@ -372,6 +386,7 @@ def toggle_devcal_tx() -> Dict[str, Any]:
         "stderr": "",
     }
     
+
 def stop_devcal_session() -> Dict[str, Any]:
     if not DEVCAL_PID.exists():
         return {

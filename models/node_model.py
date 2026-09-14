@@ -297,6 +297,7 @@ DEFAULT_MODEL = {
     },
 }
 
+
 def new_node_model(platform=None):
     """
     Return a fresh node model.
@@ -319,6 +320,8 @@ def new_node_model(platform=None):
             model["gpio"] = deepcopy(NANOPI_NEO_GPIO_DEFAULTS)
 
     return model
+
+
 def is_ics_multiport_model(model):
     hardware = model.get("hardware", {})
     enabled_ports = model.get("ports", {}).get("enabled", [])
@@ -327,6 +330,8 @@ def is_ics_multiport_model(model):
         hardware.get("family") == "ics"
         and len(enabled_ports)
     )
+
+
 def is_multiport_model(model):
     enabled_ports = model.get("ports", {}).get("enabled", [])
 
@@ -334,6 +339,8 @@ def is_multiport_model(model):
         is_ics_multiport_model(model)
         or len(enabled_ports) > 1
     )
+
+
 def squelch_uses_ctcss(squelch):
     """
     Return True when CTCSS is the active SQL detector or is
@@ -359,6 +366,7 @@ def squelch_uses_ctcss(squelch):
         and "ctcss" in components
     )
 
+
 def ctcss_talkgroup_selection_available(
     squelch,
 ):
@@ -367,6 +375,7 @@ def ctcss_talkgroup_selection_available(
     """
 
     return not squelch_uses_ctcss(squelch)
+
 
 def validate_squelch_configuration(
     squelch,
@@ -504,6 +513,7 @@ def validate_squelch_configuration(
             "is the active SQL detector."
         )
     return errors
+
 
 def validate_ctcss_talkgroup_configuration(
     configuration,
@@ -970,6 +980,7 @@ def set_ident(model, short_mode, short_interval, long_mode, long_interval):
 
     return model
 
+
 def get_installation_tones(model):
     """
     Return normalised installation-wide tone settings.
@@ -1012,6 +1023,7 @@ def get_installation_tones(model):
         ),
     }
 
+
 def set_roger(model, roger_mode):
     """
     Set the installation-wide courtesy tone mode.
@@ -1021,6 +1033,7 @@ def set_roger(model, roger_mode):
     model["tones"]["courtesy_mode"] = roger_mode
 
     return model
+
 
 def set_interface_mode(model, mode):
     """
@@ -1065,6 +1078,7 @@ def set_interface_mode(model, mode):
 
     return model
 
+
 def set_squelch(model, method, ctcss_freq=None, ctcss_tx=False):
     """
     Set squelch configuration.
@@ -1108,6 +1122,7 @@ def disable_reflector(model):
 
     return model
     
+
 def set_echolink(
     model,
     enabled,
@@ -1151,6 +1166,7 @@ def set_echolink(
     }
 
     return model
+
 
 def enable_module(model, module_name):
     """

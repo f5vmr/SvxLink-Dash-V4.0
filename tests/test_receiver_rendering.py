@@ -85,6 +85,7 @@ class ReceiverCtcssRenderingTests(unittest.TestCase):
             rendered,
         )
 
+
 class ReceiverStandardSqlRenderingTests(
     unittest.TestCase
 ):
@@ -183,6 +184,7 @@ class ReceiverStandardSqlRenderingTests(
             render_rx_hidraw_block(model),
             "",
         )
+
 
 class ReceiverCommentedSqlExampleTests(
     unittest.TestCase
@@ -385,6 +387,7 @@ class ReceiverCommentedSqlExampleTests(
             rendered,
         )
 
+
 class ReceiverCommonOptionsTests(
     unittest.TestCase
 ):
@@ -458,6 +461,7 @@ class ReceiverCommonOptionsTests(
                 expected,
                 rendered,
             )
+
 
 if __name__ == "__main__":
     unittest.main()

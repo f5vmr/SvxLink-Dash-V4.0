@@ -40,6 +40,8 @@ def get_topology_logic_name(model, port_id):
     if not isinstance(port_id, str) or port_id not in ports:
         raise ValueError("Port {!r} is not an enabled topology port.".format(port_id))
     return ports[port_id]
+
+
 def get_topology_memberships(model):
     """
     Return every saved topology assignment for each enabled port.

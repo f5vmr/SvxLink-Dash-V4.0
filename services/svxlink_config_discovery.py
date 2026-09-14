@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 
 DEFAULT_SVXLINK_CONFIG = "/etc/svxlink/svxlink.conf"
 
+
 def read_svxlink_config(config_file: str = DEFAULT_SVXLINK_CONFIG) -> configparser.ConfigParser:
     parser = configparser.ConfigParser(
         interpolation=None,

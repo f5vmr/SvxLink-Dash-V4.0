@@ -143,5 +143,6 @@ class NodeInfoConfigurationTests(unittest.TestCase):
             -7123,
         )
 
+
 if __name__ == "__main__":
     unittest.main()

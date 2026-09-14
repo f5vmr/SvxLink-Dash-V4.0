@@ -359,6 +359,7 @@ class SquelchValidationTests(unittest.TestCase):
             )
         )
 
+
 class CtcssTalkgroupValidationTests(unittest.TestCase):
 
     def valid_squelch(self):
@@ -453,6 +454,7 @@ class CtcssTalkgroupValidationTests(unittest.TestCase):
                 )
             ),
         )
+
 
 if __name__ == "__main__":
     unittest.main()
