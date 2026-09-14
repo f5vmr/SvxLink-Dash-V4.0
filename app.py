@@ -93,6 +93,9 @@ from services.nanopi_prepare_service import (
     build_nanopi_status,
     configure_boot,
 )
+from services.service_account_prepare_service import (
+    prepare_service_account,
+)
 from services.log_service import get_svxlink_log_path
 from services.metar_validation import (
     MetarVerificationUnavailable,
@@ -333,41 +336,10 @@ def inject_versions():
 
 def detect_platform():
     """
-    Detect supported hardware profile.
-
-    Initial supported targets:
-    - raspberry_pi
-    - nanopi_neo
-
-    Anything else is unsupported unless later proven compatible.
+    Return the centrally detected platform profile.
     """
+    return hw_platforms.get_platform_profile()
 
-    model_text = ""
-
-    try:
-        model_text = Path("/proc/device-tree/model").read_text(errors="ignore").lower()
-    except FileNotFoundError:
-        pass
-
-    if "raspberry pi" in model_text:
-        return {
-            "id": "raspberry_pi",
-            "name": "Raspberry Pi",
-            "supported": True,
-        }
-
-    if "nanopi neo" in model_text or "friendlyarm nanopi" in model_text:
-        return {
-            "id": "nanopi_neo",
-            "name": "NanoPi-Neo",
-            "supported": True,
-        }
-
-    return {
-        "id": "unknown",
-        "name": hw_platforms.machine(),
-        "supported": False,
-    }
 # =========================================================
 # Hardware Profiles
 # =========================================================
@@ -519,6 +491,7 @@ def start():
 @app.route("/platform", methods=["GET", "POST"])
 def platform_page():
     model = load_node_model()
+    error = None
 
     if request.method == "POST":
         # Platform is normally detected, not user-selected.
@@ -530,6 +503,7 @@ def platform_page():
             model.get("nanopi_prepare", {})
             .get("verified", False)
         )
+
         if (
             platform_id == "nanopi_neo"
             and not nanopi_verified
@@ -537,9 +511,35 @@ def platform_page():
             return redirect(
                 url_for("nanopi_prepare_page")
             )
-        return redirect(url_for("hardware_page"))
 
-    return render_template("platform.html", model=model)
+        if platform_id == "raspberry_pi":
+            result = prepare_service_account(
+                require_gpio=True
+            )
+        elif platform_id == "linux_server":
+            result = prepare_service_account(
+                require_gpio=False
+            )
+        else:
+            result = None
+
+        if result is not None and not result["ok"]:
+            error = (
+                result["stderr"]
+                or result["stdout"]
+                or (
+                    "Failed to prepare the SvxLink "
+                    "service account."
+                )
+            )
+        else:
+            return redirect(url_for("hardware_page"))
+
+    return render_template(
+        "platform.html",
+        model=model,
+        error=error,
+    )
 
 
 @app.route(
@@ -644,6 +644,7 @@ def nanopi_prepare_page():
 
         elif action == "continue":
             status = build_nanopi_status()
+
             if not status["ready"]:
                 error = (
                     "NanoPi preparation is not yet "
@@ -651,25 +652,44 @@ def nanopi_prepare_page():
                     "reboot, and refresh the checks."
                 )
             else:
-                model.setdefault(
-                    "nanopi_prepare",
-                    {},
-                )
-                model["nanopi_prepare"][
-                    "reboot_required"
-                ] = False
-                model["nanopi_prepare"][
-                    "verified"
-                ] = True
-                if "build" in model:
-                    model["build"].pop(
-                        "resume_after_reboot",
-                        None,
+                account_result = (
+                    prepare_service_account(
+                        require_gpio=True
                     )
-                save_node_model(model)
-                return redirect(
-                    url_for("hardware_page")
                 )
+
+                if not account_result["ok"]:
+                    error = (
+                        account_result["stderr"]
+                        or account_result["stdout"]
+                        or (
+                            "Failed to prepare the "
+                            "SvxLink service account."
+                        )
+                    )
+                else:
+                    model.setdefault(
+                        "nanopi_prepare",
+                        {},
+                    )
+                    model["nanopi_prepare"][
+                        "reboot_required"
+                    ] = False
+                    model["nanopi_prepare"][
+                        "verified"
+                    ] = True
+
+                    if "build" in model:
+                        model["build"].pop(
+                            "resume_after_reboot",
+                            None,
+                        )
+
+                    save_node_model(model)
+
+                    return redirect(
+                        url_for("hardware_page")
+                    )
 
         else:
             error = "Unknown action."

@@ -21,7 +21,9 @@
             <div class="label">Detected platform</div>
             <p>{{ model.platform.name }}</p>
         </div>
-
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
         {% if not model.platform.supported %}
             <p class="error">This platform is not currently supported by SvxLink-Dash-V4.0.</p>
         {% else %}

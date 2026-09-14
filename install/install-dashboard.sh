@@ -82,6 +82,26 @@ install \
 echo "Installed or updated $NANOPI_HELPER_DEST"
 
 #-----------------------
+# SvxLink service-account preparation helper
+#-----------------------
+
+SERVICE_ACCOUNT_HELPER_SOURCE="/opt/dashboard/install/svxlink_dashboard_service_account_prepare"
+SERVICE_ACCOUNT_HELPER_DEST="/usr/local/sbin/svxlink_dashboard_service_account_prepare"
+
+if [ ! -f "$SERVICE_ACCOUNT_HELPER_SOURCE" ]; then
+    echo "ERROR: Service-account preparation helper source not found:"
+    echo "       $SERVICE_ACCOUNT_HELPER_SOURCE"
+    exit 1
+fi
+
+install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$SERVICE_ACCOUNT_HELPER_SOURCE" \
+    "$SERVICE_ACCOUNT_HELPER_DEST"
+
+#-----------------------
 # Svxlink-Dash Library files
 #-----------------------
 echo "Preparing SvxLink Dashboard runtime directories..."
@@ -116,6 +136,7 @@ svxlink ALL=(root) NOPASSWD: \
     /usr/bin/pkill, \
     /usr/local/sbin/svxlink_dashboard_ics_prepare, \
     /usr/local/sbin/svxlink_dashboard_nanopi_prepare, \
+    /usr/local/sbin/svxlink_dashboard_service_account_prepare, \
     /usr/bin/nmcli, \
     /usr/bin/sh
 EOF

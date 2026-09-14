@@ -53,10 +53,14 @@ class WorkflowRoutingTests(unittest.TestCase):
             dashboard,
             "load_node_model",
             return_value=model,
+
         ), patch.object(
             dashboard,
             "save_node_model",
-        ):
+        ), patch.object(
+            dashboard,
+            "prepare_service_account",
+        ) as prepare_account:
             with dashboard.app.test_request_context(
                 "/platform",
                 method="POST",
@@ -68,6 +72,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             response.headers["Location"],
             "/nanopi-prepare",
         )
+        prepare_account.assert_not_called()
 
     def test_verified_nanopi_routes_to_hardware(
         self,
@@ -99,6 +104,90 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertEqual(
             response.headers["Location"],
             "/hardware",
+        )
+
+    def test_raspberry_pi_prepares_gpio_account(
+        self,
+    ):
+        model = new_node_model()
+        model["platform"] = {
+            "id": "raspberry_pi",
+            "name": "Raspberry Pi",
+            "supported": True,
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ), patch.object(
+            dashboard,
+            "prepare_service_account",
+            return_value={
+                "ok": True,
+                "returncode": 0,
+                "stdout": "",
+                "stderr": "",
+            },
+        ) as prepare_account:
+            with dashboard.app.test_request_context(
+                "/platform",
+                method="POST",
+            ):
+                response = dashboard.platform_page()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/hardware",
+        )
+        prepare_account.assert_called_once_with(
+            require_gpio=True
+        )
+
+    def test_linux_server_prepares_non_gpio_account(
+        self,
+    ):
+        model = new_node_model()
+        model["platform"] = {
+            "id": "linux_server",
+            "name": "Debian Server",
+            "supported": True,
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ), patch.object(
+            dashboard,
+            "prepare_service_account",
+            return_value={
+                "ok": True,
+                "returncode": 0,
+                "stdout": "",
+                "stderr": "",
+            },
+        ) as prepare_account:
+            with dashboard.app.test_request_context(
+                "/platform",
+                method="POST",
+            ):
+                response = dashboard.platform_page()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/hardware",
+        )
+        prepare_account.assert_called_once_with(
+            require_gpio=False
         )
 
     def test_ready_nanopi_continues_to_hardware(
@@ -142,7 +231,16 @@ class WorkflowRoutingTests(unittest.TestCase):
             dashboard,
             "build_nanopi_status",
             return_value=status,
-        ):
+        ), patch.object(
+            dashboard,
+            "prepare_service_account",
+            return_value={
+                "ok": True,
+                "returncode": 0,
+                "stdout": "",
+                "stderr": "",
+            },
+        ) as prepare_account:
             with dashboard.app.test_request_context(
                 "/nanopi-prepare",
                 method="POST",
@@ -171,6 +269,28 @@ class WorkflowRoutingTests(unittest.TestCase):
             "resume_after_reboot",
             model["build"],
         )
+        prepare_account.assert_called_once_with(
+            require_gpio=True
+        )
+
+    def test_detect_platform_uses_common_profile(
+        self,
+    ):
+        expected = {
+            "id": "linux_server",
+            "name": "Debian Server",
+            "supported": True,
+        }
+
+        with patch.object(
+            dashboard.hw_platforms,
+            "get_platform_profile",
+            return_value=expected,
+        ) as get_profile:
+            platform = dashboard.detect_platform()
+
+        self.assertEqual(platform, expected)
+        get_profile.assert_called_once_with()
 
     def test_nanopi_reboot_preserves_resume_route(
         self,
