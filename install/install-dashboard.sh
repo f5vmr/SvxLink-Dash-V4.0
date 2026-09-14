@@ -61,14 +61,8 @@ fi
 # NanoPi preparation stage
 #-----------------------
 
-NANOPI_HELPER_SOURCE=(
-    "/opt/dashboard/install/"
-    "svxlink_dashboard_nanopi_prepare"
-)
-NANOPI_HELPER_DEST=(
-    "/usr/local/sbin/"
-    "svxlink_dashboard_nanopi_prepare"
-)
+NANOPI_HELPER_SOURCE="/opt/dashboard/install/svxlink_dashboard_nanopi_prepare"
+NANOPI_HELPER_DEST="/usr/local/sbin/svxlink_dashboard_nanopi_prepare"
 
 echo "Installing SvxLink Dashboard NanoPi preparation helper..."
 
