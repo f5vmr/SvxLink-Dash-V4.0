@@ -123,22 +123,198 @@ Available hardware profiles include:
 - ICS-CTRLS 8X
 
 Some hardware profiles require additional preparation, device-tree overlays, ALSA configuration or a system reboot. The guided workflow identifies those requirements when the profile is selected.
+
+## Radio control and squelch detection
+
+The selected hardware profile determines which audio, receiver-control and
+transmitter-control choices are appropriate for each radio port.
+
+Supported interface modes include:
+
+* HIDRAW for compatible CM108, CM119, TOADS and related USB interfaces
+
+* GPIOD for receiver SQL and transmitter PTT controlled through Linux GPIO
+  lines
+
+* Hybrid control using different supported methods for SQL and PTT
+
+* Serial-port control
+
+HIDRAW and GPIOD inputs can be configured for the active sense required by the
+connected hardware. An incorrect active-high or active-low selection commonly
+causes the Dashboard to show the receiver as permanently open or permanently
+closed.
+
+Each enabled port has its own receiver, transmitter and squelch configuration.
+In a multi-port system, changing one port does not alter another port's
+radio-control settings.
+
+
+### Standard squelch methods
+
+The guided standard choices are:
+
+* HIDRAW â€” uses the supported USB-interface input
+
+* GPIOD â€” uses the configured GPIO chip and line
+
+* SERIAL â€” uses the selected serial-port signal
+
+* CTCSS â€” asks SvxLink to detect the configured sub-audible tone
+
+When CTCSS is the active SQL detector, a receive CTCSS frequency is required.
+The operator may also select transmit CTCSS when the connected radio system
+requires the same tone to be transmitted.
+
+For repeater operation, selecting CTCSS-controlled squelch also causes the
+generated logic to use the corresponding CTCSS opening condition.
+
+
+### Advanced and specialist squelch examples
+
+The Dashboard can record and render commented examples for advanced detectors
+without activating them automatically.
+
+Advanced examples include:
+
+* VOX
+
+* SIGLEV using noise detection
+
+* COMBINE
+
+A COMBINE example uses AND logic and requires two or three selected components
+from:
+
+* VOX
+
+* SIGLEV
+
+* CTCSS
+
+The specialist manual examples are:
+
+* EVDEV
+
+* PTY
+
+* RTL_SDR
+
+These advanced and specialist selections require manual completion, device
+mapping, any necessary supporting software and operational testing. The
+generated examples remain commented until the operator deliberately completes
+and enables them.
+
+
+### CTCSS squelch and CTCSS TalkGroup selection
+
+CTCSS-controlled squelch and local RF CTCSS TalkGroup selection serve
+different purposes and must not be confused.
+
+CTCSS-controlled squelch answers:
+
+    Should this received RF signal open the receiver?
+
+Local RF CTCSS TalkGroup selection answers:
+
+    Which reflector TalkGroup should this received RF signal select?
+
+A port cannot use local RF CTCSS TalkGroup selection when CTCSS already
+participates in its squelch decision, either as the standard CTCSS detector or
+as a component of an advanced COMBINE example.
+
+Eligible ports may instead map individual received CTCSS tones to reflector
+TalkGroups. Each mapping requires:
+
+* A positive CTCSS frequency
+
+* A positive whole-number TalkGroup
+
+* A tone that is not duplicated in another mapping for the same logic
+
+* At least one mapping when the facility is enabled
+
+An optional non-negative detection delay can reject very short tone detections
+before they select a TalkGroup.
+
+These mappings apply only to local RF traffic received by the selected radio
+logic. They are separate from monitored TalkGroups, which determine which
+traffic is accepted from the reflector.
+
+DTMF TalkGroup selection remains available when CTCSS is used as the
+receiver's ordinary squelch-access condition.
+
 ## Installation
 
-### Prerequisites
+SvxLink-Bootstrap is the recommended installation method. It prepares a supported SvxLink 26.05.1 installation, installs SvxLink-Dash V4.0 and hands control to the permanent Dashboard configuration workflow.
 
-Before installing SvxLink-Dash V4.0, confirm that:
+### Recommended Bootstrap installation
 
-* SvxLink 26.05.1 is installed and operational.
+Begin with a supported Debian or Raspberry Pi OS installation connected to the local network. Administrative access through `sudo` is required.
+
+Run the Bootstrap launcher:
+
+```bash
+curl -fsSL \
+https://raw.githubusercontent.com/f5vmr/Svxlink-Bootstrap/main/launch-bootstrap.sh |
+sudo sh
+```
+
+The launcher installs essential prerequisites when necessary, obtains SvxLink-Bootstrap and starts its temporary browser manager.
+
+Open the complete URL printed in the terminal. It includes a temporary access token and normally uses port `8765`.
+
+Bootstrap then:
+
+1. Detects the operating system, release, architecture and hardware platform.
+
+2. Selects the exact compatible SvxLink 26.05.1 package.
+
+3. Classifies any existing package-managed or compiler installation.
+
+4. Creates a timestamped configuration backup when an existing supported installation is adopted.
+
+5. Downloads and verifies the selected package when required.
+
+6. Installs and verifies SvxLink.
+
+7. Obtains SvxLink-Dash V4.0 and runs its established installer.
+
+8. Opens the permanent Dashboard configuration workflow.
+
+Do not close the browser or terminal, interrupt the launcher or remove power while installation is running.
+
+After successful handover, the browser opens:
+
+```text
+http://<dashboard-hostname-or-address>:5000/start
+```
+
+The temporary Bootstrap manager then shuts down. Port `8765` is not the permanent Dashboard address.
+
+Complete Bootstrap installation, migration, compatibility and troubleshooting documentation is available at:
+
+[SvxLink-Bootstrap](https://github.com/f5vmr/Svxlink-Bootstrap#readme)
+
+### Direct Dashboard installation
+
+Direct installation is intended for systems where SvxLink 26.05.1 has already been installed correctly or for development and recovery work.
+
+Before using the direct installer, confirm that:
+
+* SvxLink 26.05.1 is installed.
+
 * `svxlink.service` is available.
+
 * The `svxlink` user and group exist.
+
 * `/etc/svxlink` is present.
+
 * The computer is connected to the local network.
+
 * You have local administrative access through `sudo`.
 
-SvxLink-Dash configures and operates an existing SvxLink installation. It does not install SvxLink itself.
-
-### Download and run the installer
+A newly installed or reconfigured SvxLink service does not have to be running before Dashboard configuration begins. It may remain inactive until a valid configuration has been built and deployed.
 
 Clone the repository into a temporary directory and run the executable installer:
 
@@ -153,27 +329,61 @@ cd SvxLink-Dash-V4.0
 sudo ./install/install-dashboard.sh
 ```
 
-The installer places the operational dashboard in:
+The direct Dashboard installer does not install or replace the SvxLink package.
+
+### Installed locations and service account
+
+The installer places the operational Dashboard in:
 
 ```text
 /opt/dashboard
 ```
-
-Dashboard runtime data and managed backups are stored beneath:
+The saved configuration model is stored at:
 
 ```text
-/var/lib/svxlink-dash
+/opt/dashboard/config/node_model.json
+```
+Before a full configuration reset, the previous model is copied beneath:
+
+```text
+/opt/dashboard/config/backups
+```
+Before deployment, existing svxlink.conf and svxlink.d/*.conf files are
+copied beneath:
+
+```text
+/opt/dashboard/backups
+```
+Persistent Dashboard sound data, including generated identification audio,
+is stored beneath:
+
+```text
+/var/lib/svxlink-dash/sounds
 ```
 
-The dashboard service runs as:
+The Bootstrap installer also prepares /var/lib/svxlink-dash/backups, but the current
+Dashboard backup routines do not use that directory.
+
+The current node model is stored here:
+```text
+/opt/dashboard/config/node_model.json
+```
+
+The Dashboard service runs as:
 
 ```text
 svxlink:svxlink
 ```
 
+The installer creates and enables:
+
+```text
+svxlink-dash.service
+```
+
 ### Confirm the installation
 
-Check that the dashboard service is running:
+Check the Dashboard service:
 
 ```bash
 sudo systemctl status \
@@ -181,15 +391,25 @@ svxlink-dash.service \
 --no-pager
 ```
 
-The service should report:
+It should report:
 
 ```text
 active (running)
 ```
 
+Check SvxLink separately:
+
+```bash
+sudo systemctl status \
+svxlink.service \
+--no-pager
+```
+
+On a new installation, `svxlink.service` may remain inactive until the guided workflow has produced and deployed a valid configuration. This does not prevent the Dashboard from being used.
+
 ### First access
 
-Open the dashboard from a browser on the same network:
+Open the Dashboard from a browser on the same network:
 
 ```text
 http://<dashboard-hostname-or-address>:5000/
@@ -201,7 +421,81 @@ Where local hostname resolution is available, the default hostname may be used:
 http://svxlink.local:5000/
 ```
 
-The initial workflow collects the dashboard credentials and guides the operator through the installation configuration.
+A new installation presents the authorisation and initial configuration workflow. Create the Dashboard credentials, complete the guided configuration, review the validated model and deploy the generated SvxLink configuration.
+
+### Updating SvxLink-Dash
+
+SvxLink-Bootstrap remains the recommended route when preparing or migrating
+the complete appliance. It can run the Dashboard installer again after
+SvxLink has been checked and prepared.
+
+For a direct Dashboard update, rerun the installer from a current temporary
+clone. When /opt/dashboard already exists, the installer enters that checkout
+and runs git pull before refreshing permissions, service files and supporting
+installation resources.
+
+The update then reloads systemd, enables svxlink-dash.service and restarts the
+Dashboard.
+
+The current installer does not create a complete pre-update copy of
+/opt/dashboard. Operators should therefore ensure that the installation's
+saved model and any required locally maintained files are backed up before a
+Dashboard update.
+
+Do not keep deliberate modifications in tracked files beneath /opt/dashboard.
+They may prevent git pull from completing or may conflict with a later project
+update.
+
+
+### Configuration preservation during updates
+
+The operational model is stored at:
+
+    /opt/dashboard/config/node_model.json
+
+That file is not part of the repository checkout and an ordinary git pull does
+not replace it. Existing saved models are loaded through the Dashboard's model
+migration process so that newly introduced defaults can be added while
+preserving explicit operator selections.
+
+Generated SvxLink configuration beneath /etc/svxlink is also outside the
+Dashboard Git checkout and is not replaced merely by updating the Dashboard
+application. A later configuration build may deliberately replace
+Dashboard-managed SvxLink files after validation and backup.
+
+
+### Rollback limitations
+
+SvxLink-Dash does not currently provide an automated application-version
+rollback command.
+
+The configuration backups beneath /opt/dashboard/backups protect the active
+SvxLink configuration at build time. The backups beneath
+/opt/dashboard/config/backups protect the saved model when a full
+reconfiguration reset is requested. Neither directory is a complete backup of
+the Dashboard application.
+
+Returning /opt/dashboard to an earlier Git revision is an administrative
+operation and must be approached cautiously. An older Dashboard version may
+not understand a model that has already been migrated or extended by a newer
+version.
+
+Before any manual application rollback, preserve:
+
+* /opt/dashboard/config/node_model.json
+
+* /opt/dashboard/config/backups
+
+* /opt/dashboard/backups
+
+* Required files beneath /etc/svxlink
+
+* Persistent identification sounds beneath /var/lib/svxlink-dash/sounds
+
+After a rollback, validate the saved model and generated configuration before
+restarting SvxLink. If compatibility is uncertain, restore the matching saved
+model and SvxLink configuration together or rebuild through the guided
+workflow.
 
 ## Authentication
 
@@ -290,6 +584,85 @@ It can also recognise the standard locations:
 ```
 
 The protected live-log page displays the detected log output.
+
+## Modules and macros
+
+Every generated installation includes ModuleHelp and ModuleParrot.
+
+EchoLink and METAR are optional modules selected during guided configuration.
+Their protected editing pages remain available after deployment, and saved
+changes are incorporated into a rebuilt SvxLink configuration.
+
+
+### EchoLink configuration
+
+Enabling EchoLink adds ModuleEchoLink and opens the EchoLink configuration
+stage.
+
+The required information is:
+
+* An EchoLink callsign ending in -L or -R
+
+* The EchoLink password
+
+* The sysop name
+
+* A location description
+
+The Dashboard automatically prefixes the published location with [Svx]. The
+operator-entered part of the location is limited to 12 characters.
+
+The runtime Dashboard reports EchoLink activity and provides protected
+EchoLink controls. Optional EchoLink status publication through LocationInfo
+is configured separately and is available only while EchoLink is enabled.
+
+
+### METAR configuration
+
+Enabling METAR adds ModuleMetarInfo.
+
+The operator first selects the appropriate airport region and one default
+airport. Up to six additional airports may then be selected from that region.
+The Dashboard validates the default airport against the chosen regional
+catalogue before saving it.
+
+The runtime controls can open the generated METAR module and select configured
+airport entries. Module identifiers may differ if the generated configuration
+has been customised.
+
+
+### Macro management
+
+The protected macro page manages the generated [Macros] section. Existing
+macros discovered from SvxLink configuration are retained in the model where
+possible.
+
+The Dashboard supports up to 16 macros. Every configured row requires a unique
+macro number.
+
+Structured macro types include:
+
+* Reflector TalkGroup reset
+
+* Recall the previous reflector TalkGroup
+
+* Select a specified non-zero reflector TalkGroup
+
+* Send a command to an enabled module
+
+* Preserve an operator-supplied custom SvxLink macro command
+
+Module macros require both a module name and a command. EchoLink and MetarInfo
+are offered as structured module destinations only when their corresponding
+modules are enabled. The Dashboard adds the terminating # to a structured
+module command when it is omitted.
+
+Custom commands are stored without reinterpretation and remain the operator's
+responsibility.
+
+Saving macros updates the model, rebuilds the managed SvxLink configuration
+and requests a SvxLink restart. If rebuild or restart fails, the Dashboard
+reports that the macro settings were saved but were not successfully deployed.
 
 ## Default manual DTMF commands
 
@@ -417,7 +790,6 @@ svxlink.service \
 --no-pager
 ```
 
-
 ## Guided configuration sequence
 
 The configuration workflow establishes the available hardware, configures every enabled radio port and identifies the primary installation identity before creating any local or reflector links.
@@ -433,13 +805,16 @@ The normal sequence is:
 7. Select the primary installation port. A single-port installation selects its only port automatically.
 8. Select whether the installation will use a reflector.
 9. Configure the reflector route and authentication method when required.
-10. Assign every enabled port to independent operation, a local link or the reflector link.
-11. Validate and review the complete configuration.
-12. Build and deploy the generated SvxLink configuration.
+10. Select reflector node-map publication and, independently, SvxLink LocationInfo and APRS publication.
+11. Assign every enabled port to independent operation, a local link or the reflector link.
+12. Validate and review the complete configuration.
+13. Build and deploy the generated SvxLink configuration.
 
 The reflector route follows primary-port selection so that `ReflectorLogic` uses the correct installation callsign. This is especially important for Protocol 3, where the callsign forms part of the certificate identity.
 
 Link topology is configured after the available ports, their logic types and the reflector route are known.
+
+Node-map and LocationInfo publication choices are separate. Both describe the selected primary radio port, but only reflector node-map publication controls whether `/etc/svxlink/node_info.json` contains the public information used by the connected reflector’s map.
 
 ## Primary installation identity
 
@@ -528,6 +903,161 @@ Repeater closedown-tone choices are:
 `None` is a valid deliberate selection in every case. A courtesy tone is commonly used for repeater operation, but it is not mandatory.
 
 The dashboard applies each shared event-file customisation once, regardless of the number of configured radio ports.
+
+## Node information and LocationInfo publication
+
+SvxLink-Dash treats reflector node-map publication and SvxLink LocationInfo
+publication as separate facilities.
+
+They share public location and RF details because both describe the same
+installation, but enabling one does not automatically enable the other.
+
+### Reflector node-map publication
+
+Reflector node-map publication controls the contents of:
+
+    /etc/svxlink/node_info.json
+
+When enabled, the Dashboard populates this file with the public information
+used to represent the node on the connected reflector's map.
+
+The generated information includes, where supplied:
+
+* Node location or administrative area
+
+* QTH name
+
+* Sysop callsign
+
+* Decimal latitude and longitude
+
+* Maidenhead locator
+
+* Receiver and transmitter frequencies
+
+* Receiver squelch type
+
+* Transmitter power
+
+* Antenna description, height and direction
+
+For a single-port installation, the generated radio names are Rx1 and Tx1.
+
+For a multi-port installation, node_info.json represents the selected primary
+port. The receiver and transmitter names therefore use that port number, such
+as Rx2 and Tx2.
+
+A receiver configured for CTCSS squelch is published with the CTCSS squelch
+type. Other supported physical squelch methods are represented as COR.
+
+When reflector node-map publication is disabled, the Dashboard writes an
+empty JSON object rather than publishing the stored node details:
+
+    {}
+
+Stored information can therefore be retained for later use without appearing
+on the reflector map.
+
+### SvxLink LocationInfo and APRS
+
+LocationInfo publication independently controls generation and activation of
+the SvxLink [LocationInfo] configuration.
+
+Enable it only when the installation should publish through the configured
+APRS service. It is not required merely to populate the connected reflector's
+node map.
+
+LocationInfo adds settings that are not required by node_info.json, including:
+
+* Coordinates in SvxLink degrees-minutes-seconds format
+
+* APRS server list
+
+* Optional EchoLink status publication
+
+* Signed transmitter offset in kHz
+
+* Antenna gain in dBd
+
+* Antenna height unit
+
+* Beacon interval
+
+* APRS comment
+
+EchoLink status publication is available only when EchoLink itself is enabled.
+When selected, a status-server list must also be supplied.
+
+### Coordinate formats
+
+The Dashboard keeps the coordinate formats required by the two publication
+methods distinct.
+
+Decimal coordinates are used for public node information. They must be signed
+values within these ranges:
+
+* Latitude: -90 to 90
+
+* Longitude: -180 to 180
+
+Examples:
+
+    Latitude:  55.1809
+    Longitude: -1.54604
+
+Maidenhead locators may contain four, six or eight characters.
+
+Example:
+
+    IO85fe
+
+LocationInfo additionally requires coordinates in SvxLink
+degrees-minutes-seconds format. Degrees, minutes and seconds are separated by
+full stops and followed immediately by a compass direction.
+
+Example:
+
+    Latitude:  55.10.51N
+    Longitude: 01.32.45W
+
+### Transmitter offsets
+
+The LocationInfo transmitter offset is stored as a signed whole number of kHz.
+
+Examples:
+
+    Simplex:       0
+    600 kHz down: -600
+    600 kHz up:    600
+    7.6 MHz down: -7600
+
+The sign must describe the transmitter frequency relative to the receiver
+frequency. Custom signed offsets are preserved by the configuration model.
+
+### Publication combinations
+
+The two controls permit four deliberate states:
+
+* Node map disabled, LocationInfo disabled: no public node information is
+  published.
+
+* Node map enabled, LocationInfo disabled: node_info.json populates the
+  connected reflector's node map.
+
+* Node map disabled, LocationInfo enabled: LocationInfo and APRS are active,
+  but node_info.json remains empty.
+
+* Node map enabled, LocationInfo enabled: both publication methods are active.
+
+The shared public node and RF fields are available whenever either publication
+method is enabled. LocationInfo-specific fields are available only when
+LocationInfo and APRS publication is enabled.
+
+Existing saved models created before these controls were separated are
+migrated automatically. Their former combined location_info.enabled choice
+becomes the initial reflector node-map publication choice. Once the independent
+node_info.enabled value exists, later migrations preserve the operator's
+explicit selection.
 
 ## Logic and link topology
 
@@ -715,6 +1245,94 @@ A Rebuild can overwrite manual changes made directly to managed files. Before re
 
 Specialist configuration that is not guided by the dashboard should be maintained only in documented, manually managed sections or files.
 
+## Repository layout
+
+The principal source directories are:
+
+* config — example models, hardware profiles, ALSA resources, device-tree
+  overlay sources and configuration data used during installation or rendering
+
+* data — controlled application data such as regional airport, timezone and
+  selection catalogues
+
+* hw_platforms — platform-specific recognition and preparation support
+
+* install — the Dashboard installer, service unit, permission helper and ICS
+  preparation helper
+
+* models — the default configuration model, migration-aware model structure
+  and high-level validation
+
+* renderers — conversion of the validated model into SvxLink configuration
+
+* services — configuration storage, deployment, runtime status, hardware,
+  sound, network, log, DTMF, macro and supporting operations
+
+* templates — browser pages and reusable Jinja templates
+
+* templates/config — templates for generated SvxLink configuration sections
+  and files
+
+* static — Dashboard stylesheets, scripts, icons and other browser assets
+
+* tests — unit and orchestration tests for model, rendering, deployment and
+  browser-workflow behaviour
+
+* tools — administrative utilities supplied with the Dashboard
+
+The application entry point is app.py. Project-owned paths are resolved from
+the installed project root so that the Dashboard does not depend on the shell's
+current working directory.
+
+
+## Managed configuration and deployment
+
+The saved node model is the Dashboard's source of truth for guided and
+protected configuration. A build validates that model before rendering or
+deploying configuration.
+
+The deployment process can manage:
+
+* /etc/svxlink/svxlink.conf
+
+* Dashboard-generated module and logic configuration beneath
+  /etc/svxlink/svxlink.d
+
+* /etc/svxlink/node_info.json
+
+* Required local event logic beneath /usr/share/svxlink/events.d/local
+
+* Dashboard-generated identification sounds beneath
+  /var/lib/svxlink-dash/sounds/idents
+
+Before replacing the active SvxLink configuration, the Dashboard copies the
+existing svxlink.conf and existing .conf files from svxlink.d into timestamped
+files beneath /opt/dashboard/backups.
+
+The local event files deployed by the Dashboard are generated managed output.
+They are not separately backed up during each build.
+
+A configuration-only build can render and deploy configuration without
+requiring svxlink.service to become active. A normal operational build may
+request a service restart after successful deployment.
+
+The Dashboard reports build, backup, deployment and restart failures
+separately. A successful render does not by itself prove that every file was
+deployed or that SvxLink restarted successfully.
+
+### Ownership of generated files
+
+Files rendered or deployed by the Dashboard should be treated as generated
+output. Manual edits to those files may be replaced during the next build.
+
+Operator-maintained additions should be kept only in documented locations or
+sections that are outside Dashboard management. Before rebuilding, preserve
+any required manual changes and review the proposed configuration.
+
+The presence of ordinary SvxLink configuration files remains intentional: the
+Dashboard manages and operates standard SvxLink rather than replacing its
+configuration format or service model.
+
 ## Reflector configuration and security
 
 SvxLink-Dash V4.0 supports four distinct reflector routes:
@@ -728,7 +1346,7 @@ Before configuring reflector access, confirm the required connection and authent
 
 ## No reflector
 
-The installation operates without `ReflectorLogic`.
+The installation can operate without `ReflectorLogic`.
 
 A single-port radio logic remains independently operational. Multi-port installations may contain independent ports and local port-to-port links.
 
