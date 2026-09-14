@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+
+<head>
+    <meta charset="UTF-8">
+    <title>NanoPi Preparation - SvxLink-Dash-V4.0</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='site.css') }}"
+    >
+    <link
+        rel="icon"
+        href="{{ url_for('static', filename='svxlink.ico') }}"
+    >
+</head>
+
+<body>
+<main class="page">
+    <section class="card">
+        <div class="page-header">
+            <img
+                class="page-icon"
+                src="{{ url_for(
+                    'static',
+                    filename='svxlink.ico'
+                ) }}"
+                alt="SvxLink icon"
+            >
+            <div class="page-heading">
+                <h1>NanoPi Neo Preparation</h1>
+                <p>
+                    Prepare the Armbian device-tree overlays
+                    required by the NanoPi Neo.
+                </p>
+            </div>
+        </div>
+
+        <div class="note">
+            The NanoPi Neo requires the Armbian
+            <strong>i2c0</strong> and
+            <strong>analog-codec</strong> overlays.
+            These expose the header I²C bus and activate the
+            H3 analogue audio codec. Any existing overlays are
+            preserved.
+            <br><br>
+            A reboot is required after the boot configuration
+            changes. Setup will return to this page automatically
+            after the device restarts.
+        </div>
+
+        {% if message %}
+            <p class="success">{{ message }}</p>
+        {% endif %}
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% set stored_reboot_required = (
+            model.get("nanopi_prepare", {})
+            .get("reboot_required", False)
+        ) %}
+        {% set detected_reboot_required = (
+            status.boot_configured
+            and not status.ready
+        ) %}
+        {% set reboot_required = (
+            stored_reboot_required
+            or detected_reboot_required
+        ) %}
+
+        {% if reboot_required %}
+            <div class="note">
+                <strong>Reboot required.</strong><br>
+                The required overlays are present in the Armbian
+                boot configuration, but the I²C bus and H3 codec
+                are not both active.
+                <br><br>
+                Press <strong>Reboot Now</strong>. Setup will
+                resume on this preparation page.
+            </div>
+        {% endif %}
+
+        <div class="form-section">
+            <div class="label">Preparation status</div>
+
+            <div class="status-box">
+                <strong>Preparation helper:</strong>
+                {% if status.helper_available %}
+                    <span class="success-text">
+                        Available
+                    </span>
+                {% else %}
+                    <span class="error">Missing</span>
+                {% endif %}
+            </div>
+
+            <div class="status-box">
+                <strong>Armbian boot overlays:</strong>
+                {% if status.boot_configured %}
+                    <span class="success-text">
+                        i2c0 and analog-codec configured
+                    </span>
+                {% elif status.boot_check %}
+                    <span class="warning-text">
+                        Preparation required
+                    </span>
+                {% else %}
+                    <span class="warning-text">
+                        Not checked
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="status-box">
+                <strong>I²C bus:</strong>
+                {% if status.i2c_available %}
+                    <span class="success-text">
+                        /dev/i2c-0 available
+                    </span>
+                {% else %}
+                    <span class="warning-text">
+                        Not yet available
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="status-box">
+                <strong>H3 analogue codec:</strong>
+                {% if status.analog_codec_available %}
+                    <span class="success-text">
+                        Available through ALSA
+                    </span>
+                {% else %}
+                    <span class="warning-text">
+                        Not yet available
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="status-box">
+                <strong>Overall status:</strong>
+                {% if status.ready %}
+                    <span class="success-text">
+                        Preparation complete
+                    </span>
+                {% else %}
+                    <span class="warning-text">
+                        Preparation incomplete
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if (
+            status.boot_check
+            and status.boot_check.stderr
+        ) %}
+            <div class="form-section">
+                <div class="label">
+                    Preparation details
+                </div>
+                <pre class="status-box">{{
+                    status.boot_check.stderr
+                }}</pre>
+            </div>
+        {% endif %}
+
+        <div class="button-row">
+            <a
+                class="button-secondary"
+                href="{{ url_for('platform_page') }}"
+            >
+                Back
+            </a>
+
+            <a
+                class="button-secondary"
+                href="{{ url_for(
+                    'nanopi_prepare_page'
+                ) }}"
+            >
+                Refresh Checks
+            </a>
+
+            {% if not status.boot_configured %}
+                <form
+                    action="{{ url_for(
+                        'nanopi_prepare_page'
+                    ) }}"
+                    method="post"
+                    style="display:inline;"
+                >
+                    <button
+                        class="button-primary"
+                        type="submit"
+                        name="action"
+                        value="configure"
+                        {% if not status.helper_available %}
+                            disabled
+                        {% endif %}
+                    >
+                        Configure NanoPi
+                    </button>
+                </form>
+            {% elif reboot_required %}
+                <form
+                    action="{{ url_for(
+                        'nanopi_prepare_page'
+                    ) }}"
+                    method="post"
+                    style="display:inline;"
+                >
+                    <button
+                        class="button-primary"
+                        type="submit"
+                        name="action"
+                        value="reboot"
+                    >
+                        Reboot Now
+                    </button>
+                </form>
+            {% elif status.ready %}
+                <form
+                    action="{{ url_for(
+                        'nanopi_prepare_page'
+                    ) }}"
+                    method="post"
+                    style="display:inline;"
+                >
+                    <button
+                        class="button-primary"
+                        type="submit"
+                        name="action"
+                        value="continue"
+                    >
+                        Continue
+                    </button>
+                </form>
+            {% else %}
+                <button
+                    class="button-primary"
+                    type="button"
+                    disabled
+                >
+                    Continue
+                </button>
+            {% endif %}
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        SvxLink Software &copy; Tobias Blömberg SM0SVX<br>
+        SvxLink-Dash V4.0 &copy; Chris Jackson G4NAB<br>
+        SvxLink Package {{ version_info.package }} |
+        SvxLink {{ version_info.engine }}
+    </footer>
+</main>
+</body>
+</html>

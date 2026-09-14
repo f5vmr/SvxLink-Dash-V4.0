@@ -1,0 +1,200 @@
+#!/bin/bash
+
+set -euo pipefail
+
+CONFIG="/boot/armbianEnv.txt"
+REQUIRED_PREFIX="sun8i-h3"
+REQUIRED_OVERLAYS=("i2c0" "analog-codec")
+
+
+usage() {
+    echo "Usage:"
+    echo "  $0 status"
+    echo "  $0 configure"
+}
+
+
+require_config() {
+    if [ ! -f "$CONFIG" ]; then
+        echo "ERROR: Armbian boot configuration not found at $CONFIG" >&2
+        exit 1
+    fi
+
+    local prefix
+    prefix="$(
+        sed -n \
+            's/^[[:space:]]*overlay_prefix[[:space:]]*=[[:space:]]*//p' \
+            "$CONFIG"
+    )"
+
+    if [ "$prefix" != "$REQUIRED_PREFIX" ]; then
+        echo "ERROR: Expected overlay_prefix=$REQUIRED_PREFIX" >&2
+        exit 1
+    fi
+
+    local overlay_line_count
+    overlay_line_count="$(
+        grep -cE \
+            '^[[:space:]]*overlays[[:space:]]*=' \
+            "$CONFIG" ||
+        true
+    )"
+
+    if [ "$overlay_line_count" -gt 1 ]; then
+        echo "ERROR: Multiple active overlays lines found in $CONFIG" >&2
+        exit 1
+    fi
+}
+
+
+current_overlays() {
+    sed -n \
+        's/^[[:space:]]*overlays[[:space:]]*=[[:space:]]*//p' \
+        "$CONFIG"
+}
+
+
+overlay_is_present() {
+    local required="$1"
+    local overlay
+
+    for overlay in $(current_overlays); do
+        if [ "$overlay" = "$required" ]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+
+show_status() {
+    require_config
+
+    local missing=0
+    local required
+
+    echo "CONFIG=$CONFIG"
+    echo "OVERLAY_PREFIX=$REQUIRED_PREFIX"
+    echo "OVERLAYS=$(current_overlays)"
+
+    for required in "${REQUIRED_OVERLAYS[@]}"; do
+        if overlay_is_present "$required"; then
+            echo "$required=enabled"
+        else
+            echo "$required=missing"
+            missing=1
+        fi
+    done
+
+    if [ "$missing" -eq 0 ]; then
+        echo "READY=yes"
+    else
+        echo "READY=no"
+    fi
+}
+
+
+configure_overlays() {
+    require_config
+
+    if [ "$EUID" -ne 0 ]; then
+        echo "ERROR: Root authority is required." >&2
+        exit 1
+    fi
+
+    local overlays
+    local required
+    local changed=0
+
+    overlays="$(current_overlays)"
+
+    for required in "${REQUIRED_OVERLAYS[@]}"; do
+        if ! overlay_is_present "$required"; then
+            if [ -n "$overlays" ]; then
+                overlays="$overlays $required"
+            else
+                overlays="$required"
+            fi
+            changed=1
+        fi
+    done
+
+    if [ "$changed" -eq 0 ]; then
+        echo "No change required."
+        show_status
+        return 0
+    fi
+
+    local timestamp
+    local backup
+    local temporary
+
+    timestamp="$(date '+%Y%m%d-%H%M%S')"
+    backup="${CONFIG}.svxlink-dash-${timestamp}.bak"
+    temporary="$(mktemp "${CONFIG}.tmp.XXXXXX")"
+
+    trap 'rm -f "$temporary"' EXIT
+
+    cp -a \
+        "$CONFIG" \
+        "$backup"
+
+    if grep -qE \
+        '^[[:space:]]*overlays[[:space:]]*=' \
+        "$CONFIG"; then
+        awk \
+            -v replacement="overlays=$overlays" \
+            '
+            /^[[:space:]]*overlays[[:space:]]*=/ {
+                print replacement
+                next
+            }
+            {
+                print
+            }
+            ' \
+            "$CONFIG" > "$temporary"
+    else
+        cp \
+            "$CONFIG" \
+            "$temporary"
+        printf '\noverlays=%s\n' \
+            "$overlays" >> "$temporary"
+    fi
+
+    chown --reference="$CONFIG" \
+        "$temporary"
+    chmod --reference="$CONFIG" \
+        "$temporary"
+
+    mv \
+        "$temporary" \
+        "$CONFIG"
+
+    trap - EXIT
+
+    echo "Updated $CONFIG"
+    echo "Backup: $backup"
+    echo "A reboot is required."
+    show_status
+}
+
+
+if [ "$#" -ne 1 ]; then
+    usage >&2
+    exit 1
+fi
+
+case "$1" in
+    status)
+        show_status
+        ;;
+    configure)
+        configure_overlays
+        ;;
+    *)
+        usage >&2
+        exit 1
+        ;;
+esac

@@ -14,18 +14,23 @@
             <div class="page-heading">
                 <h1>Rebooting</h1>
                 <p>
-                    The Raspberry Pi is rebooting. This page is safe to refresh.
+                    The {{ device_name }} is rebooting. This page is safe to refresh.
                 </p>
             </div>
         </div>
 
         <div class="note">
-            Wait for the Raspberry Pi to restart, then return to the dashboard.
-            The build flow should resume at the ICS preparation page.
+            Wait for the {{ device_name }} to restart, then return to the dashboard.
+            The build flow should resume at the {{ preparation_name }} page.
         </div>
 
         <div class="button-row">
-            <a class="button-primary" href="{{ url_for('ics_prepare_page') }}">Return to ICS Preparation</a>
+            <a
+                class="button-primary"
+                href="{{ url_for(preparation_endpoint) }}"
+            >
+                Return to {{ preparation_name }}
+            </a>            <a class="button-primary" href="{{ url_for('ics_prepare_page') }}">Return to ICS Preparation</a>
             <a class="button-secondary" href="{{ url_for('status_page') }}">Status</a>
         </div>
     </section>

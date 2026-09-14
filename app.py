@@ -89,6 +89,10 @@ from services.ics_prepare_service import (
     set_overlay,
     enable_i2c,
 )
+from services.nanopi_prepare_service import (
+    build_nanopi_status,
+    configure_boot,
+)
 from services.log_service import get_svxlink_log_path
 from services.metar_validation import (
     MetarVerificationUnavailable,
@@ -519,9 +523,167 @@ def platform_page():
     if request.method == "POST":
         # Platform is normally detected, not user-selected.
         save_node_model(model)
+        platform_id = (
+            model.get("platform", {}).get("id")
+        )
+        nanopi_verified = (
+            model.get("nanopi_prepare", {})
+            .get("verified", False)
+        )
+        if (
+            platform_id == "nanopi_neo"
+            and not nanopi_verified
+        ):
+            return redirect(
+                url_for("nanopi_prepare_page")
+            )
         return redirect(url_for("hardware_page"))
 
     return render_template("platform.html", model=model)
+
+
+@app.route(
+    "/nanopi-prepare",
+    methods=["GET", "POST"],
+)
+def nanopi_prepare_page():
+    model = load_node_model()
+    platform_id = (
+        model.get("platform", {}).get("id")
+    )
+
+    if platform_id != "nanopi_neo":
+        return redirect(url_for("platform_page"))
+
+    message = None
+    error = None
+    status = build_nanopi_status()
+
+    if status["ready"]:
+        model.setdefault(
+            "nanopi_prepare",
+            {},
+        )
+        model["nanopi_prepare"][
+            "reboot_required"
+        ] = False
+        save_node_model(model)
+
+    if request.method == "POST":
+        action = request.form.get("action", "")
+
+        if action == "configure":
+            result = configure_boot()
+            if result["ok"]:
+                model.setdefault("build", {})
+                model["build"][
+                    "resume_after_reboot"
+                ] = "/nanopi-prepare"
+                model.setdefault(
+                    "nanopi_prepare",
+                    {},
+                )
+                model["nanopi_prepare"][
+                    "configuration_requested"
+                ] = True
+                model["nanopi_prepare"][
+                    "reboot_required"
+                ] = True
+                model["nanopi_prepare"][
+                    "verified"
+                ] = False
+                save_node_model(model)
+                message = (
+                    result["stdout"]
+                    or (
+                        "NanoPi boot preparation "
+                        "completed. Reboot required."
+                    )
+                )
+            else:
+                error = (
+                    result["stderr"]
+                    or result["stdout"]
+                    or (
+                        "Failed to configure NanoPi "
+                        "boot overlays."
+                    )
+                )
+
+        elif action == "reboot":
+            model.setdefault("build", {})
+            model["build"][
+                "resume_after_reboot"
+            ] = "/nanopi-prepare"
+            model.setdefault(
+                "nanopi_prepare",
+                {},
+            )
+            model["nanopi_prepare"][
+                "reboot_required"
+            ] = True
+            model["nanopi_prepare"][
+                "verified"
+            ] = False
+            save_node_model(model)
+
+            result = schedule_reboot(8)
+            if result.returncode != 0:
+                error = (
+                    result.stderr
+                    or result.stdout
+                    or "Failed to schedule reboot."
+                )
+            else:
+                return redirect(
+                    url_for(
+                        "rebooting_page",
+                        return_to="nanopi",
+                    )
+                )
+
+        elif action == "continue":
+            status = build_nanopi_status()
+            if not status["ready"]:
+                error = (
+                    "NanoPi preparation is not yet "
+                    "complete. Confirm the overlays, "
+                    "reboot, and refresh the checks."
+                )
+            else:
+                model.setdefault(
+                    "nanopi_prepare",
+                    {},
+                )
+                model["nanopi_prepare"][
+                    "reboot_required"
+                ] = False
+                model["nanopi_prepare"][
+                    "verified"
+                ] = True
+                if "build" in model:
+                    model["build"].pop(
+                        "resume_after_reboot",
+                        None,
+                    )
+                save_node_model(model)
+                return redirect(
+                    url_for("hardware_page")
+                )
+
+        else:
+            error = "Unknown action."
+
+        status = build_nanopi_status()
+
+    return render_template(
+        "nanopi_prepare.html",
+        model=model,
+        status=status,
+        message=message,
+        error=error,
+        version_info=get_version_info(),
+    )
 
 
 @app.route("/hardware", methods=["GET", "POST"])
@@ -961,8 +1123,27 @@ def ics_prepare_page():
 
 @app.route("/rebooting")
 def rebooting_page():
+    return_to = request.args.get(
+        "return_to",
+        "ics",
+    )
+
+    if return_to == "nanopi":
+        device_name = "NanoPi Neo"
+        preparation_name = "NanoPi Preparation"
+        preparation_endpoint = (
+            "nanopi_prepare_page"
+        )
+    else:
+        device_name = "Raspberry Pi"
+        preparation_name = "ICS Preparation"
+        preparation_endpoint = "ics_prepare_page"
+
     return render_template(
         "rebooting.html",
+        device_name=device_name,
+        preparation_name=preparation_name,
+        preparation_endpoint=preparation_endpoint,
         version_info=get_version_info(),
     )      
 

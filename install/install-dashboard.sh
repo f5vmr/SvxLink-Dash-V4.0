@@ -56,6 +56,37 @@ else
     echo "ICS preparation helper already installed:"
     echo "  $ICS_HELPER_DEST"
 fi
+
+#-----------------------
+# NanoPi preparation stage
+#-----------------------
+
+NANOPI_HELPER_SOURCE=(
+    "/opt/dashboard/install/"
+    "svxlink_dashboard_nanopi_prepare"
+)
+NANOPI_HELPER_DEST=(
+    "/usr/local/sbin/"
+    "svxlink_dashboard_nanopi_prepare"
+)
+
+echo "Installing SvxLink Dashboard NanoPi preparation helper..."
+
+if [ ! -f "$NANOPI_HELPER_SOURCE" ]; then
+    echo "ERROR: NanoPi preparation helper source not found:"
+    echo "       $NANOPI_HELPER_SOURCE"
+    exit 1
+fi
+
+install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$NANOPI_HELPER_SOURCE" \
+    "$NANOPI_HELPER_DEST"
+
+echo "Installed or updated $NANOPI_HELPER_DEST"
+
 #-----------------------
 # Svxlink-Dash Library files
 #-----------------------
@@ -90,6 +121,7 @@ svxlink ALL=(root) NOPASSWD: \
     /usr/bin/install, \
     /usr/bin/pkill, \
     /usr/local/sbin/svxlink_dashboard_ics_prepare, \
+    /usr/local/sbin/svxlink_dashboard_nanopi_prepare, \
     /usr/bin/nmcli, \
     /usr/bin/sh
 EOF

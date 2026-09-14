@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import app as dashboard
 from pathlib import Path
@@ -39,6 +39,207 @@ class WorkflowRoutingTests(unittest.TestCase):
             "airports": [],
         })
         return model
+
+    def test_nanopi_platform_routes_to_preparation(
+        self,
+    ):
+        model = new_node_model()
+        model["platform"] = {
+            "id": "nanopi_neo",
+            "name": "NanoPi-Neo",
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ):
+            with dashboard.app.test_request_context(
+                "/platform",
+                method="POST",
+            ):
+                response = dashboard.platform_page()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/nanopi-prepare",
+        )
+
+    def test_verified_nanopi_routes_to_hardware(
+        self,
+    ):
+        model = new_node_model()
+        model["platform"] = {
+            "id": "nanopi_neo",
+            "name": "NanoPi-Neo",
+        }
+        model["nanopi_prepare"] = {
+            "verified": True,
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ):
+            with dashboard.app.test_request_context(
+                "/platform",
+                method="POST",
+            ):
+                response = dashboard.platform_page()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/hardware",
+        )
+
+    def test_ready_nanopi_continues_to_hardware(
+        self,
+    ):
+        model = new_node_model()
+        model["platform"] = {
+            "id": "nanopi_neo",
+            "name": "NanoPi-Neo",
+        }
+        model["build"] = {
+            "resume_after_reboot": (
+                "/nanopi-prepare"
+            ),
+        }
+        model["nanopi_prepare"] = {
+            "reboot_required": True,
+            "verified": False,
+        }
+        status = {
+            "helper_available": True,
+            "boot_check": {
+                "ok": True,
+                "stdout": "READY=yes",
+                "stderr": "",
+            },
+            "boot_configured": True,
+            "i2c_available": True,
+            "analog_codec_available": True,
+            "ready": True,
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ), patch.object(
+            dashboard,
+            "build_nanopi_status",
+            return_value=status,
+        ):
+            with dashboard.app.test_request_context(
+                "/nanopi-prepare",
+                method="POST",
+                data={
+                    "action": "continue",
+                },
+            ):
+                response = (
+                    dashboard.nanopi_prepare_page()
+                )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/hardware",
+        )
+        self.assertTrue(
+            model["nanopi_prepare"]["verified"]
+        )
+        self.assertFalse(
+            model["nanopi_prepare"][
+                "reboot_required"
+            ]
+        )
+        self.assertNotIn(
+            "resume_after_reboot",
+            model["build"],
+        )
+
+    def test_nanopi_reboot_preserves_resume_route(
+        self,
+    ):
+        model = new_node_model()
+        model["platform"] = {
+            "id": "nanopi_neo",
+            "name": "NanoPi-Neo",
+        }
+        status = {
+            "helper_available": True,
+            "boot_check": {
+                "ok": True,
+                "stdout": "READY=yes",
+                "stderr": "",
+            },
+            "boot_configured": True,
+            "i2c_available": False,
+            "analog_codec_available": False,
+            "ready": False,
+        }
+        reboot_result = Mock(
+            returncode=0,
+            stdout="",
+            stderr="",
+        )
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ), patch.object(
+            dashboard,
+            "build_nanopi_status",
+            return_value=status,
+        ), patch.object(
+            dashboard,
+            "schedule_reboot",
+            return_value=reboot_result,
+        ) as reboot_mock:
+            with dashboard.app.test_request_context(
+                "/nanopi-prepare",
+                method="POST",
+                data={
+                    "action": "reboot",
+                },
+            ):
+                response = (
+                    dashboard.nanopi_prepare_page()
+                )
+
+        reboot_mock.assert_called_once_with(8)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/rebooting?return_to=nanopi",
+        )
+        self.assertEqual(
+            model["build"]["resume_after_reboot"],
+            "/nanopi-prepare",
+        )
+        self.assertTrue(
+            model["nanopi_prepare"][
+                "reboot_required"
+            ]
+        )
 
     def post_port_modules(self, model, reconfigure=False):
         form = {
