@@ -17,20 +17,40 @@ from services.topology_ports import (
 # =========================================================
 # System information
 # =========================================================
-import platform
 
 
 def get_library_path():
-    machine = platform.machine()
+    machine = platform.machine().lower()
 
     if machine in ("armv7l", "armhf"):
-        return "/usr/lib/arm-linux-gnueabihf/svxlink"
+        return (
+            "/usr/lib/arm-linux-gnueabihf/"
+            "svxlink"
+        )
 
     if machine in ("aarch64", "arm64"):
-        return "/usr/lib/aarch64-linux-gnu/svxlink"
+        return (
+            "/usr/lib/aarch64-linux-gnu/"
+            "svxlink"
+        )
 
     if machine in ("x86_64", "amd64"):
-        return "/usr/lib/x86_64-linux-gnu/svxlink"
+        return (
+            "/usr/lib/x86_64-linux-gnu/"
+            "svxlink"
+        )
+
+    if machine in (
+        "i386",
+        "i486",
+        "i586",
+        "i686",
+        "x86",
+    ):
+        return (
+            "/usr/lib/i386-linux-gnu/"
+            "svxlink"
+        )
 
     return "/usr/lib/svxlink"
 
