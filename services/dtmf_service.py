@@ -62,18 +62,35 @@ def get_dtmf_control_path(selected_port=None):
     return Path("/dev/shm/simplex_dtmf_ctrl")
 
 
-def validate_dtmf(command):
+def normalise_dtmf(command):
     """
-    Allow only digits, star and hash.
+    Normalise keyboard-entered DTMF characters.
     """
 
-    return bool(re.fullmatch(r"[0-9*#]+", command))
+    return command.strip().upper()
+
+
+def validate_dtmf(command):
+    """
+    Allow the complete sixteen-key DTMF alphabet.
+    """
+
+    command = normalise_dtmf(command)
+
+    return bool(
+        re.fullmatch(
+            r"[0-9A-D*#]+",
+            command,
+        )
+    )
 
 
 def send_dtmf(command, selected_port=None):
     """
     Send a DTMF command to the selected SvxLink logic PTY.
     """
+
+    command = normalise_dtmf(command)
 
     if not validate_dtmf(command):
         raise ValueError("Invalid DTMF command.")

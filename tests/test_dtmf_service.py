@@ -147,6 +147,61 @@ class DtmfControlPathTests(unittest.TestCase):
                 "91235#",
             )
 
+    def test_send_dtmf_accepts_macro_prefix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            dtmf_path = (
+                Path(directory)
+                / "repeater_dtmf_ctrl"
+            )
+            dtmf_path.touch()
+
+            with patch.object(
+                dtmf_service,
+                "get_dtmf_control_path",
+                return_value=dtmf_path,
+            ):
+                result = dtmf_service.send_dtmf(
+                    "D8#"
+                )
+
+            self.assertEqual(result, "D8#")
+            self.assertEqual(
+                dtmf_path.read_text(
+                    encoding="utf-8"
+                ),
+                "D8#",
+            )
+
+    def test_send_dtmf_accepts_full_alphabet(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as directory:
+            dtmf_path = (
+                Path(directory)
+                / "repeater_dtmf_ctrl"
+            )
+            dtmf_path.touch()
+
+            with patch.object(
+                dtmf_service,
+                "get_dtmf_control_path",
+                return_value=dtmf_path,
+            ):
+                result = dtmf_service.send_dtmf(
+                    "a1b2c3d4*0#"
+                )
+
+            self.assertEqual(
+                result,
+                "A1B2C3D4*0#",
+            )
+            self.assertEqual(
+                dtmf_path.read_text(
+                    encoding="utf-8"
+                ),
+                "A1B2C3D4*0#",
+            )
+
 
 class DtmfRouteTests(unittest.TestCase):
 
