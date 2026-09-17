@@ -7,7 +7,7 @@ INSTALL_DIR="/opt/dashboard"
 echo "Installing SvxLink-Dash-V4.0..."
 
 apt update
-apt install -y git python3 python3-flask python3-jinja2 python3-werkzeug
+apt install -y git python3 python3-flask python3-jinja2 python3-werkzeug sox
 
 if [ ! -d /opt ]; then
     mkdir -p /opt
