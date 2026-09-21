@@ -40,6 +40,79 @@ class WorkflowRoutingTests(unittest.TestCase):
         })
         return model
 
+    def test_dual_usb_nodes_use_discovered_device_mapping(self):
+        model = self.multiport_model()
+        model["hardware_preparation"] = {
+            "status": "reviewed",
+            "dual_usb": {
+                "ready": True,
+                "ports": [
+                    {
+                        "port": "1",
+                        "audio_index": 2,
+                        "audio_dev": (
+                            "alsa:plughw:CARD=Set,DEV=0"
+                        ),
+                        "hidraw_device": "/dev/hidraw0",
+                    },
+                    {
+                        "port": "2",
+                        "audio_index": 3,
+                        "audio_dev": (
+                            "alsa:plughw:CARD=Device,DEV=0"
+                        ),
+                        "hidraw_device": "/dev/hidraw1",
+                    },
+                ],
+                "errors": [],
+            },
+        }
+
+        profile = {
+            "port_map": {
+                "1": {
+                    "rx_audio": "alsa:plughw:0",
+                    "tx_audio": "alsa:plughw:0",
+                    "hidraw_device": "/dev/hidraw0",
+                },
+                "2": {
+                    "rx_audio": "alsa:plughw:1",
+                    "tx_audio": "alsa:plughw:1",
+                    "hidraw_device": "/dev/hidraw1",
+                },
+            },
+        }
+
+        nodes = dashboard.initialise_port_nodes(
+            model,
+            profile,
+        )
+
+        self.assertEqual(
+            nodes["1"]["audio"]["rx_audio"],
+            "alsa:plughw:CARD=Set,DEV=0",
+        )
+        self.assertEqual(
+            nodes["1"]["audio"]["tx_audio"],
+            "alsa:plughw:CARD=Set,DEV=0",
+        )
+        self.assertEqual(
+            nodes["1"]["hidraw"]["device"],
+            "/dev/hidraw0",
+        )
+        self.assertEqual(
+            nodes["2"]["audio"]["rx_audio"],
+            "alsa:plughw:CARD=Device,DEV=0",
+        )
+        self.assertEqual(
+            nodes["2"]["audio"]["tx_audio"],
+            "alsa:plughw:CARD=Device,DEV=0",
+        )
+        self.assertEqual(
+            nodes["2"]["hidraw"]["device"],
+            "/dev/hidraw1",
+        )
+
     def test_nanopi_platform_routes_to_preparation(
         self,
     ):
@@ -1223,8 +1296,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             "ports": [
                 {
                     "port": "1",
-                    "audio_index": 0,
-                    "audio_dev": "alsa:plughw:0",
+                    "audio_index": 2,
+                    "audio_dev": (
+                        "alsa:plughw:CARD=Set,DEV=0"
+                    ),
                     "audio_name": "Set",
                     "audio_description": (
                         "C-Media USB Headphone Set"
@@ -1236,8 +1311,10 @@ class WorkflowRoutingTests(unittest.TestCase):
                 },
                 {
                     "port": "2",
-                    "audio_index": 1,
-                    "audio_dev": "alsa:plughw:1",
+                    "audio_index": 3,
+                    "audio_dev": (
+                        "alsa:plughw:CARD=Device,DEV=0"
+                    ),
                     "audio_name": "Device",
                     "audio_description": (
                         "C-Media USB Audio Device"

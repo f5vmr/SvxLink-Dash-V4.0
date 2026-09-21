@@ -55,5 +55,31 @@ class DeploymentPermissionTests(unittest.TestCase):
         self.assertEqual(mode, 0o664)
 
 
+    def test_installer_prepares_account_before_dashboard_start(self):
+        installer_text = Path(
+            "install/install-dashboard.sh"
+        ).read_text(encoding="utf-8")
+
+        preparation_command = (
+            '"$SERVICE_ACCOUNT_HELPER_DEST" no-gpio'
+        )
+        dashboard_restart = (
+            "systemctl restart svxlink-dash\n"
+        )
+
+        self.assertIn(
+            preparation_command,
+            installer_text,
+        )
+        self.assertIn(
+            dashboard_restart,
+            installer_text,
+        )
+        self.assertLess(
+            installer_text.index(preparation_command),
+            installer_text.index(dashboard_restart),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

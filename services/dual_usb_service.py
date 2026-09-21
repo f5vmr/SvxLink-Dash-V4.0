@@ -13,8 +13,6 @@ from services.sound_discovery import discover_sound_cards
 
 CMEDIA_VENDOR_ID = "00000D8C"
 
-EXPECTED_AUDIO_INDICES = (0, 1)
-
 EXPECTED_HIDRAW_DEVICES = (
     Path("/dev/hidraw0"),
     Path("/dev/hidraw1"),
@@ -93,10 +91,11 @@ def inspect_dual_usb_hardware(
     access_check=os.access,
 ):
     """
-    Inspect the fixed two-port USB interface contract.
+    Inspect and assign two USB audio and HIDRAW interfaces.
 
-    Port 1 uses ALSA card 0 and /dev/hidraw0.
-    Port 2 uses ALSA card 1 and /dev/hidraw1.
+    Duplex USB audio devices are ordered by their current ALSA card
+    indices. Their named ALSA devices are retained so unrelated host
+    sound hardware does not affect the final SvxLink configuration.
     """
 
     if cards is None:
@@ -108,13 +107,10 @@ def inspect_dual_usb_hardware(
             for card in cards
             if is_duplex_usb_card(card)
         ),
-        key=lambda card: int(card.get("index", -1)),
+        key=lambda card: int(
+            card.get("index", -1)
+        ),
     )
-
-    cards_by_index = {
-        int(card["index"]): card
-        for card in usb_cards
-    }
 
     errors = []
     ports = []
@@ -130,17 +126,39 @@ def inspect_dual_usb_hardware(
         for device in hidraw_devices
     ]
 
-    for port_number, audio_index in enumerate(
-        EXPECTED_AUDIO_INDICES,
-        start=1,
-    ):
-        card = cards_by_index.get(audio_index)
+    for port_number in (1, 2):
+        card_position = port_number - 1
+
+        card = (
+            usb_cards[card_position]
+            if len(usb_cards) > card_position
+            else None
+        )
 
         hidraw_device = (
-            hidraw_devices[port_number - 1]
-            if len(hidraw_devices) >= port_number
-            else Path(f"/dev/hidraw{audio_index}")
+            hidraw_devices[card_position]
+            if len(hidraw_devices) > card_position
+            else Path(
+                f"/dev/hidraw{card_position}"
+            )
         )
+
+        audio_index = (
+            int(card.get("index", -1))
+            if card
+            else None
+        )
+
+        audio_dev = (
+            card.get("audio_dev", "")
+            if card
+            else ""
+        )
+
+        if card and not audio_dev:
+            audio_dev = (
+                f"alsa:plughw:{audio_index}"
+            )
 
         hidraw_exists = hidraw_device.exists()
         hidraw_accessible = (
@@ -160,8 +178,8 @@ def inspect_dual_usb_hardware(
 
         if card is None:
             errors.append(
-                f"Port {port_number} requires duplex USB "
-                f"audio card {audio_index}."
+                f"Port {port_number} requires a duplex "
+                "USB audio device."
             )
 
         if not hidraw_exists:
@@ -183,7 +201,7 @@ def inspect_dual_usb_hardware(
         ports.append({
             "port": str(port_number),
             "audio_index": audio_index,
-            "audio_dev": f"alsa:plughw:{audio_index}",
+            "audio_dev": audio_dev,
             "audio_name": (
                 card.get("name", "")
                 if card

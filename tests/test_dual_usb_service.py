@@ -58,12 +58,12 @@ class DualUsbServiceTests(unittest.TestCase):
     def test_two_cmedia_interfaces_are_ready(self):
         cards = [
             make_usb_card(
-                0,
+                2,
                 "Set",
                 "USB-Audio C-Media USB Headphone Set",
             ),
             make_usb_card(
-                1,
+                3,
                 "Device",
                 "USB-Audio C-Media USB Audio Device",
             ),
@@ -105,12 +105,20 @@ class DualUsbServiceTests(unittest.TestCase):
         self.assertTrue(result["ready"])
         self.assertEqual(result["errors"], [])
         self.assertEqual(
+            result["ports"][0]["audio_index"],
+            2,
+        )
+        self.assertEqual(
             result["ports"][0]["audio_dev"],
-            "alsa:plughw:0",
+            "alsa:plughw:CARD=Set,DEV=0",
+        )
+        self.assertEqual(
+            result["ports"][1]["audio_index"],
+            3,
         )
         self.assertEqual(
             result["ports"][1]["audio_dev"],
-            "alsa:plughw:1",
+            "alsa:plughw:CARD=Device,DEV=0",
         )
         self.assertEqual(
             result["ports"][0]["audio_name"],
@@ -130,7 +138,7 @@ class DualUsbServiceTests(unittest.TestCase):
     def test_missing_second_interface_is_rejected(self):
         cards = [
             make_usb_card(
-                0,
+                2,
                 "Set",
                 "USB-Audio C-Media USB Headphone Set",
             ),
@@ -172,7 +180,7 @@ class DualUsbServiceTests(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                "audio card 1"
+                "Port 2 requires a duplex USB audio device"
                 in error
                 for error in result["errors"]
             )
@@ -188,12 +196,12 @@ class DualUsbServiceTests(unittest.TestCase):
     def test_non_cmedia_or_inaccessible_hidraw_is_rejected(self):
         cards = [
             make_usb_card(
-                0,
+                2,
                 "Set",
                 "USB-Audio C-Media USB Headphone Set",
             ),
             make_usb_card(
-                1,
+                3,
                 "Device",
                 "USB-Audio C-Media USB Audio Device",
             ),

@@ -105,6 +105,7 @@ Runtime architecture reporting recognises:
 
 - 32-bit ARM (`armhf`)
 - 64-bit ARM (`arm64`)
+- 32-bit x86 (`i386`; tested on `i686`)
 - 64-bit x86 (`amd64`)
 
 The dashboard is intended for Debian-based operating systems on which SvxLink 26.05.1 is already installed and operational.
@@ -123,6 +124,31 @@ Available hardware profiles include:
 - ICS-CTRLS 8X
 
 Some hardware profiles require additional preparation, device-tree overlays, ALSA configuration or a system reboot. The guided workflow identifies those requirements when the profile is selected.
+
+### Dual USB Sound Fob Interfaces
+
+The Dual USB Sound Fob Interfaces profile supports exactly two separate duplex
+USB radio interfaces, including compatible CM108 and CM119 devices.
+
+Both interfaces must be connected before hardware preparation is completed.
+The Dashboard discovers the two duplex USB audio devices in their current ALSA
+order and assigns them to Port 1 and Port 2. ALSA card numbers do not need to be
+0 and 1; other host audio devices may occupy lower card numbers.
+
+The discovered named ALSA identifiers, such as
+`alsa:plughw:CARD=Set,DEV=0`, are stored in the node configuration instead of
+raw numeric card indices. The corresponding C-Media HIDRAW devices are recorded
+with the same port assignments.
+
+The installer grants the `svxlink` service account the required audio and USB
+device-group membership and installs a udev rule providing group access to
+C-Media HIDRAW devices. The rule covers C-Media vendor ID `0d8c`, including the
+tested CM108-compatible and CM119-compatible interfaces.
+
+Once preparation has assigned the two interfaces, leave them connected to their
+original physical USB sockets. Moving or exchanging the devices can change
+their detected order and therefore requires the hardware-preparation check to
+be repeated.
 
 ## Radio control and squelch detection
 
@@ -154,13 +180,13 @@ radio-control settings.
 
 The guided standard choices are:
 
-* HIDRAW â€” uses the supported USB-interface input
+* HIDRAW - uses the supported USB-interface input
 
-* GPIOD â€” uses the configured GPIO chip and line
+* GPIOD - uses the configured GPIO chip and line
 
-* SERIAL â€” uses the selected serial-port signal
+* SERIAL - uses the selected serial-port signal
 
-* CTCSS â€” asks SvxLink to detect the configured sub-audible tone
+* CTCSS - asks SvxLink to detect the configured sub-audible tone
 
 When CTCSS is the active SQL detector, a receive CTCSS frequency is required.
 The operator may also select transmit CTCSS when the connected radio system

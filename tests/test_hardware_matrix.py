@@ -83,25 +83,14 @@ class HardwareMatrixTests(unittest.TestCase):
             with self.subTest(port=port_id):
                 port = dual["port_map"][port_id]
 
-                self.assertEqual(
+                self.assertIsNone(
                     port["rx_audio"],
-                    (
-                        "alsa:plughw:0"
-                        if port_id == "1"
-                        else "alsa:plughw:1"
-                    ),
                 )
-                self.assertEqual(
+                self.assertIsNone(
                     port["tx_audio"],
-                    port["rx_audio"],
                 )
-                self.assertEqual(
+                self.assertIsNone(
                     port["hidraw_device"],
-                    (
-                        "/dev/hidraw0"
-                        if port_id == "1"
-                        else "/dev/hidraw1"
-                    ),
                 )
                 self.assertEqual(
                     port["hidraw_sql_pin"],

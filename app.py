@@ -1362,6 +1362,24 @@ def initialise_port_nodes(model, profile):
     port_roles = model.get("port_roles", {})
     port_map = profile.get("port_map", {})
 
+    dual_usb_preparation = (
+        model.get("hardware_preparation", {})
+        .get("dual_usb", {})
+    )
+
+    discovered_usb_ports = {}
+
+    if dual_usb_preparation.get("ready"):
+        discovered_usb_ports = {
+            str(port.get("port")): port
+            for port in dual_usb_preparation.get("ports", [])
+            if (
+                isinstance(port, dict)
+                and port.get("port") is not None
+                and port.get("audio_dev")
+            )
+        }
+
     existing_nodes = model.get("nodes", {})
     nodes = {}
 
@@ -1378,7 +1396,22 @@ def initialise_port_nodes(model, profile):
         if role not in ("simplex", "repeater"):
             role = "simplex"
 
-        mapping = port_map.get(port_id, {})
+        mapping = dict(
+            port_map.get(port_id, {})
+        )
+        discovered_usb = discovered_usb_ports.get(
+            port_id
+        )
+
+        if discovered_usb:
+            audio_dev = discovered_usb["audio_dev"]
+
+            mapping["rx_audio"] = audio_dev
+            mapping["tx_audio"] = audio_dev
+            mapping["hidraw_device"] = (
+                discovered_usb.get("hidraw_device")
+                or mapping.get("hidraw_device")
+            )
 
         node = existing_nodes.get(port_id, {}).copy()
 
@@ -1407,8 +1440,23 @@ def initialise_port_nodes(model, profile):
             [],
         )
         node.setdefault("audio", {})
-        node["audio"].setdefault("rx_audio", mapping.get("rx_audio"))
-        node["audio"].setdefault("tx_audio", mapping.get("tx_audio"))
+
+        if discovered_usb:
+            node["audio"]["rx_audio"] = mapping.get(
+                "rx_audio"
+            )
+            node["audio"]["tx_audio"] = mapping.get(
+                "tx_audio"
+            )
+        else:
+            node["audio"].setdefault(
+                "rx_audio",
+                mapping.get("rx_audio"),
+            )
+            node["audio"].setdefault(
+                "tx_audio",
+                mapping.get("tx_audio"),
+            )
 
         node.setdefault("gpio", {})
         node["gpio"].setdefault("ptt", mapping.get("ptt"))
@@ -1422,10 +1470,19 @@ def initialise_port_nodes(model, profile):
         except ValueError:
             hidraw_index = 0
         
-        node["hidraw"].setdefault(
-            "device",
-            mapping.get("hidraw_device", f"/dev/hidraw{hidraw_index}")
-        )
+        if discovered_usb:
+            node["hidraw"]["device"] = mapping.get(
+                "hidraw_device",
+                f"/dev/hidraw{hidraw_index}",
+            )
+        else:
+            node["hidraw"].setdefault(
+                "device",
+                mapping.get(
+                    "hidraw_device",
+                    f"/dev/hidraw{hidraw_index}",
+                ),
+            )
         
         node["hidraw"].setdefault(
             "sql_pin",

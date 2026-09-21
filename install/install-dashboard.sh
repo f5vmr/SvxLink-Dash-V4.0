@@ -101,6 +101,10 @@ install \
     "$SERVICE_ACCOUNT_HELPER_SOURCE" \
     "$SERVICE_ACCOUNT_HELPER_DEST"
 
+"$SERVICE_ACCOUNT_HELPER_DEST" no-gpio
+
+echo "Prepared the SvxLink service account and C-Media HIDRAW access."
+
 #-----------------------
 # Svxlink-Dash Library files
 #-----------------------

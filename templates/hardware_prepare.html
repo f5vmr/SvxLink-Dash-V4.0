@@ -35,8 +35,9 @@
             </div>
 
             <div class="note">
-                Port 1 uses ALSA card 0 and <strong>/dev/hidraw0</strong>.
-                Port 2 uses ALSA card 1 and <strong>/dev/hidraw1</strong>.
+                The two duplex USB audio devices are assigned to Port 1 and Port 2 in their detected order.
+                Their named ALSA identifiers are stored so unrelated host sound hardware does not change the
+                SvxLink audio configuration. The corresponding C-Media HIDRAW devices are assigned alongside them.
                 Leave both radio interfaces connected to their present physical USB sockets.
             </div>
 

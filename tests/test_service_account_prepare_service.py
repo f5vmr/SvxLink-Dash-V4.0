@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from services import service_account_prepare_service as service
@@ -94,6 +95,35 @@ class ServiceAccountPrepareServiceTests(unittest.TestCase):
             return_value=True,
         ):
             self.assertTrue(service.helper_available())
+
+    def test_helper_installs_cmedia_hidraw_rule(self):
+        helper_text = Path(
+            "install/"
+            "svxlink_dashboard_service_account_prepare"
+        ).read_text(encoding="utf-8")
+
+        required_fragments = (
+            (
+                'CMEDIA_HIDRAW_RULE="/etc/udev/rules.d/'
+                '90-svxlink-cmedia-hidraw.rules"'
+            ),
+            'SUBSYSTEM=="hidraw"',
+            'ATTRS{idVendor}=="0d8c"',
+            'GROUP="plugdev"',
+            'MODE="0660"',
+            "udevadm control --reload-rules",
+            "udevadm trigger",
+            "--subsystem-match=hidraw",
+            "--action=change",
+            "udevadm settle",
+        )
+
+        for fragment in required_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertIn(
+                    fragment,
+                    helper_text,
+                )
 
 
 if __name__ == "__main__":

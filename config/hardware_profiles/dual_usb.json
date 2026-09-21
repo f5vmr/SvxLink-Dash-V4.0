@@ -27,9 +27,9 @@
   },
   "port_map": {
     "1": {
-      "rx_audio": "alsa:plughw:0",
-      "tx_audio": "alsa:plughw:0",
-      "hidraw_device": "/dev/hidraw0",
+      "rx_audio": null,
+      "tx_audio": null,
+      "hidraw_device": null,
       "hidraw_sql_pin": "VOL_DN",
       "hidraw_ptt_pin": "GPIO3",
       "ptt": null,
@@ -38,22 +38,23 @@
       "control": "per_port_selected"
     },
     "2": {
-      "rx_audio": "alsa:plughw:1",
-      "tx_audio": "alsa:plughw:1",
-      "hidraw_device": "/dev/hidraw1",
+      "rx_audio": null,
+      "tx_audio": null,
+      "hidraw_device": null,
       "hidraw_sql_pin": "VOL_DN",
       "hidraw_ptt_pin": "GPIO3",
       "ptt": null,
       "cos": null,
       "enable": null,
       "control": "per_port_selected"
-  }
+    }
   },
   "notes": [
     "Use this profile for two separate CM108/CM119 USB radio interfaces.",
     "Both interfaces must provide duplex USB audio and remain connected to their original physical USB sockets.",
-    "Port 1 uses ALSA card 0 and /dev/hidraw0.",
-    "Port 2 uses ALSA card 1 and /dev/hidraw1.",
+    "The preparation stage discovers both USB audio devices and records their named ALSA device identifiers.",
+    "The preparation stage assigns the corresponding C-Media HIDRAW device to each radio port.",
+    "Numeric ALSA card indices are diagnostic information only and are not stored as the SvxLink audio device.",
     "PTT and COS control may subsequently be selected as HIDRAW, GPIOD or serial."
   ]
   }
