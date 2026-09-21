@@ -1208,6 +1208,168 @@ class WorkflowRoutingTests(unittest.TestCase):
         )
         validate_mock.assert_called_once_with(model)
 
+    def test_ready_dual_usb_preparation_is_saved(self):
+        model = new_node_model()
+        model["hardware_profile_id"] = "dual_usb"
+
+        profile = {
+            "profile_id": "dual_usb",
+            "family": "usb_multi_interface",
+            "type": "multi_interface",
+        }
+
+        inspection = {
+            "ready": True,
+            "ports": [
+                {
+                    "port": "1",
+                    "audio_index": 0,
+                    "audio_dev": "alsa:plughw:0",
+                    "audio_name": "Set",
+                    "audio_description": (
+                        "C-Media USB Headphone Set"
+                    ),
+                    "hidraw_device": "/dev/hidraw0",
+                    "hidraw_exists": True,
+                    "hidraw_accessible": True,
+                    "hidraw_is_cmedia": True,
+                },
+                {
+                    "port": "2",
+                    "audio_index": 1,
+                    "audio_dev": "alsa:plughw:1",
+                    "audio_name": "Device",
+                    "audio_description": (
+                        "C-Media USB Audio Device"
+                    ),
+                    "hidraw_device": "/dev/hidraw1",
+                    "hidraw_exists": True,
+                    "hidraw_accessible": True,
+                    "hidraw_is_cmedia": True,
+                },
+            ],
+            "errors": [],
+        }
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "load_hardware_profile",
+            return_value=profile,
+        ), patch.object(
+            dashboard,
+            "inspect_dual_usb_hardware",
+            return_value=inspection,
+            create=True,
+        ) as inspect_mock, patch.object(
+            dashboard,
+            "save_node_model",
+        ) as save_mock:
+            with dashboard.app.test_request_context(
+                "/hardware-prepare/reviewed",
+                method="POST",
+            ):
+                response = (
+                    dashboard.hardware_prepare_reviewed_page()
+                )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/hardware-ports",
+        )
+        inspect_mock.assert_called_once_with()
+        save_mock.assert_called_once_with(model)
+        self.assertEqual(
+            model["hardware_preparation"]["status"],
+            "reviewed",
+        )
+        self.assertEqual(
+            model["hardware_preparation"]["dual_usb"],
+            inspection,
+        )
+
+    def test_incomplete_dual_usb_preparation_is_blocked(
+        self,
+    ):
+        model = new_node_model()
+        model["hardware_profile_id"] = "dual_usb"
+
+        profile = {
+            "profile_id": "dual_usb",
+            "family": "usb_multi_interface",
+            "type": "multi_interface",
+        }
+
+        inspection = {
+            "ready": False,
+            "ports": [],
+            "errors": [
+                (
+                    "Exactly two duplex USB audio devices "
+                    "are required; 1 was detected."
+                ),
+            ],
+        }
+
+        captured = {}
+
+        def capture_template(
+            template_name,
+            **context,
+        ):
+            captured["template_name"] = template_name
+            captured["context"] = context
+            return "rendered"
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "load_hardware_profile",
+            return_value=profile,
+        ), patch.object(
+            dashboard,
+            "inspect_dual_usb_hardware",
+            return_value=inspection,
+            create=True,
+        ) as inspect_mock, patch.object(
+            dashboard,
+            "save_node_model",
+        ) as save_mock, patch.object(
+            dashboard,
+            "render_template",
+            side_effect=capture_template,
+        ):
+            with dashboard.app.test_request_context(
+                "/hardware-prepare/reviewed",
+                method="POST",
+            ):
+                response = (
+                    dashboard.hardware_prepare_reviewed_page()
+                )
+
+        self.assertEqual(response, "rendered")
+        self.assertEqual(
+            captured["template_name"],
+            "hardware_prepare.html",
+        )
+        self.assertEqual(
+            captured["context"]["dual_usb_status"],
+            inspection,
+        )
+        self.assertIn(
+            "Exactly two duplex USB audio devices",
+            captured["context"]["error"],
+        )
+        inspect_mock.assert_called_once_with()
+        save_mock.assert_not_called()
+
     def test_review_template_contains_final_validation_summary(self):
         template_text = Path(
             "templates/review.html"

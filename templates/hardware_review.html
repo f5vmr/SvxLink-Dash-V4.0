@@ -98,8 +98,9 @@
             </div>
         {% elif profile.type == "multi_interface" %}
             <div class="note">
-                For multi-interface USB systems, each enabled port will later be matched to a discovered USB audio device
-                and its selected control method.
+                The dual USB preparation check assigns Port 1 to USB audio
+                card 0 and Port 2 to USB audio card 1. The interfaces must
+                remain connected to their verified physical USB sockets.
             </div>
         {% endif %}
 

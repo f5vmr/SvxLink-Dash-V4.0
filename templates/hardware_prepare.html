@@ -30,13 +30,19 @@
             </div>
         {% elif profile.type == "multi_interface" %}
             <div class="note">
-                This multi-interface USB profile requires a discovery stage before normal configuration can continue.
-                The dashboard will later need to identify each USB audio device and assign it to the correct radio port.
+                This multi-interface USB profile verifies two duplex USB audio devices and two C-Media HIDRAW
+                interfaces before normal configuration can continue.
             </div>
 
             <div class="note">
-                PTT and COS control are not assumed here. They may later be selected per port as HIDRAW, GPIOD,
-                serial, or another supported control method.
+                Port 1 uses ALSA card 0 and <strong>/dev/hidraw0</strong>.
+                Port 2 uses ALSA card 1 and <strong>/dev/hidraw1</strong>.
+                Leave both radio interfaces connected to their present physical USB sockets.
+            </div>
+
+            <div class="note">
+                PTT and COS may later be selected per port as HIDRAW, GPIOD or serial.
+                HIDRAW verification on this page does not require HIDRAW to be selected as the final control method.
             </div>
         {% endif %}
 
@@ -120,19 +126,69 @@
 
             {% elif profile.type == "multi_interface" %}
                 <div class="form-section">
-                    <div class="label">Preparation stages planned</div>
+                    <div class="label">Dual USB hardware verification</div>
 
-                    <p>
-                        The dual USB preparation workflow will later handle:
-                    </p>
+                    {% if dual_usb_status %}
+                        {% for port in dual_usb_status.ports %}
+                            <div class="status-box">
+                                <div class="status-box-title">
+                                    Port {{ port.port }}
+                                </div>
 
-                    <p>
-                        • USB audio device discovery<br>
-                        • stable device identity mapping<br>
-                        • per-port audio assignment<br>
-                        • per-port PTT/COS control selection<br>
-                        • checking that both radio interfaces remain stable across reboot
-                    </p>
+                                <div class="status-box-row">
+                                    <strong>Audio:</strong>
+                                    {{ port.audio_dev }}
+                                    {% if port.audio_name %}
+                                        — {{ port.audio_name }}
+                                    {% endif %}
+                                </div>
+
+                                {% if port.audio_description %}
+                                    <div class="status-box-row">
+                                        {{ port.audio_description }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="status-box-row">
+                                    <strong>Control:</strong>
+                                    {{ port.hidraw_device }}
+                                </div>
+
+                                <div class="status-box-row">
+                                    C-Media:
+                                    {{ "yes" if port.hidraw_is_cmedia else "no" }}
+                                    |
+                                    Accessible:
+                                    {{ "yes" if port.hidraw_accessible else "no" }}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        {% if dual_usb_status.ready %}
+                            <div class="note">
+                                Both USB radio interfaces were detected and are ready.
+                                Keep them connected to these physical USB sockets.
+                            </div>
+                        {% else %}
+                            <div class="status-box status-box-hard">
+                                <div class="status-box-title">
+                                    Dual USB verification failed
+                                </div>
+
+                                {% for preparation_error in dual_usb_status.errors %}
+                                    <div class="status-box-row">
+                                        {{ preparation_error }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="status-box status-box-hard">
+                            <div class="status-box-row">
+                                Dual USB hardware status is unavailable.
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             {% endif %}
 
@@ -140,7 +196,7 @@
                 <a class="button-secondary" href="{{ url_for('hardware_page') }}">Back</a>
 
                 <button class="button-primary" type="submit">
-                    Acknowledge and Continue for Now
+                    Verify and Continue
                 </button>
             </div>
         </form>

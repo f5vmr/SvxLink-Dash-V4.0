@@ -39,6 +39,9 @@ from services.hardware_profile_service import (
     list_hardware_profiles,
     load_hardware_profile,
 )
+from services.dual_usb_service import (
+    inspect_dual_usb_hardware,
+)
 from services.model_store import (
     load_node_model,
     save_node_model,
@@ -809,10 +812,18 @@ def hardware_prepare_page():
     except FileNotFoundError:
         return redirect(url_for("hardware_page"))
 
+    dual_usb_status = None
+
+    if hardware_profile_id == "dual_usb":
+        dual_usb_status = (
+            inspect_dual_usb_hardware()
+        )
+
     return render_template(
         "hardware_prepare.html",
         model=model,
         profile=profile,
+        dual_usb_status=dual_usb_status,
     )
 
 
@@ -829,6 +840,24 @@ def hardware_prepare_reviewed_page():
         profile = load_hardware_profile(hardware_profile_id)
     except FileNotFoundError:
         return redirect(url_for("hardware_page"))
+
+    dual_usb_status = None
+
+    if hardware_profile_id == "dual_usb":
+        dual_usb_status = (
+            inspect_dual_usb_hardware()
+        )
+
+        if not dual_usb_status["ready"]:
+            return render_template(
+                "hardware_prepare.html",
+                model=model,
+                profile=profile,
+                dual_usb_status=dual_usb_status,
+                error=" ".join(
+                    dual_usb_status["errors"]
+                ),
+            )
 
     requires_physical_confirmation = (
         profile.get("family") == "ics"
@@ -853,6 +882,11 @@ def hardware_prepare_reviewed_page():
     model["hardware_preparation"]["physical_profile_confirmed"] = (
         requires_physical_confirmation
     )
+
+    if dual_usb_status is not None:
+        model["hardware_preparation"]["dual_usb"] = (
+            dual_usb_status
+        )
 
     save_node_model(model)
 
