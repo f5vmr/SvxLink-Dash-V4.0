@@ -56,7 +56,20 @@
             </div>
             <div class="form-section">
                 <div class="label">Audio Response</div>
+                <div class="note">
+                    <strong>Audio emphasis guidance</strong>
 
+                    <p>
+                        Leave pre-emphasis and de-emphasis disabled unless the radio
+                        interface uses a flat or discriminator-level audio path that
+                        specifically requires them.
+                    </p>
+
+                    <p>
+                        Applying de-emphasis to audio that has already been
+                        de-emphasised by the radio may prevent reliable DTMF decoding.
+                    </p>
+                </div>
                 <div class="radio-row">
                     <input
                         type="checkbox"
