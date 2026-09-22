@@ -1,26 +1,173 @@
 #!/bin/bash
-set -e
+set -eu
 
 REPO_URL="https://github.com/f5vmr/SvxLink-Dash-V4.0.git"
+
 INSTALL_DIR="/opt/dashboard"
+BACKUP_ROOT="/var/backups/svxlink-dash"
+
+SCRIPT_DIR="$(
+    CDPATH= cd -- "$(dirname -- "$0")" &&
+    pwd
+)"
+SOURCE_DIR="$(
+    CDPATH= cd -- "$SCRIPT_DIR/.." &&
+    pwd
+)"
+
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+STAGING_DIR="/opt/.svxlink-dashboard-v4-${TIMESTAMP}-$$"
+PREVIOUS_DIR=""
+EXISTING_RELEASE=""
 
 echo "Installing SvxLink-Dash-V4.0..."
 
+SOURCE_ORIGIN=""
+
+if [ -f "$SOURCE_DIR/.git/config" ]; then
+    SOURCE_ORIGIN="$(
+        git config \
+            --file "$SOURCE_DIR/.git/config" \
+            --get remote.origin.url \
+            2>/dev/null ||
+        true
+    )"
+fi
+
+case "$SOURCE_ORIGIN" in
+    *"/SvxLink-Dash-V4.0.git"|*"/SvxLink-Dash-V4.0")
+        ;;
+    *)
+        echo "ERROR: The installer source is not a recognised V4.0 checkout." >&2
+        echo "Source: $SOURCE_DIR" >&2
+        echo "Origin: ${SOURCE_ORIGIN:-not detected}" >&2
+        exit 1
+        ;;
+esac
+
+if [ -e "$INSTALL_DIR" ]; then
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo "ERROR: $INSTALL_DIR exists but is not a directory." >&2
+        exit 1
+    fi
+
+    EXISTING_ORIGIN=""
+
+    if [ -f "$INSTALL_DIR/.git/config" ]; then
+        EXISTING_ORIGIN="$(
+            git config \
+                --file "$INSTALL_DIR/.git/config" \
+                --get remote.origin.url \
+                2>/dev/null ||
+            true
+        )"
+    fi
+
+    case "$EXISTING_ORIGIN" in
+        *"/SvxLink-Dash-V3.0.git"|*"/SvxLink-Dash-V3.0")
+            EXISTING_RELEASE="V3.0"
+            ;;
+        *"/SvxLink-Dash-V3.1.git"|*"/SvxLink-Dash-V3.1")
+            EXISTING_RELEASE="V3.1"
+            ;;
+        *"/SvxLink-Dash-V4.0.git"|*"/SvxLink-Dash-V4.0")
+            EXISTING_RELEASE="V4.0"
+            ;;
+        *)
+            echo "ERROR: Unrecognised existing dashboard installation." >&2
+            echo "Directory: $INSTALL_DIR" >&2
+            echo "Origin: ${EXISTING_ORIGIN:-not detected}" >&2
+            echo "No dashboard files have been replaced." >&2
+            exit 1
+            ;;
+    esac
+fi
+
 apt update
+
 apt install -y git python3 python3-flask python3-jinja2 python3-werkzeug sox
 
 if [ ! -d /opt ]; then
     mkdir -p /opt
 fi
 
-if [ -d "$INSTALL_DIR" ]; then
-    echo "$INSTALL_DIR already exists."
-    echo "Updating existing installation..."
-    cd "$INSTALL_DIR"
-    git pull
+echo "Preparing a clean SvxLink-Dash V4.0 application tree..."
+
+git clone \
+    --no-hardlinks \
+    "$SOURCE_DIR" \
+    "$STAGING_DIR"
+
+if [ -n "$EXISTING_RELEASE" ]; then
+    BACKUP_DIR="$BACKUP_ROOT/${TIMESTAMP}-${EXISTING_RELEASE}-$$"
+
+    install -d \
+        -o root \
+        -g root \
+        -m 0755 \
+        "$BACKUP_ROOT"
+
+    echo "Backing up the existing $EXISTING_RELEASE dashboard:"
+    echo "  $BACKUP_DIR"
+
+    cp -a \
+        "$INSTALL_DIR" \
+        "$BACKUP_DIR"
+
+    if [ ! -d "$BACKUP_DIR" ]; then
+        echo "ERROR: The existing dashboard backup could not be verified." >&2
+        exit 1
+    fi
+
+    systemctl stop svxlink-dash.service \
+        2>/dev/null ||
+        true
+
+    PREVIOUS_DIR="${INSTALL_DIR}.previous-${TIMESTAMP}-$$"
+
+    mv \
+        "$INSTALL_DIR" \
+        "$PREVIOUS_DIR"
+
+    if ! mv "$STAGING_DIR" "$INSTALL_DIR"; then
+        mv "$PREVIOUS_DIR" "$INSTALL_DIR"
+        echo "ERROR: Could not activate the V4.0 application tree." >&2
+        exit 1
+    fi
+
+    if [ "$EXISTING_RELEASE" = "V4.0" ]; then
+        echo "Restoring the existing V4.0 runtime configuration."
+
+        for CONFIG_FILE in \
+            node_model.json \
+            talkgroups.json \
+            gpio_lines.json
+        do
+            if [ -f "$BACKUP_DIR/config/$CONFIG_FILE" ]; then
+                cp -a \
+                    "$BACKUP_DIR/config/$CONFIG_FILE" \
+                    "$INSTALL_DIR/config/$CONFIG_FILE"
+            fi
+        done
+
+        if [ -d "$BACKUP_DIR/config/backups" ]; then
+            cp -a \
+                "$BACKUP_DIR/config/backups" \
+                "$INSTALL_DIR/config/backups"
+        fi
+
+        if [ -d "$BACKUP_DIR/backups" ]; then
+            cp -a \
+                "$BACKUP_DIR/backups" \
+                "$INSTALL_DIR/backups"
+        fi
+    else
+        echo "The $EXISTING_RELEASE configuration remains available in:"
+        echo "  $BACKUP_DIR"
+        echo "V4.0 will begin with a new guided configuration."
+    fi
 else
-    echo "Cloning dashboard..."
-    git clone "$REPO_URL" "$INSTALL_DIR"
+    mv "$STAGING_DIR" "$INSTALL_DIR"
 fi
 
 chmod +x "$INSTALL_DIR/install/fix-permissions.sh"
@@ -231,6 +378,10 @@ cp "$INSTALL_DIR/install/svxlink-dash.service" /etc/systemd/system/svxlink-dash.
 systemctl daemon-reload
 systemctl enable svxlink-dash
 systemctl restart svxlink-dash
+
+if [ -n "$PREVIOUS_DIR" ] && [ -d "$PREVIOUS_DIR" ]; then
+    rm -rf -- "$PREVIOUS_DIR"
+fi
 
 echo "SvxLink-Dash installed."
 echo "Open: http://<node-ip>:5000/"

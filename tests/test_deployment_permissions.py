@@ -80,6 +80,36 @@ class DeploymentPermissionTests(unittest.TestCase):
             installer_text.index(dashboard_restart),
         )
 
+    def test_installer_replaces_recognised_dashboard_safely(self):
+        installer_text = Path(
+            "install/install-dashboard.sh"
+        ).read_text(encoding="utf-8")
+
+        self.assertNotIn(
+            "\n    git pull\n",
+            installer_text,
+        )
+        self.assertIn(
+            "SvxLink-Dash-V3.0.git",
+            installer_text,
+        )
+        self.assertIn(
+            "SvxLink-Dash-V3.1.git",
+            installer_text,
+        )
+        self.assertIn(
+            "SvxLink-Dash-V4.0.git",
+            installer_text,
+        )
+        self.assertIn(
+            'BACKUP_ROOT="/var/backups/svxlink-dash"',
+            installer_text,
+        )
+        self.assertIn(
+            "Unrecognised existing dashboard installation",
+            installer_text,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

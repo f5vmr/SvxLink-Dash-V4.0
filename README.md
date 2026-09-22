@@ -452,76 +452,100 @@ A new installation presents the authorisation and initial configuration workflow
 ### Updating SvxLink-Dash
 
 SvxLink-Bootstrap remains the recommended route when preparing or migrating
-the complete appliance. It can run the Dashboard installer again after
-SvxLink has been checked and prepared.
+the complete appliance. It checks and prepares SvxLink before running the
+Dashboard installer.
 
-For a direct Dashboard update, rerun the installer from a current temporary
-clone. When /opt/dashboard already exists, the installer enters that checkout
-and runs git pull before refreshing permissions, service files and supporting
-installation resources.
+For a direct Dashboard update, run the installer from a current temporary V4.0
+clone. The installer deploys that checkout as a clean application tree; it does
+not run `git pull` inside `/opt/dashboard`.
 
-The update then reloads systemd, enables svxlink-dash.service and restarts the
-Dashboard.
+When `/opt/dashboard` already exists, its Git origin is checked before any
+package installation or file replacement. The installer recognises:
 
-The current installer does not create a complete pre-update copy of
-/opt/dashboard. Operators should therefore ensure that the installation's
-saved model and any required locally maintained files are backed up before a
-Dashboard update.
+* SvxLink-Dash V3.0
+* SvxLink-Dash V3.1
+* SvxLink-Dash V4.0
 
-Do not keep deliberate modifications in tracked files beneath /opt/dashboard.
-They may prevent git pull from completing or may conflict with a later project
-update.
+An existing directory with an absent or unrecognised Git origin is refused and
+left unchanged.
 
+Before replacing a recognised installation, the complete existing
+`/opt/dashboard` tree is copied beneath:
 
-### Configuration preservation during updates
+```text
+/var/backups/svxlink-dash
+```
 
-The operational model is stored at:
+Each backup uses a timestamp, detected release and process identifier. The
+existing Dashboard service is stopped only after the backup has completed and
+been verified.
 
-    /opt/dashboard/config/node_model.json
+The new V4.0 application tree is prepared separately and then moved into
+`/opt/dashboard`. If that activation fails, the previous tree is immediately
+returned to its original location. The temporary previous tree is removed only
+after the V4.0 service has restarted successfully.
 
-That file is not part of the repository checkout and an ordinary git pull does
-not replace it. Existing saved models are loaded through the Dashboard's model
-migration process so that newly introduced defaults can be added while
-preserving explicit operator selections.
+The installer then refreshes permissions, helper programs, service files and
+supporting installation resources, reloads systemd, enables
+`svxlink-dash.service` and restarts the Dashboard.
 
-Generated SvxLink configuration beneath /etc/svxlink is also outside the
-Dashboard Git checkout and is not replaced merely by updating the Dashboard
-application. A later configuration build may deliberately replace
-Dashboard-managed SvxLink files after validation and backup.
+### V3.0 and V3.1 replacement
 
+V3.0 and V3.1 installations are replaced with a clean V4.0 application tree.
+Their complete application directory and saved data remain available in the
+timestamped backup beneath `/var/backups/svxlink-dash`.
+
+V3 configuration files are not inserted automatically into the V4 model.
+Differences between the older configuration structures and the V4 validated
+model make automatic reuse unsafe. After replacement, complete the V4 guided
+configuration. The archived V3 files may be consulted when transferring
+operator settings.
+
+Generated SvxLink configuration beneath `/etc/svxlink` is outside the
+Dashboard application tree and is not removed merely by replacing the
+Dashboard. A later V4 build may deliberately replace Dashboard-managed
+SvxLink files after validation and its normal configuration backup.
+
+### V4.0 configuration preservation during updates
+
+When an existing V4.0 installation is updated, the installer restores these
+runtime files from the verified application backup when they exist:
+
+```text
+/opt/dashboard/config/node_model.json
+/opt/dashboard/config/talkgroups.json
+/opt/dashboard/config/gpio_lines.json
+/opt/dashboard/config/backups
+/opt/dashboard/backups
+```
+
+The saved node model is loaded through the Dashboard model-migration process so
+that newly introduced defaults can be added while preserving explicit operator
+selections.
+
+Persistent identification sounds beneath
+`/var/lib/svxlink-dash/sounds` are outside the application tree and remain in
+place during an update.
 
 ### Rollback limitations
 
-SvxLink-Dash does not currently provide an automated application-version
-rollback command.
+SvxLink-Dash does not provide an automatic application-version rollback
+command. The complete pre-replacement application backup beneath
+`/var/backups/svxlink-dash` provides the material required for an
+administrative rollback.
 
-The configuration backups beneath /opt/dashboard/backups protect the active
-SvxLink configuration at build time. The backups beneath
-/opt/dashboard/config/backups protect the saved model when a full
-reconfiguration reset is requested. Neither directory is a complete backup of
-the Dashboard application.
+An older Dashboard version may not understand a model that has already been
+migrated or extended by a newer version. Before restoring an earlier
+application, also preserve:
 
-Returning /opt/dashboard to an earlier Git revision is an administrative
-operation and must be approached cautiously. An older Dashboard version may
-not understand a model that has already been migrated or extended by a newer
-version.
+* Required files beneath `/etc/svxlink`
+* Persistent identification sounds beneath `/var/lib/svxlink-dash/sounds`
+* Any V4 model or configuration created after the installation backup
 
-Before any manual application rollback, preserve:
-
-* /opt/dashboard/config/node_model.json
-
-* /opt/dashboard/config/backups
-
-* /opt/dashboard/backups
-
-* Required files beneath /etc/svxlink
-
-* Persistent identification sounds beneath /var/lib/svxlink-dash/sounds
-
-After a rollback, validate the saved model and generated configuration before
-restarting SvxLink. If compatibility is uncertain, restore the matching saved
-model and SvxLink configuration together or rebuild through the guided
-workflow.
+After a rollback, validate the restored model and generated configuration
+before restarting SvxLink. If compatibility is uncertain, restore the matching
+Dashboard application, saved model and SvxLink configuration together, or
+rebuild through the guided workflow.
 
 ## Authentication
 

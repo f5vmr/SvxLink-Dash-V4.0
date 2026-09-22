@@ -7,7 +7,7 @@ Version helpers for SvxLink-Dash.
 import subprocess
 
 
-DASHBOARD_VERSION = "3.1"
+DASHBOARD_VERSION = "4.0"
 DASHBOARD_NAME_PREFIX = "SvxLink-Dash-V"
 
 
