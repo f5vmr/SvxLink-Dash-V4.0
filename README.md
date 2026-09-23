@@ -4,7 +4,7 @@ SvxLink-Dash V4.0 is a Flask-based configuration and runtime dashboard for SvxLi
 
 It provides a guided environment for configuring, building and operating simplex, repeater and multi-port SvxLink installations. It is suitable for independently operated nodes and is not restricted to a particular reflector network, region or deployment model.
 
-SvxLink 26.05.1 is developed by Tobias Blömberg, SM0SVX.
+SvxLink 26.05.1 is developed by Tobias Blomberg, SM0SVX.
 
 ## Principal features
 
@@ -1525,7 +1525,7 @@ A dashboard Rebuild can overwrite manual changes made to dashboard-managed files
 
 ## Credits
 
-SvxLink 26.05.1 is developed by Tobias Blömberg, SM0SVX.
+SvxLink 26.05.1 is developed by Tobias Blomberg, SM0SVX.
 
 SvxLink-Dash V4.0 is developed by Chris Jackson, G4NAB.
 
@@ -1537,4 +1537,4 @@ SvxLink-Dash V4.0 is free software distributed under the GNU General Public Lice
 
 You may use, modify and redistribute it under the terms contained in the repository’s [`LICENSE`](LICENSE) file.
 
-SvxLink itself is developed and licensed separately by Tobias Blömberg, SM0SVX. Files derived from or supplied by SvxLink retain their original copyright and licensing terms.
+SvxLink itself is developed and licensed separately by Tobias Blomberg, SM0SVX. Files derived from or supplied by SvxLink retain their original copyright and licensing terms.
