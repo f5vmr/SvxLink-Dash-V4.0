@@ -953,12 +953,51 @@ footer a:hover {
 }
 
 .dashboard-header {
+    position: relative;
     background: #0000ff;
     color: #ffffff;
     text-align: center;
     padding: 10px;
     border-radius: 10px;
     box-shadow: 2px 2px 8px #303030;
+}
+
+.live-stream-status {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.live-stream-title {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.live-stream-button {
+    min-height: 40px;
+    padding: 0 1rem;
+    cursor: default;
+    opacity: 0.75;
+}
+
+@media (max-width: 720px) {
+    .live-stream-status {
+        position: static;
+        margin-top: 0.75rem;
+    }
+}
+
+.live-stream-player {
+    max-width: 520px;
+    margin: 0.75rem auto 0;
+}
+
+.live-stream-player audio {
+    width: 100%;
 }
 
 .dashboard-grid {

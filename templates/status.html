@@ -18,8 +18,35 @@
 
     <section class="card dashboard-container">
 
-        <div class="dashboard-header">
-            <h1 class="status-title">
+<div class="dashboard-header">
+
+{% if port_count == 1 %}
+<div class="live-stream-status">
+    <div class="live-stream-title">
+        Live Stream
+    </div>
+
+    {% if streamer_available %}
+    <button
+        type="button"
+        class="button-secondary live-stream-button"
+        id="live-stream-button"
+    >
+        Available
+    </button>
+    {% else %}
+    <button
+        type="button"
+        class="button-secondary live-stream-button"
+        disabled
+    >
+        Not Fitted
+    </button>
+    {% endif %}
+</div>
+{% endif %}
+
+    <h1 class="status-title">
 
         <img class="status-title-icon"
          src="{{ url_for('static', filename='svxlink.ico') }}"
@@ -45,6 +72,20 @@
                 </p>
             {% endif %}
         </div>
+        {% if port_count == 1 and streamer_available %}
+        <div
+            class="live-stream-player"
+            id="live-stream-player"
+            hidden
+        >
+            <audio
+                id="live-stream-audio"
+                controls
+                preload="none"
+                src="{{ url_for('live_stream') }}"
+            ></audio>
+        </div>
+        {% endif %}
         {% include "navbar.html" %}
 
         {% if port_count > 1 %}
@@ -659,5 +700,31 @@ setupPortNavigation();
 setInterval(pollStatus, 3000);
 pollStatus();
 </script>
+{% if port_count == 1 and streamer_available %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("live-stream-button");
+    const player = document.getElementById("live-stream-player");
+    const audio = document.getElementById("live-stream-audio");
+
+    if (!button || !player || !audio) {
+        return;
+    }
+
+    button.addEventListener("click", () => {
+        player.hidden = false;
+
+        const playPromise = audio.play();
+
+        if (
+            playPromise &&
+            typeof playPromise.catch === "function"
+        ) {
+            playPromise.catch(() => {});
+        }
+    });
+});
+</script>
+{% endif %}
 </body>
 </html>

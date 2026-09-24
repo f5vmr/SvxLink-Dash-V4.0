@@ -3,10 +3,22 @@
 from platform import node
 from pyexpat import model
 
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from pathlib import Path
 import shutil
-import datetime 
+import datetime
+import json
+import urllib.error
+import urllib.request
 from datetime import timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
                                                                                        
@@ -5620,6 +5632,69 @@ def launch():
     )
 
 
+STREAMER_HEALTH_URL = "http://127.0.0.1:8765/health"
+
+
+def streamer_is_available():
+    try:
+        with urllib.request.urlopen(
+            STREAMER_HEALTH_URL,
+            timeout=0.25,
+        ) as response:
+            if response.status != 200:
+                return False
+
+            data = json.load(response)
+
+        return data.get("status") == "ok"
+
+    except (
+        OSError,
+        ValueError,
+        urllib.error.URLError,
+    ):
+        return False
+
+
+STREAMER_AUDIO_URL = "http://127.0.0.1:8765/stream.mp3"
+
+
+@app.route("/stream/live.mp3", methods=["GET"])
+def live_stream():
+    try:
+        upstream = urllib.request.urlopen(
+            STREAMER_AUDIO_URL,
+            timeout=2,
+        )
+    except (OSError, urllib.error.URLError):
+        return Response(
+            "Live stream unavailable\n",
+            status=503,
+            mimetype="text/plain",
+        )
+
+    def generate():
+        try:
+            while True:
+                chunk = upstream.read(4096)
+
+                if not chunk:
+                    break
+
+                yield chunk
+        finally:
+            upstream.close()
+
+    return Response(
+        generate(),
+        mimetype="audio/mpeg",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
 @app.route("/status", methods=["GET"])
 def status_page():
     model = load_node_model()
@@ -5633,6 +5708,10 @@ def status_page():
 
     if not enabled_ports:
         enabled_ports = ["1"]
+        streamer_available = (
+            len(enabled_ports) == 1
+            and streamer_is_available()
+        )
 
     selected_port = request.args.get("port", enabled_ports[0])
 
@@ -5725,6 +5804,7 @@ def status_page():
             selected_topology_memberships
         ),
         port_count=len(enabled_ports),
+        streamer_available=streamer_available,
         version_info=get_version_info(),
     )
 
