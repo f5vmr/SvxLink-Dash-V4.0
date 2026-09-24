@@ -293,6 +293,7 @@ def require_dashboard_auth():
     public_paths = {
         "/status",
         "/api/status",
+        "/stream/live.mp3",
         "/wifi",
     }
 
