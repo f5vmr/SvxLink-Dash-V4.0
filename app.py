@@ -5708,10 +5708,10 @@ def status_page():
 
     if not enabled_ports:
         enabled_ports = ["1"]
-        streamer_available = (
-            len(enabled_ports) == 1
-            and streamer_is_available()
-        )
+    streamer_available = (
+        len(enabled_ports) == 1
+        and streamer_is_available()
+    )
 
     selected_port = request.args.get("port", enabled_ports[0])
 
