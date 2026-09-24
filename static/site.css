@@ -989,6 +989,37 @@ footer a:hover {
     opacity: 0.75;
 }
 
+.live-stream-button.live-stream-playing {
+    animation: live-stream-pulse 1.6s ease-out infinite;
+}
+
+@keyframes live-stream-pulse {
+    0% {
+        box-shadow:
+            0 0 0 0 rgba(113, 193, 222, 0.75),
+            0 0 6px rgba(113, 193, 222, 0.65);
+    }
+
+    70% {
+        box-shadow:
+            0 0 0 8px rgba(113, 193, 222, 0),
+            0 0 12px rgba(113, 193, 222, 0.35);
+    }
+
+    100% {
+        box-shadow:
+            0 0 0 0 rgba(113, 193, 222, 0),
+            0 0 6px rgba(113, 193, 222, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .live-stream-button.live-stream-playing {
+        animation: none;
+        box-shadow: 0 0 0 2px #71c1de;
+    }
+}
+
 @media (max-width: 720px) {
     .live-stream-status {
         position: static;

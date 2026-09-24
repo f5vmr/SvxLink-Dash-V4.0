@@ -714,25 +714,29 @@ document.addEventListener("DOMContentLoaded", () => {
     button.disabled = false;
     button.textContent = "Listen";
 
-    audio.addEventListener("play", () => {
-        button.disabled = false;
-        button.textContent = "Stop";
-    });
+audio.addEventListener("play", () => {
+    button.disabled = false;
+    button.textContent = "Stop";
+    button.classList.add("live-stream-playing");
+});
 
-    audio.addEventListener("pause", () => {
-        button.disabled = false;
-        button.textContent = "Listen";
-    });
+audio.addEventListener("pause", () => {
+    button.disabled = false;
+    button.textContent = "Listen";
+    button.classList.remove("live-stream-playing");
+});
 
-    audio.addEventListener("ended", () => {
-        button.disabled = false;
-        button.textContent = "Listen";
-    });
+audio.addEventListener("ended", () => {
+    button.disabled = false;
+    button.textContent = "Listen";
+    button.classList.remove("live-stream-playing");
+});
 
-    audio.addEventListener("error", () => {
-        button.disabled = false;
-        button.textContent = "Listen";
-    });
+audio.addEventListener("error", () => {
+    button.disabled = false;
+    button.textContent = "Listen";
+    button.classList.remove("live-stream-playing");
+});
 
     button.addEventListener("click", () => {
         if (audio.paused) {
@@ -745,6 +749,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 playPromise.catch(() => {
                     button.disabled = false;
                     button.textContent = "Listen";
+                    button.classList.remove("live-stream-playing")
                 });
             }
 
