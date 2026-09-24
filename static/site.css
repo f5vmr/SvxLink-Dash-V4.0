@@ -980,6 +980,11 @@ footer a:hover {
 .live-stream-button {
     min-height: 40px;
     padding: 0 1rem;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.live-stream-button:disabled {
     cursor: default;
     opacity: 0.75;
 }

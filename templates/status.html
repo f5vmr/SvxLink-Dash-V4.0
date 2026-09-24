@@ -719,22 +719,63 @@ document.addEventListener("DOMContentLoaded", () => {
             if (
                 playPromise &&
                 typeof playPromise.then === "function"
+{% if port_count == 1 and streamer_available %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("live-stream-button");
+    const audio = document.getElementById("live-stream-audio");
+
+    if (!button || !audio) {
+        return;
+    }
+
+    button.disabled = false;
+    button.textContent = "Listen";
+
+    audio.addEventListener("play", () => {
+        button.disabled = false;
+        button.textContent = "Stop";
+    });
+
+    audio.addEventListener("pause", () => {
+        button.disabled = false;
+        button.textContent = "Listen";
+    });
+
+    audio.addEventListener("ended", () => {
+        button.disabled = false;
+        button.textContent = "Listen";
+    });
+
+    audio.addEventListener("error", () => {
+        button.disabled = false;
+        button.textContent = "Listen";
+    });
+
+    button.addEventListener("click", () => {
+        if (audio.paused) {
+            const playPromise = audio.play();
+
+            if (
+                playPromise &&
+                typeof playPromise.catch === "function"
             ) {
-                playPromise
-                    .then(() => {
-                        playing = true;
-                        button.textContent = "Stop";
-                    })
-                    .catch(() => {});
+                playPromise.catch(() => {
+                    button.disabled = false;
+                    button.textContent = "Listen";
+                });
             }
 
             return;
         }
 
         audio.pause();
-        audio.currentTime = 0;
-        playing = false;
-        button.textContent = "Listen";
+
+        /*
+         * Reset the streaming connection so Stop really
+         * disconnects from /stream/live.mp3.
+         */
+        audio.load();
     });
 });
 </script>
