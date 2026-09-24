@@ -710,25 +710,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    let playing = false;
-
-    button.addEventListener("click", () => {
-        if (!playing) {
-            const playPromise = audio.play();
-
-            if (
-                playPromise &&
-                typeof playPromise.then === "function"
-{% if port_count == 1 and streamer_available %}
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const button = document.getElementById("live-stream-button");
-    const audio = document.getElementById("live-stream-audio");
-
-    if (!button || !audio) {
-        return;
-    }
-
     button.disabled = false;
     button.textContent = "Listen";
 
