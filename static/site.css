@@ -991,15 +991,6 @@ footer a:hover {
     }
 }
 
-.live-stream-player {
-    max-width: 520px;
-    margin: 0.75rem auto 0;
-}
-
-.live-stream-player audio {
-    width: 100%;
-}
-
 .dashboard-grid {
     display: grid;
     grid-template-columns: 220px 1fr;

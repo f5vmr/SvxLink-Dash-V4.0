@@ -32,7 +32,7 @@
         class="button-secondary live-stream-button"
         id="live-stream-button"
     >
-        Available
+        Listen
     </button>
     {% else %}
     <button
@@ -80,9 +80,9 @@
         >
             <audio
                 id="live-stream-audio"
-                controls
                 preload="none"
                 src="{{ url_for('live_stream') }}"
+                hidden
             ></audio>
         </div>
         {% endif %}
@@ -704,24 +704,37 @@ pollStatus();
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const button = document.getElementById("live-stream-button");
-    const player = document.getElementById("live-stream-player");
     const audio = document.getElementById("live-stream-audio");
 
-    if (!button || !player || !audio) {
+    if (!button || !audio) {
         return;
     }
 
+    let playing = false;
+
     button.addEventListener("click", () => {
-        player.hidden = false;
+        if (!playing) {
+            const playPromise = audio.play();
 
-        const playPromise = audio.play();
+            if (
+                playPromise &&
+                typeof playPromise.then === "function"
+            ) {
+                playPromise
+                    .then(() => {
+                        playing = true;
+                        button.textContent = "Stop";
+                    })
+                    .catch(() => {});
+            }
 
-        if (
-            playPromise &&
-            typeof playPromise.catch === "function"
-        ) {
-            playPromise.catch(() => {});
+            return;
         }
+
+        audio.pause();
+        audio.currentTime = 0;
+        playing = false;
+        button.textContent = "Listen";
     });
 });
 </script>
