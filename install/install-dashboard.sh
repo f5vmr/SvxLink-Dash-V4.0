@@ -2,6 +2,7 @@
 set -eu
 
 REPO_URL="https://github.com/f5vmr/SvxLink-Dash-V4.0.git"
+STREAMER_REPO_URL="https://github.com/f5vmr/Svxlink-Streamer.git"
 
 INSTALL_DIR="/opt/dashboard"
 BACKUP_ROOT="/var/backups/svxlink-dash"
@@ -19,10 +20,22 @@ TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 STAGING_DIR="/opt/.svxlink-dashboard-v4-${TIMESTAMP}-$$"
 PREVIOUS_DIR=""
 EXISTING_RELEASE=""
+STREAMER_SOURCE_DIR=""
 
 echo "Installing SvxLink-Dash-V4.0..."
 
 SOURCE_ORIGIN=""
+
+cleanup_installer() {
+    if [ -n "${STREAMER_SOURCE_DIR}" ] &&
+       [ -d "${STREAMER_SOURCE_DIR}" ]; then
+        rm -rf -- "${STREAMER_SOURCE_DIR}"
+
+    fi
+}
+
+trap cleanup_installer EXIT
+
 
 if [ -f "$SOURCE_DIR/.git/config" ]; then
     SOURCE_ORIGIN="$(
@@ -90,6 +103,41 @@ apt install -y git python3 python3-flask python3-jinja2 python3-werkzeug sox
 if [ ! -d /opt ]; then
     mkdir -p /opt
 fi
+
+#-----------------------
+# Svxlink-Streamer
+#-----------------------
+
+STREAMER_SOURCE_DIR="/opt/.svxlink-streamer-${TIMESTAMP}-$$"
+
+echo "Installing Svxlink-Streamer..."
+
+if ! git clone \
+    --depth 1 \
+    "$STREAMER_REPO_URL" \
+    "$STREAMER_SOURCE_DIR"
+then
+    echo "ERROR: Could not clone Svxlink-Streamer." >&2
+    rm -rf -- "$STREAMER_SOURCE_DIR"
+    exit 1
+fi
+
+if [ ! -x "$STREAMER_SOURCE_DIR/scripts/install.sh" ]; then
+    echo "ERROR: Svxlink-Streamer installer was not found." >&2
+    rm -rf -- "$STREAMER_SOURCE_DIR"
+    exit 1
+fi
+
+if ! "$STREAMER_SOURCE_DIR/scripts/install.sh"; then
+    echo "ERROR: Svxlink-Streamer installation failed." >&2
+    rm -rf -- "$STREAMER_SOURCE_DIR"
+    exit 1
+fi
+
+rm -rf -- "$STREAMER_SOURCE_DIR"
+STREAMER_SOURCE_DIR=""
+
+echo "Svxlink-Streamer installed."
 
 echo "Preparing a clean SvxLink-Dash V4.0 application tree..."
 
