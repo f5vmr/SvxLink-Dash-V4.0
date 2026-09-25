@@ -722,104 +722,123 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    button.disabled = false;
-    button.textContent = "Listen";
+    let streamRequested = false;
 
-audio.addEventListener("play", () => {
-    console.log("Live Stream event: play");
-    button.disabled = false;
-    button.textContent = "Stop";
-    button.classList.add("live-stream-playing");
-});
+    function showListen() {
+        button.disabled = false;
+        button.textContent = "Listen";
+        button.classList.remove("live-stream-playing");
+    }
 
-audio.addEventListener("pause", () => {
-    console.log("Live Stream event: pause");
-    button.disabled = false;
-    button.textContent = "Listen";
-    button.classList.remove("live-stream-playing");
-});
+    function showStop() {
+        button.disabled = false;
+        button.textContent = "Stop";
+        button.classList.add("live-stream-playing");
+    }
 
-audio.addEventListener("ended", () => {
-    console.log("Live Stream event: ended");
-    button.disabled = false;
-    button.textContent = "Listen";
-    button.classList.remove("live-stream-playing");
-});
+    showListen();
 
-audio.addEventListener("error", () => {
-    console.log("Live Stream event: error", audio.error);
-    button.disabled = false;
-    button.textContent = "Listen";
-    button.classList.remove("live-stream-playing");
-});
+    audio.addEventListener("play", () => {
+        console.log("Live Stream event: play");
+
+        if (streamRequested) {
+            showStop();
+        }
+    });
+
+    audio.addEventListener("pause", () => {
+        console.log("Live Stream event: pause");
+
+        if (!streamRequested) {
+            showListen();
+        }
+    });
+
+    audio.addEventListener("ended", () => {
+        console.log("Live Stream event: ended");
+        streamRequested = false;
+        showListen();
+    });
+
+    audio.addEventListener("error", () => {
+        console.log("Live Stream event: error", audio.error);
+        streamRequested = false;
+        showListen();
+    });
 
     button.addEventListener("click", () => {
-if (audio.paused) {
-    if (
-        audio.error ||
-        audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
-    ) {
-        console.log(
-            "Live Stream: resetting failed media source",
-            {
-                error: audio.error,
-                networkState: audio.networkState
-            }
-        );
+        if (streamRequested) {
+            console.log("Live Stream click: stop requested");
 
-        audio.load();
-    }
+            streamRequested = false;
+            showListen();
 
-    if (
-        window.PeakGlow &&
-        typeof window.PeakGlow.prepare === "function"
-    ) {
-        window.PeakGlow.prepare();
-    }
-
-    console.log(
-        "Live Stream click: play requested",
-        {
-            paused: audio.paused,
-            readyState: audio.readyState,
-            networkState: audio.networkState,
-            currentSrc: audio.currentSrc
-        }
-    );
-
-    if (!audio.getAttribute("src")) {
-        audio.src = "{{ url_for('live_stream') }}";
-    }
-
-    const playPromise = audio.play();
-
-            if (
-                playPromise &&
-                typeof playPromise.catch === "function"
-            ) {
-                playPromise.catch((error) => {
-                    console.log(
-                        "Live Stream play() rejected:",
-                        error
-                    );
-                    button.disabled = false;
-                    button.textContent = "Listen";
-                    button.classList.remove("live-stream-playing")
-                });
-            }
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
 
             return;
         }
 
-        console.log("Live Stream click: stop requested");
-        audio.pause();
+        console.log("Live Stream click: play requested");
 
-        /*
-         * Reset the streaming connection so Stop really
-         * disconnects from /stream/live.mp3.
-         */
-        audio.removeAttribute("src");
-        audio.load();
+        streamRequested = true;
+
+        if (!audio.getAttribute("src")) {
+            audio.src = "{{ url_for('live_stream') }}";
+        }
+
+        if (
+            audio.error ||
+            audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
+        ) {
+            console.log(
+                "Live Stream: resetting failed media source",
+                {
+                    error: audio.error,
+                    networkState: audio.networkState
+                }
+            );
+
+            audio.load();
+        }
+
+        if (
+            window.PeakGlow &&
+            typeof window.PeakGlow.prepare === "function"
+        ) {
+            window.PeakGlow.prepare();
+        }
+
+        console.log(
+            "Live Stream click: play requested",
+            {
+                paused: audio.paused,
+                readyState: audio.readyState,
+                networkState: audio.networkState,
+                currentSrc: audio.currentSrc
+            }
+        );
+
+        const playPromise = audio.play();
+
+        if (
+            playPromise &&
+            typeof playPromise.catch === "function"
+        ) {
+            playPromise.catch((error) => {
+                console.log(
+                    "Live Stream play() rejected:",
+                    error
+                );
+
+                streamRequested = false;
+                showListen();
+
+                audio.removeAttribute("src");
+                audio.load();
+            });
+        }
     });
 });
 </script>
