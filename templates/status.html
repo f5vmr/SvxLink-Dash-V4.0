@@ -787,6 +787,10 @@ if (audio.paused) {
         }
     );
 
+    if (!audio.getAttribute("src")) {
+        audio.src = "{{ url_for('live_stream') }}";
+    }
+
     const playPromise = audio.play();
 
             if (
@@ -814,6 +818,7 @@ if (audio.paused) {
          * Reset the streaming connection so Stop really
          * disconnects from /stream/live.mp3.
          */
+        audio.removeAttribute("src");
         audio.load();
     });
 });
