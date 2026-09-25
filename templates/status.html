@@ -754,24 +754,40 @@ audio.addEventListener("error", () => {
 });
 
     button.addEventListener("click", () => {
-        if (audio.paused) {
-            if (
-                window.PeakGlow &&
-                typeof window.PeakGlow.prepare === "function"
-            ) {
-                window.PeakGlow.prepare();
+if (audio.paused) {
+    if (
+        audio.error ||
+        audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
+    ) {
+        console.log(
+            "Live Stream: resetting failed media source",
+            {
+                error: audio.error,
+                networkState: audio.networkState
             }
+        );
 
-            console.log(
-                "Live Stream click: play requested",
-                {
-                    paused: audio.paused,
-                    readyState: audio.readyState,
-                    networkState: audio.networkState,
-                    currentSrc: audio.currentSrc
-                }
-            );
-            const playPromise = audio.play();
+        audio.load();
+    }
+
+    if (
+        window.PeakGlow &&
+        typeof window.PeakGlow.prepare === "function"
+    ) {
+        window.PeakGlow.prepare();
+    }
+
+    console.log(
+        "Live Stream click: play requested",
+        {
+            paused: audio.paused,
+            readyState: audio.readyState,
+            networkState: audio.networkState,
+            currentSrc: audio.currentSrc
+        }
+    );
+
+    const playPromise = audio.play();
 
             if (
                 playPromise &&
