@@ -29,7 +29,7 @@
     {% if streamer_available %}
     <button
         type="button"
-        class="button-secondary live-stream-button"
+        class="button-secondary live-stream-button peak-glow"
         id="live-stream-button"
     >
         Listen
@@ -84,6 +84,17 @@
                 src="{{ url_for('live_stream') }}"
                 hidden
             ></audio>
+            <script>
+            window.PeakGlowConfig = {
+                target: "both",
+                floorDb: -50,
+                attackMs: 10,
+                releaseMs: 250,
+                maxLighten: 45
+            };
+            </script>
+
+            <script src="{{ url_for('static', filename='peak-glow.js') }}"></script>
         </div>
         {% endif %}
         {% include "navbar.html" %}
@@ -740,6 +751,13 @@ audio.addEventListener("error", () => {
 
     button.addEventListener("click", () => {
         if (audio.paused) {
+            if (
+                window.PeakGlow &&
+                typeof window.PeakGlow.prepare === "function"
+            ) {
+                window.PeakGlow.prepare();
+            }
+
             const playPromise = audio.play();
 
             if (
