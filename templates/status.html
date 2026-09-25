@@ -591,7 +591,6 @@ function pollStatus() {
     fetch("/api/status?port=" + encodeURIComponent(selectedPort))
         .then(response => response.json())
         .then(data => updateStatusPage(data))
-        .catch(error => console.log("Status poll failed:", error));
 }
 function setupPortNavigation() {
     const selector = document.getElementById("port-status-selector");
@@ -739,7 +738,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showListen();
 
     audio.addEventListener("play", () => {
-        console.log("Live Stream event: play");
 
         if (streamRequested) {
             showStop();
@@ -747,7 +745,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     audio.addEventListener("pause", () => {
-        console.log("Live Stream event: pause");
 
         if (!streamRequested) {
             showListen();
@@ -755,20 +752,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     audio.addEventListener("ended", () => {
-        console.log("Live Stream event: ended");
         streamRequested = false;
         showListen();
     });
 
     audio.addEventListener("error", () => {
-        console.log("Live Stream event: error", audio.error);
         streamRequested = false;
         showListen();
     });
 
     button.addEventListener("click", () => {
         if (streamRequested) {
-            console.log("Live Stream click: stop requested");
 
             streamRequested = false;
             showListen();
@@ -780,8 +774,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        console.log("Live Stream click: play requested");
-
         streamRequested = true;
 
         if (!audio.getAttribute("src")) {
@@ -792,14 +784,6 @@ document.addEventListener("DOMContentLoaded", () => {
             audio.error ||
             audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
         ) {
-            console.log(
-                "Live Stream: resetting failed media source",
-                {
-                    error: audio.error,
-                    networkState: audio.networkState
-                }
-            );
-
             audio.load();
         }
 
@@ -810,16 +794,6 @@ document.addEventListener("DOMContentLoaded", () => {
             window.PeakGlow.prepare();
         }
 
-        console.log(
-            "Live Stream click: play requested",
-            {
-                paused: audio.paused,
-                readyState: audio.readyState,
-                networkState: audio.networkState,
-                currentSrc: audio.currentSrc
-            }
-        );
-
         const playPromise = audio.play();
 
         if (
@@ -827,11 +801,6 @@ document.addEventListener("DOMContentLoaded", () => {
             typeof playPromise.catch === "function"
         ) {
             playPromise.catch((error) => {
-                console.log(
-                    "Live Stream play() rejected:",
-                    error
-                );
-
                 streamRequested = false;
                 showListen();
 
