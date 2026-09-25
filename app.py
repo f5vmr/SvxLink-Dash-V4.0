@@ -5633,7 +5633,7 @@ def launch():
     )
 
 
-STREAMER_HEALTH_URL = "http://127.0.0.1:8765/health"
+STREAMER_HEALTH_URL = "http://127.0.0.1:8766/health"
 
 
 def streamer_is_available():
@@ -5657,7 +5657,7 @@ def streamer_is_available():
         return False
 
 
-STREAMER_AUDIO_URL = "http://127.0.0.1:8765/stream.mp3"
+STREAMER_AUDIO_URL = "http://127.0.0.1:8766/stream.mp3"
 
 
 @app.route("/stream/live.mp3", methods=["GET"])

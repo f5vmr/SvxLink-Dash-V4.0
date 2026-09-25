@@ -146,6 +146,8 @@ git clone \
     "$SOURCE_DIR" \
     "$STAGING_DIR"
 
+git -C "$STAGING_DIR" remote set-url origin "$REPO_URL"
+
 if [ -n "$EXISTING_RELEASE" ]; then
     BACKUP_DIR="$BACKUP_ROOT/${TIMESTAMP}-${EXISTING_RELEASE}-$$"
 
