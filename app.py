@@ -5665,7 +5665,7 @@ def live_stream():
     try:
         upstream = urllib.request.urlopen(
             STREAMER_AUDIO_URL,
-            timeout=2,
+            timeout=10,
         )
     except (OSError, urllib.error.URLError):
         return Response(
