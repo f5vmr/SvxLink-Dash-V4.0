@@ -726,24 +726,28 @@ document.addEventListener("DOMContentLoaded", () => {
     button.textContent = "Listen";
 
 audio.addEventListener("play", () => {
+    console.log("Live Stream event: play");
     button.disabled = false;
     button.textContent = "Stop";
     button.classList.add("live-stream-playing");
 });
 
 audio.addEventListener("pause", () => {
+    console.log("Live Stream event: pause");
     button.disabled = false;
     button.textContent = "Listen";
     button.classList.remove("live-stream-playing");
 });
 
 audio.addEventListener("ended", () => {
+    console.log("Live Stream event: ended");
     button.disabled = false;
     button.textContent = "Listen";
     button.classList.remove("live-stream-playing");
 });
 
 audio.addEventListener("error", () => {
+    console.log("Live Stream event: error", audio.error);
     button.disabled = false;
     button.textContent = "Listen";
     button.classList.remove("live-stream-playing");
@@ -758,13 +762,26 @@ audio.addEventListener("error", () => {
                 window.PeakGlow.prepare();
             }
 
+            console.log(
+                "Live Stream click: play requested",
+                {
+                    paused: audio.paused,
+                    readyState: audio.readyState,
+                    networkState: audio.networkState,
+                    currentSrc: audio.currentSrc
+                }
+            );
             const playPromise = audio.play();
 
             if (
                 playPromise &&
                 typeof playPromise.catch === "function"
             ) {
-                playPromise.catch(() => {
+                playPromise.catch((error) => {
+                    console.log(
+                        "Live Stream play() rejected:",
+                        error
+                    );
                     button.disabled = false;
                     button.textContent = "Listen";
                     button.classList.remove("live-stream-playing")
@@ -774,6 +791,7 @@ audio.addEventListener("error", () => {
             return;
         }
 
+        console.log("Live Stream click: stop requested");
         audio.pause();
 
         /*
