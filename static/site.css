@@ -2220,6 +2220,12 @@ html.dark-mode .theme-toggle {
     opacity: 1;
 }
 
+.live-stream-stopped {
+    background: #1a4d8f !important;
+    border-color: #235 !important;
+    color: #ffffff !important;
+}
+
 .live-stream-button:disabled {
     cursor: default;
     opacity: 0.75;

@@ -29,7 +29,7 @@
 {% if streamer_available %}
 <button
     type="button"
-    class="peak-glow live-stream-button"
+    class="peak-glow live-stream-button live-stream-stopped"
     id="live-stream-button"
 >
     Listen
@@ -727,15 +727,13 @@ document.addEventListener("DOMContentLoaded", () => {
         button.disabled = false;
         button.textContent = "Listen";
         button.classList.remove("live-stream-playing");
-
-        button.style.removeProperty("background-color");
-        button.style.removeProperty("border-color");
-        button.style.removeProperty("--peak");
+        button.classList.add("live-stream-stopped");
     }
 
     function showStop() {
         button.disabled = false;
         button.textContent = "Stop";
+        button.classList.remove("live-stream-stopped");
         button.classList.add("live-stream-playing");
     }
 
