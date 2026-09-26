@@ -727,6 +727,10 @@ document.addEventListener("DOMContentLoaded", () => {
         button.disabled = false;
         button.textContent = "Listen";
         button.classList.remove("live-stream-playing");
+
+        button.style.removeProperty("background-color");
+        button.style.removeProperty("border-color");
+        button.style.removeProperty("--peak");
     }
 
     function showStop() {
