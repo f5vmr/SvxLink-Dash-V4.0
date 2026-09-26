@@ -27,13 +27,15 @@
     </div>
 
     {% if streamer_available %}
-    <button
-        type="button"
-        class="button-secondary peak-glow live-stream-button "
-        id="live-stream-button"
-    >
-        Listen
-    </button>
+    <div class="live-stream-glow peak-glow">
+        <button
+            type="button"
+            class="button-secondary live-stream-button"
+            id="live-stream-button"
+        >
+            Listen
+        </button>
+    </div>
     {% else %}
     <button
         type="button"
@@ -86,7 +88,7 @@
             ></audio>
             <script>
             window.PeakGlowConfig = {
-                target: "both",
+                target: "border",
                 floorDb: -50,
                 attackMs: 10,
                 releaseMs: 250,
@@ -792,13 +794,6 @@ document.addEventListener("DOMContentLoaded", () => {
             typeof window.PeakGlow.prepare === "function"
         ) {
             window.PeakGlow.prepare();
-        }
-
-        if (
-            window.PeakGlow &&
-            typeof window.PeakGlow.reset === "function"
-        ) {
-            window.PeakGlow.reset();
         }
 
 showStop();
