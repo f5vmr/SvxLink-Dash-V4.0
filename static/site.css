@@ -2198,3 +2198,37 @@ html.dark-mode .theme-toggle {
         padding: 0.4rem 0.6rem;
     }
 }
+
+.live-stream-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 40px;
+    padding: 0 1rem;
+
+    border: 3px solid #235;
+    border-radius: 999px;
+
+    background: #1a4d8f;
+    color: #ffffff;
+
+    font: inherit;
+    font-weight: 800;
+
+    cursor: pointer;
+    opacity: 1;
+}
+
+.live-stream-button:disabled {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.live-stream-button.live-stream-playing {
+    background: #c62828;
+    border-color: #8e1c1c;
+    color: #ffffff;
+
+    animation: live-stream-pulse 1.6s ease-out infinite;
+}

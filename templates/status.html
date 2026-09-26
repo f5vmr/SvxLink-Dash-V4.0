@@ -26,23 +26,23 @@
         Live Stream
     </div>
 
-    {% if streamer_available %}
-    <button
-        type="button"
-        class="button-secondary peak-glow live-stream-button "
-        id="live-stream-button"
-    >
-        Listen
-    </button>
-    {% else %}
-    <button
-        type="button"
-        class="button-secondary live-stream-button"
-        disabled
-    >
-        Not Fitted
-    </button>
-    {% endif %}
+{% if streamer_available %}
+<button
+    type="button"
+    class="peak-glow live-stream-button"
+    id="live-stream-button"
+>
+    Listen
+</button>
+{% else %}
+<button
+    type="button"
+    class="live-stream-button"
+    disabled
+>
+    Not Fitted
+</button>
+{% endif %}
 </div>
 {% endif %}
 
@@ -785,20 +785,6 @@ document.addEventListener("DOMContentLoaded", () => {
             audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
         ) {
             audio.load();
-        }
-
-        if (
-            window.PeakGlow &&
-            typeof window.PeakGlow.prepare === "function"
-        ) {
-            window.PeakGlow.prepare();
-        }
-
-        if (
-            window.PeakGlow &&
-            typeof window.PeakGlow.reset === "function"
-        ) {
-            window.PeakGlow.reset();
         }
 
 showStop();
