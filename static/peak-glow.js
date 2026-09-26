@@ -30,8 +30,9 @@
   const audio = document.getElementById(C.audioId);
   if (!audio) return;
   window.PeakGlow = {
-    config: C,
-    prepare,
+      config: C,
+      prepare,
+      reset: stop,
   };
   let ctx, analyser, buf, raf = 0, level = 0, last = 0, items = [];
 

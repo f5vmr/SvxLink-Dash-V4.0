@@ -794,7 +794,14 @@ document.addEventListener("DOMContentLoaded", () => {
             window.PeakGlow.prepare();
         }
 
-        showStop();
+        if (
+            window.PeakGlow &&
+            typeof window.PeakGlow.reset === "function"
+        ) {
+            window.PeakGlow.reset();
+        }
+
+showStop();
 
         const playPromise = audio.play();
 
