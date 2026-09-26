@@ -83,7 +83,12 @@
     prepare();
   
     if (!ctx || raf) return;
-  
+
+    for (const el of document.querySelectorAll(C.selector)) {
+    el.style.removeProperty("background-color");
+    el.style.removeProperty("border-color");
+    el.style.removeProperty("--peak");
+    }
     // Re-read base colours on every start so theme changes are picked up.
     items = [...document.querySelectorAll(C.selector)].map((el) => {
       const cs = getComputedStyle(el);
