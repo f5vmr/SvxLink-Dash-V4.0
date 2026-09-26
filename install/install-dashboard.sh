@@ -315,7 +315,30 @@ install -d -o svxlink -g svxlink -m 0775 \
 #-----------------------
 # Configure sudo permissions
 #----------------------
-cat > /etc/sudoers.d/svxlink-dash <<'EOF'
+
+SUDOERS_FILE="/etc/sudoers.d/svxlink-dash"
+
+if [ -L "$SUDOERS_FILE" ]; then
+    echo "ERROR: Refusing to replace symbolic sudoers path:" >&2
+    echo "       $SUDOERS_FILE" >&2
+    exit 1
+fi
+
+if [ -d "$SUDOERS_FILE" ]; then
+    echo "Removing an empty directory obstructing the sudoers file:"
+
+    if ! rmdir "$SUDOERS_FILE"; then
+        echo "ERROR: $SUDOERS_FILE is a non-empty directory." >&2
+        echo "Its contents have been preserved for manual review." >&2
+        exit 1
+    fi
+elif [ -e "$SUDOERS_FILE" ] && [ ! -f "$SUDOERS_FILE" ]; then
+    echo "ERROR: The sudoers path is not a regular file:" >&2
+    echo "       $SUDOERS_FILE" >&2
+    exit 1
+fi
+
+cat > "$SUDOERS_FILE" <<'EOF'
 # SvxLink-Dash-V4.0 controlled service permissions
 
 svxlink ALL=(root) NOPASSWD: \
@@ -343,8 +366,8 @@ svxlink ALL=(root) NOPASSWD: \
 EOF
 
 
-chmod 0440 /etc/sudoers.d/svxlink-dash
-visudo -c -f /etc/sudoers.d/svxlink-dash
+chmod 0440 "$SUDOERS_FILE"
+visudo -c -f "$SUDOERS_FILE"
 # Wifi install
 # -------------------------------------------------
 # Install network failsafe helper

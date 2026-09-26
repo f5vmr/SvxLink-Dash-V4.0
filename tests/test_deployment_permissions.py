@@ -110,6 +110,26 @@ class DeploymentPermissionTests(unittest.TestCase):
             installer_text,
         )
 
+    def test_installer_handles_obstructing_sudoers_path_safely(self):
+        installer_text = Path(
+            "install/install-dashboard.sh"
+        ).read_text(encoding="utf-8")
+
+        required_fragments = (
+            'SUDOERS_FILE="/etc/sudoers.d/svxlink-dash"',
+            'if [ -L "$SUDOERS_FILE" ]; then',
+            'if [ -d "$SUDOERS_FILE" ]; then',
+            'if ! rmdir "$SUDOERS_FILE"; then',
+            "Its contents have been preserved for manual review.",
+            'cat > "$SUDOERS_FILE" <<\'EOF\'',
+            'chmod 0440 "$SUDOERS_FILE"',
+            'visudo -c -f "$SUDOERS_FILE"',
+        )
+
+        for fragment in required_fragments:
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, installer_text)
+
 
 if __name__ == "__main__":
     unittest.main()
