@@ -989,8 +989,27 @@ footer a:hover {
     opacity: 0.75;
 }
 
+.live-stream-button:hover {
+    background: transparent;
+    border-color: var(--highlight-color);
+    color: var(--highlight-color);
+    transform: none;
+    box-shadow: none;
+}
+
 .live-stream-button.live-stream-playing {
+    background: #c62828;
+    border-color: #c62828;
+    color: #ffffff;
+    transform: none;
     animation: live-stream-pulse 1.6s ease-out infinite;
+}
+
+.live-stream-button.live-stream-playing:hover {
+    background: #c62828;
+    border-color: #c62828;
+    color: #ffffff;
+    transform: none;
 }
 
 @keyframes live-stream-pulse {
