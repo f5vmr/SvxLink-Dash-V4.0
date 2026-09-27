@@ -77,6 +77,9 @@ if [ -e "$INSTALL_DIR" ]; then
     fi
 
     case "$EXISTING_ORIGIN" in
+        *"/SvxLink-Dash-V3.git"|*"/SvxLink-Dash-V3")
+            EXISTING_RELEASE="V3"
+            ;;
         *"/SvxLink-Dash-V3.0.git"|*"/SvxLink-Dash-V3.0")
             EXISTING_RELEASE="V3.0"
             ;;

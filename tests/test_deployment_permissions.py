@@ -90,6 +90,13 @@ class DeploymentPermissionTests(unittest.TestCase):
             installer_text,
         )
         self.assertIn(
+            (
+                '*"/SvxLink-Dash-V3.git"|'
+                '*"/SvxLink-Dash-V3")'
+            ),
+            installer_text,
+        )
+        self.assertIn(
             "SvxLink-Dash-V3.0.git",
             installer_text,
         )
