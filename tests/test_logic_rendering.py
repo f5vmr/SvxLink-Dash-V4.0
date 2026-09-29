@@ -37,7 +37,7 @@ class LogicRenderingTests(unittest.TestCase):
             "type": "repeater",
             "callsign": "G4NAB",
         })
-        model["tones"]["courtesy_mode"] = "beep"
+        model["tones"]["courtesy_mode"] = "R"
         model["repeater"].update({
             "idle_timeout": 7,
             "sql_timeout": 240,

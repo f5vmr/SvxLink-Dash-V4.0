@@ -283,10 +283,10 @@
 
             <p>
                 Courtesy:
-                {{ tones.get("courtesy_mode", "none")|title }}
-                {% if tones.get("courtesy_mode", "none") != "none" %}
-                    at
-                    {{ tones.get("courtesy_frequency", 800) }} Hz
+                {% if tones.get("courtesy_mode", "none") == "none" %}
+                    None
+                {% else %}
+                    CW {{ tones.get("courtesy_mode") }}
                 {% endif %}
             </p>
 

@@ -24,9 +24,18 @@ SUPPORTED_IDENT_MODES = {
 
 SUPPORTED_ROGER_MODES = {
     "none",
-    "beep",
-    "morse_t",
-    "morse_k",
+    "A",
+    "D",
+    "E",
+    "I",
+    "K",
+    "M",
+    "N",
+    "R",
+    "S",
+    "T",
+    "U",
+    "X",
 }
 SUPPORTED_IDLE_TONES = {
     "chime",

@@ -1050,6 +1050,108 @@ class WorkflowRoutingTests(unittest.TestCase):
             template_text,
         )
 
+    def test_courtesy_page_accepts_selected_cw_letter(self):
+        model = new_node_model()
+        model["node"]["type"] = "simplex"
+
+        with patch.object(
+            dashboard,
+            "load_node_model",
+            return_value=model,
+        ), patch.object(
+            dashboard,
+            "save_node_model",
+        ) as save_mock:
+            with dashboard.app.test_request_context(
+                "/courtesy",
+                method="POST",
+                data={
+                    "courtesy_mode": "R",
+                    "tone_frequency": "not-used",
+                    "idle_mode": "silence",
+                    "closedown_mode": "none",
+                },
+            ):
+                response = dashboard.courtesy_page()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            "/modules",
+        )
+        self.assertEqual(
+            model["tones"]["courtesy_mode"],
+            "R",
+        )
+        save_mock.assert_called_once_with(model)
+
+    def test_courtesy_template_offers_supported_cw_letters(self):
+        template_text = Path(
+            "templates/courtesy.html"
+        ).read_text(
+            encoding="utf-8"
+        )
+
+        for letter in (
+            "A",
+            "D",
+            "E",
+            "I",
+            "K",
+            "M",
+            "N",
+            "R",
+            "S",
+            "T",
+            "U",
+            "X",
+        ):
+            with self.subTest(letter=letter):
+                self.assertIn(
+                    f'value="{letter}"',
+                    template_text,
+                )
+
+        self.assertIn(
+            "E, I, K and R are common choices",
+            template_text,
+        )
+        self.assertNotIn(
+            'value="beep"',
+            template_text,
+        )
+        self.assertNotIn(
+            'name="tone_frequency"',
+            template_text,
+        )
+        self.assertNotIn(
+            "Courtesy beep frequency",
+            template_text,
+        )
+
+    def test_review_templates_show_cw_courtesy_without_beep(self):
+        for template_name in (
+            "review.html",
+            "port_final_review.html",
+        ):
+            with self.subTest(template=template_name):
+                template_text = (
+                    Path("templates") / template_name
+                ).read_text(encoding="utf-8")
+
+                self.assertNotIn(
+                    "Beep frequency",
+                    template_text,
+                )
+                self.assertNotIn(
+                    "courtesy_frequency",
+                    template_text,
+                )
+                self.assertIn(
+                    "CW",
+                    template_text,
+                )
+
     def test_reconfiguration_back_links_return_to_menu(self):
         template_names = (
             "environment.html",

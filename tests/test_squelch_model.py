@@ -250,6 +250,32 @@ class SquelchValidationTests(unittest.TestCase):
             " ".join(self.errors(squelch)),
         )
 
+    def test_supported_courtesy_cw_letters_are_valid(self):
+        for letter in (
+            "A",
+            "D",
+            "E",
+            "I",
+            "K",
+            "M",
+            "N",
+            "R",
+            "S",
+            "T",
+            "U",
+            "X",
+        ):
+            with self.subTest(letter=letter):
+                model = new_node_model()
+                model["tones"]["courtesy_mode"] = letter
+
+                errors = validate_model(model)
+
+                self.assertNotIn(
+                    "Courtesy tone mode is invalid.",
+                    errors,
+                )
+
     def test_ctcss_requires_frequency(self):
         squelch = self.valid_squelch()
         squelch["method"] = "ctcss"

@@ -421,7 +421,7 @@ def default_node_model():
 
         "ident": {
             "short": {
-                "mode": None,       # none | cw | voice | both
+                "mode": None,
                 "interval": 15,
             },
             "long": {
@@ -4162,11 +4162,6 @@ def courtesy_page():
             "",
         ).strip()
 
-        tone_frequency_text = request.form.get(
-            "tone_frequency",
-            "800",
-        ).strip()
-
         idle_mode = request.form.get(
             "idle_mode",
             "",
@@ -4178,10 +4173,18 @@ def courtesy_page():
         ).strip()
 
         if courtesy_mode not in (
-            "none",
-            "beep",
-            "morse_t",
-            "morse_k",
+            "A",
+            "D",
+            "E",
+            "I",
+            "K",
+            "M",
+            "N",
+            "R",
+            "S",
+            "T",
+            "U",
+            "X",
         ):
             error = "Please select a valid courtesy tone."
 
@@ -4200,39 +4203,31 @@ def courtesy_page():
             error = "Please select a valid closedown tone."
 
         else:
-            try:
-                tone_frequency = int(tone_frequency_text)
-            except ValueError:
-                error = "Courtesy beep frequency must be numeric."
-            else:
-                if tone_frequency < 300 or tone_frequency > 3000:
-                    error = (
-                        "Courtesy beep frequency must be between "
-                        "300 and 3000 Hz."
-                    )
-                else:
-                    model["tones"] = {
-                        "courtesy_mode": courtesy_mode,
-                        "courtesy_frequency": tone_frequency,
-                        "idle_mode": idle_mode,
-                        "closedown_mode": closedown_mode,
-                    }
+            model["tones"] = {
+                "courtesy_mode": courtesy_mode,
+                "courtesy_frequency": tones.get(
+                    "courtesy_frequency",
+                    800,
+                ),
+                "idle_mode": idle_mode,
+                "closedown_mode": closedown_mode,
+            }
 
-                    model.setdefault("build", {})
-                    model["build"]["tones_configured"] = True
+            model.setdefault("build", {})
+            model["build"]["tones_configured"] = True
 
-                    save_node_model(model)
+            save_node_model(model)
 
-                    if request.form.get("reconfigure") == "1":
-                        return redirect(url_for("build_page"))
+            if request.form.get("reconfigure") == "1":
+                return redirect(url_for("build_page"))
 
-                    if multiport:
-                        return redirect(url_for("port_repeater_page"))
+            if multiport:
+                return redirect(url_for("port_repeater_page"))
 
-                    if has_repeater:
-                        return redirect(url_for("repeater_page"))
+            if has_repeater:
+                return redirect(url_for("repeater_page"))
 
-                    return redirect(url_for("modules_page"))
+            return redirect(url_for("modules_page"))
 
     return render_template(
         "courtesy.html",

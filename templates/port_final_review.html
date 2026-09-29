@@ -36,19 +36,11 @@
                 <div class="review-row">
                     <span class="review-label">Courtesy tone</span>
                     <span class="review-value">
-                        {% if tones.get("courtesy_mode", "none") == "morse_t" %}
-                            Morse T
-                        {% elif tones.get("courtesy_mode", "none") == "morse_k" %}
-                            Morse K
+                        {% if tones.get("courtesy_mode", "none") == "none" %}
+                            None
                         {% else %}
-                            {{ tones.get("courtesy_mode", "none")|title }}
+                            CW {{ tones.get("courtesy_mode") }}
                         {% endif %}
-                    </span>
-                </div>
-                <div class="review-row">
-                    <span class="review-label">Beep frequency</span>
-                    <span class="review-value">
-                        {{ tones.get("courtesy_frequency", 800) }} Hz
                     </span>
                 </div>
                 <div class="review-row">

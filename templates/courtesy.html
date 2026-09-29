@@ -63,60 +63,75 @@
             {% endif %}
 
             <div class="form-section">
-                <div class="label">Courtesy tone</div>
-
-                <div class="radio-row">
-                    <input type="radio"
-                           id="courtesy_none"
-                           name="courtesy_mode"
-                           value="none"
-                           {% if tones.courtesy_mode == "none" %}checked{% endif %}>
-                    <label for="courtesy_none">None</label>
-                </div>
-
-                <div class="radio-row">
-                    <input type="radio"
-                           id="courtesy_beep"
-                           name="courtesy_mode"
-                           value="beep"
-                           {% if tones.courtesy_mode == "beep" %}checked{% endif %}>
-                    <label for="courtesy_beep">Beep</label>
-                </div>
-
-                <div class="radio-row">
-                    <input type="radio"
-                           id="courtesy_morse_t"
-                           name="courtesy_mode"
-                           value="morse_t"
-                           {% if tones.courtesy_mode == "morse_t" %}checked{% endif %}>
-                    <label for="courtesy_morse_t">Morse T</label>
-                </div>
-
-                <div class="radio-row">
-                    <input type="radio"
-                           id="courtesy_morse_k"
-                           name="courtesy_mode"
-                           value="morse_k"
-                           {% if tones.courtesy_mode == "morse_k" %}checked{% endif %}>
-                    <label for="courtesy_morse_k">Morse K</label>
-                </div>
-            </div>
-
-            <div class="field-group">
-                <label class="label" for="tone_frequency">
-                    Courtesy beep frequency
+                <label class="label" for="courtesy_mode">
+                    Courtesy tone
                 </label>
 
-                <input class="input-field"
-                       id="tone_frequency"
-                       name="tone_frequency"
-                       type="number"
-                       min="300"
-                       max="3000"
-                       value="{{ tones.courtesy_frequency }}">
+                <select class="input-field"
+                        id="courtesy_mode"
+                        name="courtesy_mode"
+                        required>
+                    <option value="none"
+                            {% if tones.courtesy_mode == "none" %}selected{% endif %}>
+                        None
+                    </option>
+
+                    <option value="A"
+                            {% if tones.courtesy_mode == "A" %}selected{% endif %}>
+                        CW A
+                    </option>
+                    <option value="D"
+                            {% if tones.courtesy_mode == "D" %}selected{% endif %}>
+                        CW D
+                    </option>
+                    <option value="E"
+                            {% if tones.courtesy_mode == "E" %}selected{% endif %}>
+                        CW E
+                    </option>
+                    <option value="I"
+                            {% if tones.courtesy_mode == "I" %}selected{% endif %}>
+                        CW I
+                    </option>
+                    <option value="K"
+                            {% if tones.courtesy_mode == "K" %}selected{% endif %}>
+                        CW K
+                    </option>
+                    <option value="M"
+                            {% if tones.courtesy_mode == "M" %}selected{% endif %}>
+                        CW M
+                    </option>
+                    <option value="N"
+                            {% if tones.courtesy_mode == "N" %}selected{% endif %}>
+                        CW N
+                    </option>
+                    <option value="R"
+                            {% if tones.courtesy_mode == "R" %}selected{% endif %}>
+                        CW R
+                    </option>
+                    <option value="S"
+                            {% if tones.courtesy_mode == "S" %}selected{% endif %}>
+                        CW S
+                    </option>
+                    <option value="T"
+                            {% if tones.courtesy_mode == "T" %}selected{% endif %}>
+                        CW T
+                    </option>
+                    <option value="U"
+                            {% if tones.courtesy_mode == "U" %}selected{% endif %}>
+                        CW U
+                    </option>
+                    <option value="X"
+                            {% if tones.courtesy_mode == "X" %}selected{% endif %}>
+                        CW X
+                    </option>
+                </select>
 
                 <div class="note">
-                    Used only when Beep is selected. Default: 800 Hz.
+                    Select the CW character played as the courtesy tone.
+                    E, I, K and R are common choices; A, D, M, N, S, T,
+                    U and X provide additional variations. SvxLink
+                    generates the selected character using the configured
+                    CW pitch, speed and level.
                 </div>
             </div>
 

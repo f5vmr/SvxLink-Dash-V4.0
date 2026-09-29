@@ -274,7 +274,6 @@ def apply_courtesy_tone(model):
     tones = get_installation_tones(model)
 
     mode = tones["courtesy_mode"]
-    tone_freq = tones["courtesy_frequency"]
 
     # cw_amp = cw.get("amp", -10)
     # cw_pitch = cw.get("pitch", 650)
@@ -292,14 +291,21 @@ def apply_courtesy_tone(model):
     if mode == "none":
         replacement = "# playTone 440 500 100"
 
-    elif mode == "beep":
-        replacement = f"playTone {tone_freq} 800 60"
-
-    elif mode == "morse_t":
-        replacement = f'CW::play "T"'
-
-    elif mode == "morse_k":
-        replacement = f'CW::play "K"'
+    elif mode in (
+        "A",
+        "D",
+        "E",
+        "I",
+        "K",
+        "M",
+        "N",
+        "R",
+        "S",
+        "T",
+        "U",
+        "X",
+    ):
+        replacement = f'CW::play "{mode}"'
 
     else:
         replacement = "# playTone 440 500 100"
