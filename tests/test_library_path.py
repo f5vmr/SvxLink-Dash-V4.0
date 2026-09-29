@@ -68,6 +68,22 @@ class LibraryPathTests(unittest.TestCase):
                         expected,
                     )
 
+    def test_debian_armhf_overrides_aarch64_kernel(self):
+        with patch.object(
+            svxlink_renderer,
+            "get_architecture_label",
+            return_value="armhf",
+            create=True,
+        ), patch.object(
+            svxlink_renderer.platform,
+            "machine",
+            return_value="aarch64",
+        ):
+            self.assertEqual(
+                svxlink_renderer.get_library_path(),
+                "/usr/lib/arm-linux-gnueabihf/svxlink",
+            )
+
     def test_unknown_architecture_uses_fallback(self):
         with patch.object(
             svxlink_renderer.platform,

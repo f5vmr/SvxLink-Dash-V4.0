@@ -8,6 +8,7 @@ from models.node_model import (
     is_multiport_model,
 )
 from renderers.template_engine import render_config_template
+from services.hardware_service import get_architecture_label
 import platform
 from services.topology_ports import (
     get_topology_logic_name,
@@ -20,7 +21,16 @@ from services.topology_ports import (
 
 
 def get_library_path():
+    architecture = get_architecture_label().strip().lower()
     machine = platform.machine().lower()
+
+    if architecture in (
+        "armhf",
+        "arm64",
+        "amd64",
+        "i386",
+    ):
+        machine = architecture
 
     if machine in ("armv7l", "armhf"):
         return (
