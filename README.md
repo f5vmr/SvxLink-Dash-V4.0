@@ -851,14 +851,15 @@ The normal sequence is:
 3. Assign each enabled port as `SimplexLogic` or `RepeaterLogic`.
 4. Configure the node, interface, squelch, identification and CW settings for each enabled port.
 5. Select the installation-wide courtesy, idle and closedown tones.
-6. Complete the repeater settings for any repeater ports.
-7. Select the primary installation port. A single-port installation selects its only port automatically.
-8. Select whether the installation will use a reflector.
-9. Configure the reflector route and authentication method when required.
-10. Select reflector node-map publication and, independently, SvxLink LocationInfo and APRS publication.
-11. Assign every enabled port to independent operation, a local link or the reflector link.
-12. Validate and review the complete configuration.
-13. Build and deploy the generated SvxLink configuration.
+6. Configure optional emergency DTMF online/offline control for each radio logic.
+7. Complete the repeater settings for any repeater ports.
+8. Select the primary installation port. A single-port installation selects its only port automatically.
+9. Select whether the installation will use a reflector.
+10. Configure the reflector route and authentication method when required.
+11. Select reflector node-map publication and, independently, SvxLink LocationInfo and APRS publication.
+12. Assign every enabled port to independent operation, a local link or the reflector link.
+13. Validate and review the complete configuration.
+14. Build and deploy the generated SvxLink configuration.
 
 The reflector route follows primary-port selection so that `ReflectorLogic` uses the correct installation callsign. This is especially important for Protocol 3, where the callsign forms part of the certificate identity.
 
@@ -934,9 +935,9 @@ Idle and closedown behaviour is applied through the shared `RepeaterLogicType.tc
 Courtesy choices are:
 
 * None
-* Beep
-* Morse T
-* Morse K
+* Morse A, D, E, I, K, M, N, R, S, T, U or X
+SvxLink generates the selected Morse character using the configured CW
+pitch, speed and level. E, I, K and R are common choices.
 
 Repeater idle-tone choices are:
 
@@ -953,6 +954,34 @@ Repeater closedown-tone choices are:
 `None` is a valid deliberate selection in every case. A courtesy tone is commonly used for repeater operation, but it is not mandatory.
 
 The dashboard applies each shared event-file customisation once, regardless of the number of configured radio ports.
+
+## Emergency DTMF online/offline control
+
+Emergency DTMF control is optional and configured separately for each
+simplex or repeater radio logic, including individual ports in a multi-port
+installation.
+
+Enable the feature and enter a private six-digit command. Leading zeroes
+are preserved. Enter only the six digits in the configuration page, without
+`*`, `#` or the final online/offline selection digit.
+
+Share the command only with authorised operators.
+
+To operate the control over the radio:
+
+* Enter the private command followed by `0#` to take the logic offline.
+* Enter the private command followed by `1#` to return the logic online.
+* Prefix the complete command with `*` if a module is active.
+
+When enabled, the generated radio logic section contains the configured
+`ONLINE_CMD` and `ONLINE=1`. The generated startup setting is online.
+When disabled, the configuration retains a commented manual example.
+
+Existing installations can change these settings through
+**Rebuild / Reconfigure → Emergency DTMF Control**.
+
+Save the settings, rebuild the configuration and restart SvxLink to apply
+the change.
 
 ## Node information and LocationInfo publication
 

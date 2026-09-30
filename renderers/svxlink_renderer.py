@@ -228,11 +228,35 @@ def ident_enabled(mode, ident_type):
 # Online control block
 # =========================================================
 
-def render_online_control():
+def render_online_control(configuration=None):
     """
-    Retain the manual DTMF online/offline control reference
-    in every generated logic section.
+    Render optional emergency DTMF online/offline control.
+    Retain the manual reference when disabled.
     """
+    configuration = configuration or {}
+
+    if configuration.get("enabled", False):
+        command = configuration.get("command", "")
+
+        if (
+            not isinstance(command, str)
+            or len(command) != 6
+            or any(character not in "0123456789" for character in command)
+        ):
+            raise ValueError(
+                "Emergency DTMF command must contain exactly six digits."
+            )
+
+        return "\n".join([
+            "# Emergency DTMF logic control.",
+            "# Append 0# to the private command to take this logic offline.",
+            "# Append 1# to the private command to return this logic online.",
+            "# Prefix the command with * if a module is active.",
+            "# DTMF muting prevents the digits being retransmitted.",
+            f"ONLINE_CMD={command}",
+            "ONLINE=1",
+        ])
+
     return "\n".join([
         "# Emergency DTMF logic control.",
         "# Replace XXXXXX with a private six-digit command.",
@@ -243,7 +267,6 @@ def render_online_control():
         "#ONLINE_CMD=XXXXXX",
         "#ONLINE=1",
     ])
-
 
 # =========================================================
 # CTCSS helpers
@@ -931,7 +954,9 @@ def render_active_logic(model):
         "FX_GAIN_NORMAL": model.get("fx_gain_normal", 0),
         "FX_GAIN_LOW": model.get("fx_gain_low", -12),
 
-        "ONLINE_CONTROL_BLOCK": render_online_control(),
+        "ONLINE_CONTROL_BLOCK": render_online_control(
+            model.get("online_control", {})
+        ),
         "DTMF_CTRL_PTY": get_dtmf_ctrl_pty(model),
         "CTCSS_TO_TG_BLOCK": render_ctcss_to_tg(
             model.get("ctcss_to_tg", {}),
@@ -1027,7 +1052,9 @@ def render_port_logic(model, port_id, node):
         "FX_GAIN_NORMAL": model.get("fx_gain_normal", 0),
         "FX_GAIN_LOW": model.get("fx_gain_low", -12),
 
-        "ONLINE_CONTROL_BLOCK": render_online_control(),
+        "ONLINE_CONTROL_BLOCK": render_online_control(
+            node.get("online_control", {})
+        ),
         "DTMF_CTRL_PTY": f"/dev/shm/port{port_id}_dtmf_ctrl",
         "CTCSS_TO_TG_BLOCK": render_ctcss_to_tg(
             node.get("ctcss_to_tg", {}),

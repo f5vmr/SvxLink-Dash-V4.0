@@ -107,7 +107,75 @@ class OnlineControlRenderingTests(unittest.TestCase):
                     EXPECTED_MANUAL_BLOCK,
                 )
 
-    def test_save_removes_legacy_online_command(self):
+    def test_enabled_control_reaches_each_logic(self):
+        for role in ("simplex", "repeater"):
+            with self.subTest(scope="single", role=role):
+                model = new_node_model()
+                model["node"].update({
+                    "type": role,
+                    "callsign": "G4NAB",
+                })
+                model["online_control"] = {
+                    "enabled": True,
+                    "command": "012345",
+                }
+
+                captured = self.capture_values(
+                    lambda: renderer.render_active_logic(model)
+                )
+                lines = captured["values"]["ONLINE_CONTROL_BLOCK"].splitlines()
+
+                self.assertIn("ONLINE_CMD=012345", lines)
+                self.assertIn("ONLINE=1", lines)
+
+            with self.subTest(scope="port", role=role):
+                node = {
+                    "role": role,
+                    "callsign": "G4NAB",
+                    "online_control": {
+                        "enabled": True,
+                        "command": "654321",
+                    },
+                }
+
+                captured = self.capture_values(
+                    lambda: renderer.render_port_logic(model, "2", node)
+                )
+                lines = captured["values"]["ONLINE_CONTROL_BLOCK"].splitlines()
+
+                self.assertIn("ONLINE_CMD=654321", lines)
+                self.assertIn("ONLINE=1", lines)
+                self.assertNotIn("ONLINE_CMD=012345", lines)
+
+                node.pop("online_control")
+                captured = self.capture_values(
+                    lambda: renderer.render_port_logic(model, "2", node)
+                )
+
+                self.assertEqual(
+                    captured["values"]["ONLINE_CONTROL_BLOCK"],
+                    EXPECTED_MANUAL_BLOCK,
+                )
+
+    def test_enabled_control_rejects_invalid_commands(self):
+        for command in (
+            "",
+            "12345",
+            "1234567",
+            "12345#",
+            "123 56",
+            "１２３４５６",
+            123456,
+            None,
+        ):
+            with self.subTest(command=command):
+                with self.assertRaises(ValueError):
+                    renderer.render_online_control({
+                        "enabled": True,
+                        "command": command,
+                    })
+
+    def test_save_preserves_online_command(self):
         model = new_node_model()
         model["online_control"] = {
             "enabled": True,
@@ -135,13 +203,18 @@ class OnlineControlRenderingTests(unittest.TestCase):
                 )
             )
 
-        self.assertNotIn(
-            "online_control",
-            model,
+        expected = {
+            "enabled": True,
+            "command": "345678",
+        }
+
+        self.assertEqual(
+            model["online_control"],
+            expected,
         )
-        self.assertNotIn(
-            "online_control",
-            saved,
+        self.assertEqual(
+            saved["online_control"],
+            expected,
         )
 
 

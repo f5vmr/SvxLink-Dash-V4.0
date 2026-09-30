@@ -4221,13 +4221,7 @@ def courtesy_page():
             if request.form.get("reconfigure") == "1":
                 return redirect(url_for("build_page"))
 
-            if multiport:
-                return redirect(url_for("port_repeater_page"))
-
-            if has_repeater:
-                return redirect(url_for("repeater_page"))
-
-            return redirect(url_for("modules_page"))
+            return redirect(url_for("online_control_page"))
 
     return render_template(
         "courtesy.html",
@@ -4235,6 +4229,99 @@ def courtesy_page():
         tones=tones,
         has_repeater=has_repeater,
         is_multiport=multiport,
+        error=error,
+        version_info=get_version_info(),
+    )
+
+
+@app.route("/online-control", methods=["GET", "POST"])
+def online_control_page():
+    model = load_node_model()
+    multiport = is_multiport_build(model)
+    reconfigure = request.values.get("reconfigure") == "1"
+    error = None
+
+    controls = []
+
+    if multiport:
+        nodes = model.get("nodes", {})
+        enabled_ports = [
+            str(port)
+            for port in model.get("ports", {}).get("enabled", [])
+        ]
+
+        if not enabled_ports:
+            return redirect(url_for("hardware_ports_page"))
+
+        if any(port_id not in nodes for port_id in enabled_ports):
+            return redirect(url_for("port_config_page"))
+
+        for port_id in enabled_ports:
+            node = nodes[port_id]
+            configuration = node.get("online_control", {})
+            controls.append({
+                "key": f"port_{port_id}",
+                "label": f"Port {port_id} — {node.get('callsign', '')}",
+                "target": node,
+                "enabled": configuration.get("enabled", False),
+                "command": configuration.get("command", ""),
+            })
+    else:
+        configuration = model.get("online_control", {})
+        controls.append({
+            "key": "single",
+            "label": model.get("node", {}).get("callsign") or "Radio logic",
+            "target": model,
+            "enabled": configuration.get("enabled", False),
+            "command": configuration.get("command", ""),
+        })
+
+    if request.method == "POST":
+        for control in controls:
+            key = control["key"]
+            control["enabled"] = (
+                request.form.get(f"{key}_enabled") == "1"
+            )
+            control["command"] = request.form.get(
+                f"{key}_command", ""
+            ).strip()
+
+            command = control["command"]
+
+            if control["enabled"] and (
+                len(command) != 6
+                or any(character not in "0123456789" for character in command)
+            ):
+                if error is None:
+                    error = (
+                        f"{control['label']}: enter exactly six digits "
+                        "for the private command."
+                    )
+
+        if error is None:
+            for control in controls:
+                control["target"]["online_control"] = {
+                    "enabled": control["enabled"],
+                    "command": control["command"],
+                }
+
+            save_node_model(model)
+
+            if reconfigure:
+                return redirect(url_for("build_page"))
+
+            if multiport:
+                return redirect(url_for("port_repeater_page"))
+
+            if model.get("node", {}).get("type") == "repeater":
+                return redirect(url_for("repeater_page"))
+
+            return redirect(url_for("modules_page"))
+
+    return render_template(
+        "online_control.html",
+        controls=controls,
+        reconfigure=reconfigure,
         error=error,
         version_info=get_version_info(),
     )
@@ -7357,6 +7444,15 @@ def reconfigure_page():
             "route": "review_page",
             "description": "Review the current model before rebuilding.",
         })
+    reconfigure_targets.append({
+        "id": "online_control",
+        "label": "Emergency DTMF Control",
+        "route": "online_control_page",
+        "description": (
+            "Enable or disable private DTMF online/offline "
+            "commands for each radio logic."
+        ),
+    })
     reconfigure_targets.append({
         "id": "tones",
         "label": "Installation Tones",

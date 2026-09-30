@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency DTMF Control</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='site.css') }}">
+    <link rel="icon"
+          href="{{ url_for('static', filename='svxlink.ico') }}">
+</head>
+<body>
+<main class="page">
+    <section class="card">
+        <div class="page-header">
+            <img class="page-icon"
+                 src="{{ url_for('static', filename='svxlink.ico') }}"
+                 alt="SvxLink icon">
+            <div class="page-heading">
+                <h1>Emergency DTMF Control</h1>
+                <p>
+                    Allow authorised operators to take a radio logic
+                    offline and return it online using a private command.
+                </p>
+            </div>
+        </div>
+
+        <div class="note">
+            This feature is optional. Choose a private six-digit command
+            and share it only with authorised operators.
+            Settings apply separately to each radio logic.
+        </div>
+
+        <div class="info-box">
+            <h3>Operating instructions</h3>
+            <p>
+                Enter your six-digit command followed by
+                <strong>0#</strong> to take the logic offline,
+                or <strong>1#</strong> to return it online.
+            </p>
+            <p>
+                Prefix the complete command with <strong>*</strong>
+                if a module is active.
+            </p>
+            <p>
+                The generated configuration starts the logic online.
+                Saving these settings requires a configuration rebuild
+                before they take effect.
+            </p>
+        </div>
+
+        {% if error %}
+            <p class="error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form action="{{ url_for('online_control_page') }}"
+              method="post">
+            {% if reconfigure %}
+                <input type="hidden" name="reconfigure" value="1">
+            {% endif %}
+
+            {% for control in controls %}
+                <div class="form-section">
+                    <h3>{{ control.label }}</h3>
+
+                    <label for="{{ control.key }}_enabled">
+                        <input type="checkbox"
+                               id="{{ control.key }}_enabled"
+                               name="{{ control.key }}_enabled"
+                               value="1"
+                               {% if control.enabled %}checked{% endif %}>
+                        Enable emergency DTMF control
+                    </label>
+
+                    <div class="field-group">
+                        <label class="label"
+                               for="{{ control.key }}_command">
+                            Private six-digit command
+                        </label>
+                        <input class="input-field"
+                               type="text"
+                               inputmode="numeric"
+                               autocomplete="off"
+                               spellcheck="false"
+                               id="{{ control.key }}_command"
+                               name="{{ control.key }}_command"
+                               value="{{ control.command or '' }}"
+                               aria-describedby="{{ control.key }}_help">
+                        <div class="note"
+                             id="{{ control.key }}_help">
+                            Use exactly six digits, including any leading
+                            zeroes. Enter only the private command here,
+                            without *, # or the final 0/1.
+                            A command is required when control is enabled.
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+            <div class="button-row">
+                {% if reconfigure %}
+                    <a class="button-secondary"
+                       href="{{ url_for('reconfigure_page') }}">Back</a>
+                {% else %}
+                    <a class="button-secondary"
+                       href="{{ url_for('courtesy_page') }}">Back</a>
+                {% endif %}
+                <button class="button-primary" type="submit">
+                    Save and Continue
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <footer class="site-footer">
+        SvxLink Software &copy; Tobias Blomberg SM0SVX<br>
+        SvxLink Configurator and Dashboard &copy; Chris Jackson G4NAB<br>
+        SvxLink-Dash-V4.0 |
+        SvxLink Package {{ version_info.package }} |
+        SvxLink {{ version_info.engine }}
+    </footer>
+</main>
+</body>
+</html>

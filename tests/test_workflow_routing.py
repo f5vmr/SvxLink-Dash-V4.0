@@ -40,6 +40,155 @@ class WorkflowRoutingTests(unittest.TestCase):
         })
         return model
 
+    def test_online_control_single_save_and_navigation(self):
+        for role, destination in (
+            ("simplex", "/modules"),
+            ("repeater", "/repeater"),
+        ):
+            for reconfigure in (False, True):
+                with self.subTest(role=role, reconfigure=reconfigure):
+                    model = new_node_model()
+                    model["node"]["type"] = role
+                    data = {
+                        "single_enabled": "1",
+                        "single_command": "012345",
+                    }
+                    if reconfigure:
+                        data["reconfigure"] = "1"
+
+                    with patch.object(
+                        dashboard, "load_node_model", return_value=model
+                    ), patch.object(
+                        dashboard, "save_node_model"
+                    ) as save:
+                        with dashboard.app.test_request_context(
+                            "/online-control", method="POST", data=data
+                        ):
+                            response = dashboard.online_control_page()
+
+                    save.assert_called_once_with(model)
+                    self.assertEqual(
+                        model["online_control"],
+                        {"enabled": True, "command": "012345"},
+                    )
+                    self.assertEqual(
+                        response.headers["Location"],
+                        "/build" if reconfigure else destination,
+                    )
+
+    def test_online_control_ports_save_independently(self):
+        model = self.multiport_model()
+        model["nodes"]["2"]["online_control"] = {
+            "enabled": True,
+            "command": "654321",
+        }
+
+        with patch.object(
+            dashboard, "load_node_model", return_value=model
+        ), patch.object(
+            dashboard, "save_node_model"
+        ) as save:
+            with dashboard.app.test_request_context(
+                "/online-control",
+                method="POST",
+                data={
+                    "port_1_enabled": "1",
+                    "port_1_command": "012345",
+                    "port_2_command": "654321",
+                },
+            ):
+                response = dashboard.online_control_page()
+
+        save.assert_called_once_with(model)
+        self.assertEqual(
+            model["nodes"]["1"]["online_control"],
+            {"enabled": True, "command": "012345"},
+        )
+        self.assertEqual(
+            model["nodes"]["2"]["online_control"],
+            {"enabled": False, "command": "654321"},
+        )
+        self.assertEqual(
+            response.headers["Location"], "/port-repeater"
+        )
+
+    def test_online_control_invalid_port_does_not_partially_save(self):
+        model = self.multiport_model()
+
+        with patch.object(
+            dashboard, "load_node_model", return_value=model
+        ), patch.object(
+            dashboard, "save_node_model"
+        ) as save, patch.object(
+            dashboard, "get_version_info", return_value={}
+        ), patch.object(
+            dashboard, "render_template", return_value="invalid"
+        ) as render:
+            with dashboard.app.test_request_context(
+                "/online-control",
+                method="POST",
+                data={
+                    "port_1_enabled": "1",
+                    "port_1_command": "012345",
+                    "port_2_enabled": "1",
+                    "port_2_command": "12345#",
+                },
+            ):
+                response = dashboard.online_control_page()
+
+        self.assertEqual(response, "invalid")
+        save.assert_not_called()
+        for node in model["nodes"].values():
+            self.assertNotIn("online_control", node)
+
+        values = render.call_args.kwargs
+        self.assertIn("Port 2", values["error"])
+        self.assertEqual(
+            values["controls"][1]["command"], "12345#"
+        )
+
+    def test_online_control_get_renders_saved_settings(self):
+        model = new_node_model()
+        model["online_control"] = {
+            "enabled": True,
+            "command": "012345",
+        }
+
+        with patch.object(
+            dashboard, "load_node_model", return_value=model
+        ), patch.object(
+            dashboard, "get_version_info",
+            return_value={"package": "test", "engine": "test"},
+        ):
+            with dashboard.app.test_request_context(
+                "/online-control?reconfigure=1"
+            ):
+                html = dashboard.online_control_page()
+
+        self.assertIn('value="012345"', html)
+        self.assertIn('name="single_enabled"', html)
+        self.assertIn('name="reconfigure" value="1"', html)
+
+    def test_online_control_requires_authorisation(self):
+        with patch.object(
+            dashboard, "dashboard_auth_exists", return_value=True
+        ), patch.object(
+            dashboard, "load_node_model"
+        ) as load:
+            with dashboard.app.test_client() as client:
+                for method in ("get", "post"):
+                    with self.subTest(method=method):
+                        response = getattr(client, method)(
+                            "/online-control"
+                        )
+                        self.assertEqual(response.status_code, 302)
+                        self.assertIn(
+                            "/authorise?",
+                            response.headers["Location"],
+                        )
+
+        load.assert_not_called()
+
     def test_dual_usb_nodes_use_discovered_device_mapping(self):
         model = self.multiport_model()
         model["hardware_preparation"] = {
@@ -1077,7 +1226,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             response.headers["Location"],
-            "/modules",
+            "/online-control",
         )
         self.assertEqual(
             model["tones"]["courtesy_mode"],
