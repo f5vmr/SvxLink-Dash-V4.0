@@ -69,13 +69,17 @@ def svxlink_status():
 
 def restart_svxlink():
     """
-    Restart SvxLink using sudoers.d permission.
+    Enable SvxLink at boot and restart it using sudoers.d permission.
 
     The dashboard is expected to run as user svxlink.
     """
+    subprocess.run(
+        ["sudo", "/usr/bin/systemctl", "enable", "svxlink.service"],
+        check=True,
+    )
 
     subprocess.run(
-        ["sudo", "systemctl", "restart", "svxlink.service"],
+        ["sudo", "/usr/bin/systemctl", "restart", "svxlink.service"],
         check=True,
     )
 
