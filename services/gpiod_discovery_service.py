@@ -3,6 +3,26 @@
 import subprocess
 
 
+NATIVE_ICS_RX_LINES = {
+    "ics_1x": {
+        "1": {
+            "chip": "gpiochip0",
+            "line": 26,
+        },
+    },
+    "ics_2x": {
+        "1": {
+            "chip": "gpiochip0",
+            "line": 26,
+        },
+        "2": {
+            "chip": "gpiochip0",
+            "line": 23,
+        },
+    },
+}
+
+
 def discover_gpiod_lines(required_line_names):
     """
     Discover which gpiochip currently owns each named GPIO line.
@@ -81,7 +101,11 @@ def discover_gpiod_lines(required_line_names):
 
 def required_ics_line_names(model):
     """
-    Build the list of GPIO line names required by the selected ICS profile.
+    Build the named GPIO lines required by the selected ICS profile.
+
+    ICS 1X and 2X receive COS from fixed native Raspberry Pi GPIO
+    lines, so only their MCP23017 TX lines require named discovery.
+    ICS 4X and 8X expose both RX and TX through named GPIO lines.
     """
 
     hardware = model.get("hardware", {})
@@ -97,7 +121,10 @@ def required_ics_line_names(model):
 
     for port in enabled_ports:
         port_id = str(port)
-        line_names.append(f"RX_{port_id}")
+
+        if profile_id not in NATIVE_ICS_RX_LINES:
+            line_names.append(f"RX_{port_id}")
+
         line_names.append(f"TX_{port_id}")
 
     if profile_id in ("ics_4x", "ics_8x"):
@@ -110,6 +137,18 @@ def update_model_gpiod_discovery(model):
     """
     Discover and store GPIOD chip/line mappings in node_model data.
     """
+
+    hardware = model.get("hardware", {})
+    profile_id = (
+        model.get("hardware_profile_id")
+        or hardware.get("profile_id")
+        or hardware.get("id")
+    )
+
+    native_rx_lines = NATIVE_ICS_RX_LINES.get(
+        profile_id,
+        {},
+    )
 
     line_names = required_ics_line_names(model)
     discovered = discover_gpiod_lines(line_names)
@@ -133,13 +172,20 @@ def update_model_gpiod_discovery(model):
         rx_name = f"RX_{port_id}"
         tx_name = f"TX_{port_id}"
 
-        rx = discovered.get(rx_name, {})
+        rx = (
+            native_rx_lines.get(port_id)
+            or discovered.get(rx_name, {})
+        )
         tx = discovered.get(tx_name, {})
 
         node.setdefault("gpio", {})
         node["gpio"]["cos_chip"] = rx.get("chip", "")
         node["gpio"]["cos_line"] = rx.get("line", rx_name)
-        node["gpio"]["cos_offset"] = rx.get("offset")
+
+        if "offset" in rx:
+            node["gpio"]["cos_offset"] = rx["offset"]
+        else:
+            node["gpio"].pop("cos_offset", None)
 
         node["gpio"]["ptt_chip"] = tx.get("chip", "")
         node["gpio"]["ptt_line"] = tx.get("line", tx_name)
