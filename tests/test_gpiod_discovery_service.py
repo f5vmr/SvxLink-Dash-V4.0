@@ -4,7 +4,7 @@ import unittest
 
 from unittest.mock import patch
 
-from services import gpiod_discovery_service
+from services import gpio_service
 
 
 class GpiodDiscoveryServiceTests(unittest.TestCase):
@@ -31,16 +31,19 @@ class GpiodDiscoveryServiceTests(unittest.TestCase):
         }
 
         with patch.object(
-            gpiod_discovery_service,
-            "discover_gpiod_lines",
-            return_value=discovered,
+            gpio_service,
+            "discover_named_gpio_lines",
+            return_value=(discovered, []),
         ) as discovery_mock:
             result = (
-                gpiod_discovery_service
+                gpio_service
                 .update_model_gpiod_discovery(model)
             )
 
-        discovery_mock.assert_called_once_with(["TX_1"])
+        discovery_mock.assert_called_once_with(
+            ["TX_1"],
+            refresh=True,
+        )
 
         self.assertEqual(
             result["gpiod"]["missing_lines"],
@@ -84,19 +87,30 @@ class GpiodDiscoveryServiceTests(unittest.TestCase):
         }
 
         with patch.object(
-            gpiod_discovery_service,
-            "discover_gpiod_lines",
-            return_value=discovered,
+            gpio_service,
+            "discover_named_gpio_lines",
+            return_value=(discovered, []),
         ) as discovery_mock:
             result = (
-                gpiod_discovery_service
+                gpio_service
                 .update_model_gpiod_discovery(model)
             )
 
-        discovery_mock.assert_called_once_with([
-            "TX_1",
-            "TX_2",
-        ])
+        discovery_mock.assert_called_once_with(
+            [
+                "TX_1",
+                "TX_2",
+            ],
+            refresh=True,
+        )
+
+        discovery_mock.assert_called_once_with(
+            [
+                "TX_1",
+                "TX_2",
+            ],
+            refresh=True,
+        )
 
         self.assertEqual(
             result["gpiod"]["missing_lines"],
@@ -143,8 +157,7 @@ class GpiodDiscoveryServiceTests(unittest.TestCase):
         }
 
         self.assertEqual(
-            gpiod_discovery_service
-            .required_ics_line_names(model),
+            gpio_service.required_ics_gpio_lines(model),
             [
                 "RX_1",
                 "TX_1",

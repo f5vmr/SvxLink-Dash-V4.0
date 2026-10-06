@@ -69,6 +69,49 @@ class PortReconfigurationTests(unittest.TestCase):
                 save.assert_called_once_with(model)
 
 
+    def test_port_roles_page_has_continue_button(self):
+        with dashboard.app.test_request_context(
+            "/port-roles"
+        ):
+            html = dashboard.render_template(
+                "port_roles.html",
+                model={
+                    "hardware_profile_id": "ics_2x",
+                },
+                enabled_ports=["1", "2"],
+                port_roles={},
+                error=None,
+                version_info={
+                    "package": "test",
+                    "engine": "test",
+                },
+            )
+
+        self.assertIn(
+            'type="submit"',
+            html,
+        )
+        self.assertIn(
+            "Save roles and continue",
+            html,
+        )
+        self.assertIn(
+            "GPIO: GPIO26, TX_1",
+            html,
+        )
+        self.assertIn(
+            "GPIO: GPIO23, TX_2",
+            html,
+        )
+        self.assertNotIn(
+            "GPIO: RX_1",
+            html,
+        )
+        self.assertNotIn(
+            "GPIO: RX_2",
+            html,
+        )
+
     def test_port_roles_save_uses_correct_workflow(self):
         for reconfigure in (False, True):
             with self.subTest(reconfigure=reconfigure):
@@ -99,6 +142,7 @@ class PortReconfigurationTests(unittest.TestCase):
                     model["nodes"]["1"]["role"], "repeater"
                 )
                 save.assert_called_once_with(model)
+
 
     def test_squelch_completion_preserves_workflow(self):
         for configured in (False, True):
