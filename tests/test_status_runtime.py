@@ -180,6 +180,10 @@ class RuntimeStatusTests(unittest.TestCase):
 
         with patch.object(
             status_service,
+            "svxlink_status",
+            return_value="active",
+        ), patch.object(
+            status_service,
             "read_recent_svxlink_log_lines",
             return_value=lines,
         ) as log_mock:
@@ -192,6 +196,33 @@ class RuntimeStatusTests(unittest.TestCase):
         self.assertTrue(state["rx"])
         self.assertFalse(state["tx"])
         log_mock.assert_called_once_with(300)
+
+    def test_stopped_service_ignores_stale_radio_events(self):
+        for service_state in ("inactive", "failed", "unknown"):
+            for port in ("1", "2"):
+                with self.subTest(service_state=service_state, port=port):
+                    with patch.object(
+                        status_service,
+                        "svxlink_status",
+                        return_value=service_state,
+                    ), patch.object(
+                        status_service,
+                        "read_recent_svxlink_log_lines",
+                        return_value=[
+                            f"Rx{port}: The squelch is open",
+                            f"Tx{port}: Turning the transmitter on",
+                        ],
+                    ) as log_mock:
+                        state = status_service.get_radio_state(
+                            selected_port=port
+                        )
+
+                    self.assertEqual(state["label"], "Stopped")
+                    self.assertEqual(state["input"], "Unknown")
+                    self.assertEqual(state["class"], "radio-standby")
+                    self.assertFalse(state["rx"])
+                    self.assertFalse(state["tx"])
+                    log_mock.assert_not_called()
 
     def test_talkgroup_state_uses_rotation_aware_log_reader(self):
 

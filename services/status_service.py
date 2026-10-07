@@ -112,6 +112,14 @@ def get_radio_state(selected_port="1"):
         RX/input state is detected from Rx1 squelch messages.
         """
 
+        if svxlink_status() != "active":
+            return {
+                "label": "Stopped",
+                "input": "Unknown",
+                "class": "radio-standby",
+                "tx": False,
+                "rx": False,
+            }
         tx_active = False
         rx_open = False
         selected_port = str(selected_port or "1")
