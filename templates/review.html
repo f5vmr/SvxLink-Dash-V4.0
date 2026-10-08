@@ -444,15 +444,16 @@
                 Return to Dashboard
             </a>
         
-            <button class="button-primary"
-                    type="submit"
-                    {% if not review_allowed %}disabled{% endif %}>
-                {% if review_allowed %}
+            {% if review_allowed %}
+                <button class="button-primary" type="submit">
                     Proceed to Build
-                {% else %}
+                </button>
+            {% else %}
+                <a class="button-primary"
+                   href="{{ url_for('topology_page', reconfigure='1') if is_multi_port else url_for('reconfigure_page') }}">
                     Resolve Configuration Issues
-                {% endif %}
-            </button>
+                </a>
+            {% endif %}
         </div>
         </form>
     </section>

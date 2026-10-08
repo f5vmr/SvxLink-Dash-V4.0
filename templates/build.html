@@ -111,15 +111,16 @@
                    href="{{ url_for('review_page') }}">
                     Back
                 </a>
-                <button class="button-primary"
-                        type="submit"
-                        {% if not build_allowed %}disabled{% endif %}>
-                    {% if build_allowed %}
+                {% if build_allowed %}
+                    <button class="button-primary" type="submit">
                         Build Configuration
-                    {% else %}
+                    </button>
+                {% else %}
+                    <a class="button-primary"
+                       href="{{ url_for('topology_page', reconfigure='1') if is_multi_port else url_for('reconfigure_page') }}">
                         Resolve Configuration Issues
-                    {% endif %}
-                </button>
+                    </a>
+                {% endif %}
             </div>
         </form>
     </section>
