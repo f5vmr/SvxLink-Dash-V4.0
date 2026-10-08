@@ -106,6 +106,34 @@ if [ ! -d /opt ]; then
     mkdir -p /opt
 fi
 
+# Disable the legacy gpiochip4 compatibility alias when present.
+GPIOCHIP4_RULE_FOUND=0
+
+for GPIOCHIP4_RULE_DIR in \
+    /etc/udev/rules.d \
+    /run/udev/rules.d \
+    /usr/lib/udev/rules.d \
+    /lib/udev/rules.d
+do
+    if [ -f "$GPIOCHIP4_RULE_DIR/60-gpiochip4.rules" ]; then
+        GPIOCHIP4_RULE_FOUND=1
+    fi
+done
+
+if [ "$GPIOCHIP4_RULE_FOUND" -eq 1 ]; then
+    echo "Disabling the legacy gpiochip4 compatibility rule..."
+    install -d -m 0755 /etc/udev/rules.d
+    ln -sfn /dev/null /etc/udev/rules.d/60-gpiochip4.rules
+    udevadm control --reload-rules
+
+    # Remove only the compatibility symlink, never a real GPIO device.
+    if [ -L /dev/gpiochip4 ] && \
+       [ "$(readlink -f /dev/gpiochip4)" = "/dev/gpiochip0" ]; then
+        rm -- /dev/gpiochip4
+        echo "Removed /dev/gpiochip4 alias to gpiochip0."
+    fi
+fi
+
 #-----------------------
 # Svxlink-Streamer
 #-----------------------
