@@ -81,11 +81,11 @@
                             <h3 class="review-section-title">GPIO / Control</h3>
                             <div class="review-row">
                                 <span class="review-label">COS</span>
-                                <span class="review-value">{{ gpio.get("cos", "Not set") }}</span>
+                                <span class="review-value">{% include "config/port_cos_summary.html" %}</span>
                             </div>
                             <div class="review-row">
                                 <span class="review-label">PTT</span>
-                                <span class="review-value">{{ gpio.get("ptt", "Not set") }}</span>
+                                <span class="review-value">{% include "config/port_ptt_summary.html" %}</span>
                             </div>
                         </div>
 

@@ -75,8 +75,8 @@
                 <div class="status-box">
                     RX audio: {{ node.get("audio", {}).get("rx_audio", "Not set") }}<br>
                     TX audio: {{ node.get("audio", {}).get("tx_audio", "Not set") }}<br>
-                    PTT: {{ node.gpio.ptt }}<br>
-                    COS: {{ node.gpio.cos }}
+                    PTT: {% include "config/port_ptt_summary.html" %}<br>
+                    COS: {% include "config/port_cos_summary.html" %}
                 </div>
             </div>
             <div class="form-section">

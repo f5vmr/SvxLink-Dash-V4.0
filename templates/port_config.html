@@ -47,8 +47,8 @@
                     <br>
                     RX audio: {{ mapping.get("rx_audio", "not mapped") }}<br>
                     TX audio: {{ mapping.get("tx_audio", "not mapped") }}<br>
-                    PTT: {{ mapping.get("ptt", "not mapped") }} |
-                    COS: {{ mapping.get("cos", "not mapped") }}
+                    PTT mapping: {{ mapping.get("ptt") or "Not mapped" }} |
+                    COS mapping: {{ mapping.get("cos") or "Not mapped" }}
                 </div>
             {% endfor %}
         </div>
@@ -76,8 +76,8 @@
                         <br>
                         RX audio: {{ node.get("audio", {}).get("rx_audio", "Not set") }}<br>
                         TX audio: {{ node.get("audio", {}).get("tx_audio", "Not set") }}<br>
-                        PTT: {{ node.gpio.ptt }}<br>
-                        COS: {{ node.gpio.cos }}<br>
+                        PTT: {% include "config/port_ptt_summary.html" %}<br>
+                        COS: {% include "config/port_cos_summary.html" %}<br>
                         Configured:
                         {% if node.node_details_configured %}
                             <span class="success-text">Partly</span>

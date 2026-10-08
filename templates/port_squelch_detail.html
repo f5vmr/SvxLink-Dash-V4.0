@@ -39,7 +39,8 @@
                 Port: {{ node.port }}<br>
                 Callsign: {{ node.callsign }}<br>
                 Role: {{ node.role }}<br>
-                COS: {{ node.gpio.cos }}
+                COS: {% include "config/port_cos_summary.html" %}<br>
+                PTT: {% include "config/port_ptt_summary.html" %}
             </div>
         </div>
 
