@@ -197,6 +197,48 @@ class RuntimeStatusTests(unittest.TestCase):
         self.assertFalse(state["tx"])
         log_mock.assert_called_once_with(300)
 
+    def test_radio_state_does_not_reuse_events_before_restart(self):
+        boundary = (
+            "NOTICE: Initialization done. Starting main application."
+        )
+
+        for port in ("1", "2"):
+            for fresh_events, expected_rx, expected_tx in (
+                ([], False, False),
+                ([f"Rx{port}: The squelch is OPEN"], True, False),
+                ([f"Tx{port}: Turning the transmitter ON"], False, True),
+                ([f"Rx{port}: The squelch is CLOSED"], False, False),
+            ):
+                with self.subTest(port=port, events=fresh_events):
+                    lines = [
+                        f"Rx{port}: The squelch is OPEN",
+                        f"Tx{port}: Turning the transmitter ON",
+                        "NOTICE: SIGTERM received. Shutting down application...",
+                        "NOTICE: Exiting",
+                        boundary,
+                    ] + fresh_events
+
+                    with patch.object(
+                        status_service,
+                        "svxlink_status",
+                        return_value="active",
+                    ), patch.object(
+                        status_service,
+                        "read_recent_svxlink_log_lines",
+                        return_value=lines,
+                    ):
+                        state = status_service.get_radio_state(port)
+
+                    self.assertEqual(state["rx"], expected_rx)
+                    self.assertEqual(state["tx"], expected_tx)
+                    self.assertEqual(
+                        state["label"],
+                        "Transmitting" if expected_tx else
+                        "Receiving" if expected_rx else "Listening",
+                    )
+                    if not fresh_events:
+                        self.assertEqual(state["input"], "Unknown")
+
     def test_stopped_service_ignores_stale_radio_events(self):
         for service_state in ("inactive", "failed", "unknown"):
             for port in ("1", "2"):

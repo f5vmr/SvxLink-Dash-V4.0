@@ -127,6 +127,16 @@ def get_radio_state(selected_port="1"):
         tx_name = f"tx{selected_port}:"
 
         lines = read_recent_svxlink_log_lines(300)
+        # Ignore radio activity from an earlier SvxLink run.
+        for index in range(len(lines) - 1, -1, -1):
+            lower = lines[index].lower()
+            if any(marker in lower for marker in (
+                "notice: initialization done. starting main application",
+                "notice: sigterm received. shutting down application",
+                "notice: exiting",
+            )):
+                lines = lines[index + 1:]
+                break
 
         if not lines:
             return {
