@@ -2029,6 +2029,17 @@ def port_squelch_detail_page(port_id):
 
             save_node_model(model)
 
+            if (
+                request.form.get("reconfigure") == "1"
+                and request.form.get("return_to") != "topology"
+            ):
+                return redirect(
+                    url_for(
+                        "port_squelch_page",
+                        reconfigure="1",
+                    )
+                )
+
             return (
                 redirect_after_port_configuration(
                     "port_squelch_page"
