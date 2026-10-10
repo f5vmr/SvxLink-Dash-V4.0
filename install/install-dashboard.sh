@@ -48,10 +48,11 @@ if [ -f "$SOURCE_DIR/.git/config" ]; then
 fi
 
 case "$SOURCE_ORIGIN" in
-    *"/SvxLink-Dash-V4.0.git"|*"/SvxLink-Dash-V4.0")
+    *"/SvxLink-Dash-V4.0.git"|*"/SvxLink-Dash-V4.0"|\
+    *"/SvxLink-Dash-V4.1.git"|*"/SvxLink-Dash-V4.1")
         ;;
     *)
-        echo "ERROR: The installer source is not a recognised V4.0 checkout." >&2
+        echo "ERROR: The installer source is not a recognised V4.x checkout." >&2
         echo "Source: $SOURCE_DIR" >&2
         echo "Origin: ${SOURCE_ORIGIN:-not detected}" >&2
         exit 1
@@ -88,6 +89,9 @@ if [ -e "$INSTALL_DIR" ]; then
             ;;
         *"/SvxLink-Dash-V4.0.git"|*"/SvxLink-Dash-V4.0")
             EXISTING_RELEASE="V4.0"
+            ;;
+        *"/SvxLink-Dash-V4.1.git"|*"/SvxLink-Dash-V4.1")
+            EXISTING_RELEASE="V4.1"
             ;;
         *)
             echo "ERROR: Unrecognised existing dashboard installation." >&2
@@ -215,8 +219,9 @@ if [ -n "$EXISTING_RELEASE" ]; then
         exit 1
     fi
 
-    if [ "$EXISTING_RELEASE" = "V4.0" ]; then
-        echo "Restoring the existing V4.0 runtime configuration."
+    if [ "$EXISTING_RELEASE" = "V4.0" ] ||
+       [ "$EXISTING_RELEASE" = "V4.1" ]; then
+        echo "Restoring the existing $EXISTING_RELEASE runtime configuration."
 
         for CONFIG_FILE in \
             node_model.json \
@@ -244,7 +249,7 @@ if [ -n "$EXISTING_RELEASE" ]; then
     else
         echo "The $EXISTING_RELEASE configuration remains available in:"
         echo "  $BACKUP_DIR"
-        echo "V4.0 will begin with a new guided configuration."
+        echo "The new dashboard will begin with a guided configuration."
     fi
 else
     mv "$STAGING_DIR" "$INSTALL_DIR"

@@ -109,6 +109,10 @@ class DeploymentPermissionTests(unittest.TestCase):
             installer_text,
         )
         self.assertIn(
+            "SvxLink-Dash-V4.1.git",
+            installer_text,
+        )
+        self.assertIn(
             'BACKUP_ROOT="/var/backups/svxlink-dash"',
             installer_text,
         )
