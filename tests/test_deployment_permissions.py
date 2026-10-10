@@ -54,6 +54,20 @@ class DeploymentPermissionTests(unittest.TestCase):
         self.assertEqual(written, target)
         self.assertEqual(mode, 0o664)
 
+    def test_installer_enables_svxlink_for_boot(self):
+        installer_text = Path(
+            "install/install-dashboard.sh"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "\nsystemctl enable svxlink.service\n",
+            installer_text,
+        )
+        self.assertNotIn(
+            "\nsystemctl enable --now svxlink.service\n",
+            installer_text,
+        )
+
 
     def test_installer_prepares_account_before_dashboard_start(self):
         installer_text = Path(
