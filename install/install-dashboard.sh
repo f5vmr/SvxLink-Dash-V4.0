@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-REPO_URL="https://github.com/f5vmr/SvxLink-Dash-V4.0.git"
+REPO_URL="https://github.com/f5vmr/SvxLink-Dash-V4.1.git"
 STREAMER_REPO_URL="https://github.com/f5vmr/Svxlink-Streamer.git"
 
 INSTALL_DIR="/opt/dashboard"
@@ -22,7 +22,7 @@ PREVIOUS_DIR=""
 EXISTING_RELEASE=""
 STREAMER_SOURCE_DIR=""
 
-echo "Installing SvxLink-Dash-V4.0..."
+echo "Installing SvxLink-Dash-V4.1..."
 
 SOURCE_ORIGIN=""
 
@@ -173,7 +173,7 @@ STREAMER_SOURCE_DIR=""
 
 echo "Svxlink-Streamer installed."
 
-echo "Preparing a clean SvxLink-Dash V4.0 application tree..."
+echo "Preparing a clean SvxLink-Dash V4.1 application tree..."
 
 git clone \
     --no-hardlinks \
@@ -215,7 +215,7 @@ if [ -n "$EXISTING_RELEASE" ]; then
 
     if ! mv "$STAGING_DIR" "$INSTALL_DIR"; then
         mv "$PREVIOUS_DIR" "$INSTALL_DIR"
-        echo "ERROR: Could not activate the V4.0 application tree." >&2
+        echo "ERROR: Could not activate the V4.1 application tree." >&2
         exit 1
     fi
 
@@ -369,7 +369,7 @@ elif [ -e "$SUDOERS_FILE" ] && [ ! -f "$SUDOERS_FILE" ]; then
 fi
 
 cat > "$SUDOERS_FILE" <<'EOF'
-# SvxLink-Dash-V4.0 controlled service permissions
+# SvxLink-Dash-V4.1 controlled service permissions
 
 svxlink ALL=(root) NOPASSWD: \
     /usr/bin/systemctl restart svxlink.service, \
