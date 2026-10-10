@@ -1,10 +1,10 @@
 # SvxLink-Dash V4.1
 
-SvxLink-Dash V4.1 is a Flask-based configuration and runtime dashboard for SvxLink 26.05.1.
+SvxLink-Dash V4.1 is a Flask-based configuration and runtime dashboard for SvxLink 26.05.2 and its predecessor.
 
 It provides a guided environment for configuring, building and operating simplex, repeater and multi-port SvxLink installations. It is suitable for independently operated nodes and is not restricted to a particular reflector network, region or deployment model.
 
-SvxLink 26.05.1 is developed by Tobias Blomberg, SM0SVX.
+SvxLink 26.05.2 is developed by Tobias Blomberg, SM0SVX.
 
 ## Principal features
 
@@ -108,7 +108,7 @@ Runtime architecture reporting recognises:
 - 32-bit x86 (`i386`; tested on `i686`)
 - 64-bit x86 (`amd64`)
 
-The dashboard is intended for Debian-based operating systems on which SvxLink 26.05.1 is already installed and operational.
+The dashboard is intended for Debian-based operating systems on which SvxLink 26.05.2 is already installed and operational.
 
 Platform recognition and hardware-profile support are separate. Not every hardware profile is appropriate for every platform.
 
@@ -272,7 +272,7 @@ receiver's ordinary squelch-access condition.
 
 ## Installation
 
-SvxLink-Bootstrap is the recommended installation method. It prepares a supported SvxLink 26.05.1 installation, installs SvxLink-Dash V4.1 and hands control to the permanent Dashboard configuration workflow.
+SvxLink-Bootstrap is the recommended installation method. It prepares a supported SvxLink 26.05.2 installation, installs SvxLink-Dash V4.1 and hands control to the permanent Dashboard configuration workflow.
 
 ### Recommended Bootstrap installation
 
@@ -294,7 +294,7 @@ Bootstrap then:
 
 1. Detects the operating system, release, architecture and hardware platform.
 
-2. Selects the exact compatible SvxLink 26.05.1 package.
+2. Selects the exact compatible SvxLink  package.
 
 3. Classifies any existing package-managed or compiler installation.
 
@@ -324,11 +324,11 @@ Complete Bootstrap installation, migration, compatibility and troubleshooting do
 
 ### Direct Dashboard installation
 
-Direct installation is intended for systems where SvxLink 26.05.1 has already been installed correctly or for development and recovery work.
+Direct installation is intended for systems where SvxLink 26.05.2 has already been installed correctly or for development and recovery work.
 
 Before using the direct installer, confirm that:
 
-* SvxLink 26.05.1 is installed.
+* SvxLink 26.05.2 or a previous version is installed.
 
 * `svxlink.service` is available.
 
