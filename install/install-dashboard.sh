@@ -479,6 +479,7 @@ chown root:root /etc/logrotate.d/svxlink
 
 cp "$INSTALL_DIR/install/svxlink-dash.service" /etc/systemd/system/svxlink-dash.service
 systemctl daemon-reload
+systemctl enable svxlink.service
 systemctl enable svxlink-dash
 systemctl restart svxlink-dash
 
