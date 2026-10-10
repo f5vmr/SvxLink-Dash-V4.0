@@ -1554,7 +1554,7 @@ A dashboard Rebuild can overwrite manual changes made to dashboard-managed files
 
 ## Credits
 
-SvxLink 26.05.1 is developed by Tobias Blomberg, SM0SVX.
+SvxLink 26.05.2 is developed by Tobias Blomberg, SM0SVX.
 
 SvxLink-Dash V4.1 is developed by Chris Jackson, G4NAB.
 
